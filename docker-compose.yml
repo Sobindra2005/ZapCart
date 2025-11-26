@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ecommerce-backend
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL:-mongodb://localhost:27017/ecommerce}
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # Uncomment for development with hot-reload
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/dist:/app/dist
+
+  # Nginx reverse proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: ecommerce-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+# Uncomment if you need persistent volumes
+# volumes:
+#   backend-data:

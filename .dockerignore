@@ -1,0 +1,25 @@
+# Docker files
+**/node_modules/
+**/dist/
+**/.env
+**/.env.*
+!**/.env.example
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+**/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (optional - uncomment if you don't want these in images)
+# README.md
+# DEPLOYMENT.md
