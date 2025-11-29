@@ -1,5 +1,6 @@
 import express from 'express';
-import { QueueService } from 'service/queueService/searchIndexService';
+import authRoutes from './authRoutes';
+import testRoutes from './testRoutes';
 
 const router = express.Router();
 
@@ -7,10 +8,11 @@ const router = express.Router();
  * Central route configuration
  * Mount all route modules here
  */
-router.get('/', async (req, res) => {
-    console.log(`here is the ${req}`)
-    await QueueService.syncProductToSearchIndex('sample-product-id');
-    return res.status(200).json({ message: 'syncing product to search index' });
-})
+
+// Authentication routes
+router.use('/auth', authRoutes);
+
+// Test routes (for verifying auth functionality)
+router.use('/test', testRoutes);
 
 export default router;

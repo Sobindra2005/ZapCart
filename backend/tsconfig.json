@@ -16,7 +16,8 @@
       "@/routes/*": ["routes/*"],
       "@/controllers/*": ["controllers/*"],
       "@/models/*": ["models/*"],
-      "@/services/*": ["services/*"]
+      "@/services/*": ["services/*"],
+      "@/generated/*": ["generated/*"]
     },
     "resolveJsonModule": true,
     

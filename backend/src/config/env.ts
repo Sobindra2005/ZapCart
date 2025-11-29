@@ -61,6 +61,11 @@ export const config = {
     // API configuration
     apiVersion: 'v1',
 
+    // JWT configuration
+    jwtSecret: getEnvVariable('JWT_SECRET'),
+    jwtAccessExpiration: getEnvVariable('JWT_ACCESS_EXPIRATION', '15m'),
+    jwtRefreshExpiration: getEnvVariable('JWT_REFRESH_EXPIRATION', '7d'),
+
     // Security configuration
     rateLimitWindowMs: 15 * 60 * 1000, // 15 minutes
     rateLimitMaxRequests: 100, // limit each IP to 100 requests per windowMs
@@ -75,7 +80,7 @@ export const validateEnv = (): void => {
         console.log('🔍 Validating environment variables...');
 
         // This will throw if any required variable is missing
-        const requiredVars = ['PORT', 'NODE_ENV', 'DATABASE_URL', 'MONGODB_URL','REDIS_HOST','REDIS_PORT'];
+        const requiredVars = ['PORT', 'NODE_ENV', 'DATABASE_URL', 'MONGODB_URL', 'REDIS_HOST', 'REDIS_PORT', 'JWT_SECRET'];
 
         requiredVars.forEach(key => {
             getEnvVariable(key);
