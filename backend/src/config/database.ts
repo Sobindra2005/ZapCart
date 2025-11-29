@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { config } from './env';
+import { connectRedis, disconnectRedis } from './redis';
 
 interface DatabaseConfig {
     uri: string;
@@ -49,17 +50,24 @@ export class DatabaseConnection {
         }
 
         this.connectionPromise = this.performConnection();
+
+        try {
+            await connectRedis();
+        } catch (error) {
+            console.error('⚠️  Redis connection failed, continuing without cache:', error);
+        }
+
         return this.connectionPromise;
     }
 
     private async performConnection(): Promise<typeof mongoose> {
         try {
             mongoose.set('strictQuery', false);
-            
+
             const connection = await mongoose.connect(this.config.uri, this.config.options);
             this.isConnected = true;
             console.log('✅ MongoDB connected successfully');
-            
+
             return connection;
         } catch (error) {
             this.connectionPromise = null;
@@ -76,6 +84,8 @@ export class DatabaseConnection {
                 this.connectionPromise = null;
                 console.log('🔌 MongoDB disconnected');
             }
+
+            await disconnectRedis();
         } catch (error) {
             console.error('❌ MongoDB disconnection error:', error);
             throw error;

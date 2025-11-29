@@ -75,7 +75,7 @@ export const validateEnv = (): void => {
         console.log('🔍 Validating environment variables...');
 
         // This will throw if any required variable is missing
-        const requiredVars = ['PORT', 'NODE_ENV', 'DATABASE_URL', 'MONGODB_URL','redisHost','redisPort'];
+        const requiredVars = ['PORT', 'NODE_ENV', 'DATABASE_URL', 'MONGODB_URL','REDIS_HOST','REDIS_PORT'];
 
         requiredVars.forEach(key => {
             getEnvVariable(key);
