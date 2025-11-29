@@ -50,8 +50,8 @@ jobs:
           docker build -t zapcart-nginx:dev ./nginx
       - name: Test Docker Compose
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 10
-          docker-compose ps
-          docker-compose logs
-          docker-compose down
+          docker compose ps
+          docker compose logs
+          docker compose down
