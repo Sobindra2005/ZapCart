@@ -1,6 +1,6 @@
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -8,19 +8,351 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  posts     Post[]
-  createdAt DateTime @default(now())
+// ===========================
+// USER MANAGEMENT
+// ===========================
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPERADMIN
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt DateTime @default(now())
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
 }
+
+model User {
+  id            Int           @id @default(autoincrement())
+  email         String        @unique
+  password      String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole      @default(CUSTOMER)
+  status        UserStatus    @default(ACTIVE)
+  emailVerified Boolean       @default(false)
+  lastLogin     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  addresses     Address[]
+  orders        Order[]
+  payments      Payment[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  country      String
+  postalCode   String
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ordersShipping Order[] @relation("ShippingAddress")
+  ordersBilling  Order[] @relation("BillingAddress")
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ===========================
+// ORDER MANAGEMENT
+// ===========================
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_PENDING
+  PAYMENT_FAILED
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id                Int         @id @default(autoincrement())
+  userId            Int
+  orderNumber       String      @unique
+  status            OrderStatus @default(PENDING)
+  
+  // Shipping Information
+  shippingAddressId Int
+  billingAddressId  Int
+  
+  // Pricing
+  subtotal          Decimal     @db.Decimal(10, 2)
+  shippingCost      Decimal     @db.Decimal(10, 2)
+  tax               Decimal     @db.Decimal(10, 2)
+  discount          Decimal     @db.Decimal(10, 2) @default(0)
+  totalAmount       Decimal     @db.Decimal(10, 2)
+  
+  // Tracking
+  trackingNumber    String?
+  estimatedDelivery DateTime?
+  deliveredAt       DateTime?
+  
+  // Notes
+  customerNotes     String?
+  adminNotes        String?
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  user            User        @relation(fields: [userId], references: [id])
+  shippingAddress Address     @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  billingAddress  Address     @relation("BillingAddress", fields: [billingAddressId], references: [id])
+  orderItems      OrderItem[]
+  payments        Payment[]
+  transactions    Transaction[]
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  
+  // Product reference (stored from MongoDB)
+  productId   String   // MongoDB ObjectId as string
+  productName String
+  sku         String?
+  
+  // Variant information
+  variantId   String?  // MongoDB ObjectId as string
+  variantName String?
+  
+  // Pricing
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  totalPrice  Decimal  @db.Decimal(10, 2)
+  discount    Decimal  @db.Decimal(10, 2) @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inventoryLog InventoryLog[]
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ===========================
+// PAYMENT & TRANSACTIONS
+// ===========================
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PAYPAL
+  STRIPE
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+}
+
+model Payment {
+  id              Int           @id @default(autoincrement())
+  orderId         Int
+  userId          Int
+  
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("USD")
+  status          PaymentStatus @default(PENDING)
+  method          PaymentMethod
+  
+  // Gateway Information
+  gatewayProvider String?       // e.g., "stripe", "paypal"
+  gatewayPaymentId String?      @unique // Payment ID from gateway
+  gatewayCustomerId String?     // Customer ID in gateway system
+  
+  // Card/Payment Details (last 4 digits only)
+  cardLast4       String?
+  cardBrand       String?       // visa, mastercard, etc.
+  
+  // Metadata
+  metadata        Json?         // Additional gateway-specific data
+  errorMessage    String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  order        Order         @relation(fields: [orderId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([gatewayPaymentId])
+  @@map("payments")
+}
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  PARTIAL_REFUND
+  AUTHORIZATION
+  CAPTURE
+}
+
+model Transaction {
+  id              Int             @id @default(autoincrement())
+  paymentId       Int
+  orderId         Int
+  
+  type            TransactionType
+  amount          Decimal         @db.Decimal(10, 2)
+  currency        String          @default("USD")
+  
+  // Gateway Information
+  gatewayTransactionId String?    @unique
+  gatewayResponse      Json?
+  
+  status          String          // success, failed, pending
+  errorCode       String?
+  errorMessage    String?
+  
+  // Metadata
+  description     String?
+  metadata        Json?
+  
+  createdAt       DateTime        @default(now())
+
+  // Relations
+  payment Payment @relation(fields: [paymentId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+
+  @@index([paymentId])
+  @@index([orderId])
+  @@index([gatewayTransactionId])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+// ===========================
+// INVENTORY MANAGEMENT
+// ===========================
+
+model Inventory {
+  id              Int      @id @default(autoincrement())
+  
+  // Product reference (from MongoDB)
+  productId       String   @unique // MongoDB ObjectId as string
+  variantId       String?  @unique // MongoDB ObjectId for variant
+  sku             String   @unique
+  
+  // Stock Information
+  quantityInStock Int      @default(0)
+  reservedQuantity Int     @default(0) // Reserved for pending orders
+  availableQuantity Int    @default(0) // quantityInStock - reservedQuantity
+  
+  // Thresholds
+  lowStockThreshold Int    @default(10)
+  reorderPoint      Int    @default(5)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  // Location (optional)
+  warehouseLocation String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  inventoryLogs InventoryLog[]
+
+  @@index([productId])
+  @@index([sku])
+  @@index([quantityInStock])
+  @@map("inventory")
+}
+
+enum InventoryAction {
+  PURCHASE        // Stock added
+  SALE            // Stock reduced (order)
+  RETURN          // Stock returned
+  ADJUSTMENT      // Manual adjustment
+  DAMAGE          // Damaged goods
+  TRANSFER        // Warehouse transfer
+  RESERVATION     // Reserved for order
+  RELEASE         // Released reservation
+}
+
+model InventoryLog {
+  id              Int             @id @default(autoincrement())
+  inventoryId     Int
+  orderItemId     Int?            // Link to order if applicable
+  
+  action          InventoryAction
+  quantityChange  Int             // Positive or negative
+  quantityBefore  Int
+  quantityAfter   Int
+  
+  reason          String?
+  performedBy     Int?            // User ID (admin/system)
+  
+  createdAt       DateTime        @default(now())
+
+  // Relations
+  inventory Inventory  @relation(fields: [inventoryId], references: [id])
+  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+
+  @@index([inventoryId])
+  @@index([orderItemId])
+  @@index([createdAt])
+  @@map("inventory_logs")
+}
+
