@@ -69,6 +69,11 @@ export const config = {
     // Security configuration
     rateLimitWindowMs: 15 * 60 * 1000, // 15 minutes
     rateLimitMaxRequests: 100, // limit each IP to 100 requests per windowMs
+
+    // Cloudinary configuration
+    CLOUDINARY_CLOUD_NAME: getEnvVariable('CLOUDINARY_CLOUD_NAME'),
+    CLOUDINARY_API_KEY: getEnvVariable('CLOUDINARY_API_KEY'),
+    CLOUDINARY_API_SECRET: getEnvVariable('CLOUDINARY_API_SECRET'),
 } as const;
 
 /**
