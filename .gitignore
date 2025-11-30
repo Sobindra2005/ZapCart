@@ -14,8 +14,6 @@
 **/.env.local
 **/.env.*.local
 
-.env
-
 # Logs
 **/logs/
 **/*.log

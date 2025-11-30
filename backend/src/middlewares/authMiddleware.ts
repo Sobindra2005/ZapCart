@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, UserStatus } from '@/generated/prisma';
+import { UserStatus } from '@/generated/prisma';
+import { prisma } from '@/config/prisma';
 import { verifyAccessToken, JwtPayload } from '@/utils/jwtUtils';
 import AppError from '@/utils/AppError';
 import asyncHandler from '@/utils/asyncHandler';
-
-const prisma = new PrismaClient();
 
 /**
  * Extend Express Request interface to include user

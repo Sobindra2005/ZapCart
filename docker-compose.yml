@@ -31,11 +31,11 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL:-mongodb://localhost:27017/ecommerce}
       - MONGODB_URL=${MONGODB_URL:-mongodb://localhost:27017/ecommerce}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
       - JWT_SECRET=${JWT_SECRET:-your_jwt_secret}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
-      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
+      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION:-15m}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION:-7d}
     ports:
       - "8080:8080"
     depends_on:

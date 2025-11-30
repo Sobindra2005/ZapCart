@@ -15,11 +15,11 @@ const defaultQueueOptions: QueueOptions = {
             delay: 2000,
         },
         removeOnComplete: {
-            age: 24 * 3600, 
-            count: 1000, 
+            age: 24 * 3600,
+            count: 1000,
         },
         removeOnFail: {
-            age: 7 * 24 * 3600, 
+            age: 7 * 24 * 3600,
         },
     },
 };
@@ -27,18 +27,22 @@ const defaultQueueOptions: QueueOptions = {
 // Queue names
 export enum QueueName {
     SEARCH_INDEX = 'search-index-queue',
+    ORDER_QUEUE = 'order-queue',
 }
 
 export const searchIndexQueue = new Queue(QueueName.SEARCH_INDEX, defaultQueueOptions);
+export const orderQueue = new Queue(QueueName.ORDER_QUEUE, defaultQueueOptions);
 
 export const closeAllQueues = async (): Promise<void> => {
     console.log('🛑 Closing all queues...');
     await Promise.all([
         searchIndexQueue.close(),
+        orderQueue.close(),
     ]);
     console.log('✅ All queues closed');
 };
 
 export const queues = {
     searchIndex: searchIndexQueue,
+    order: orderQueue,
 };

@@ -232,8 +232,8 @@ GitHub Actions automatically:
 ## 📈 Roadmap
 
 - [x] Project setup and architecture
-- [ ] Database models (Prisma + Mongoose)
-- [ ] Authentication system
+- [x] Database models (Prisma + Mongoose)
+- [x] Authentication system
 - [ ] Product catalog API
 - [ ] Shopping cart functionality
 - [ ] Order processing system
@@ -241,7 +241,6 @@ GitHub Actions automatically:
 - [ ] Admin dashboard
 - [ ] Image upload service
 - [ ] Search and filtering
-- [ ] Email notifications
 - [ ] Frontend application
 
 ## 🤝 Contributing

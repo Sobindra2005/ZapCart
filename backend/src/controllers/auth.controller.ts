@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient, UserStatus, UserRole } from '@/generated/prisma';
+import { UserStatus, UserRole } from '@/generated/prisma';
+import { prisma } from '@/config/prisma';
 import { hashPassword, comparePassword } from '@/utils/passwordUtils';
 import {
     generateAccessToken,
@@ -10,8 +11,6 @@ import {
 import config from '@/config/env';
 import AppError from '@/utils/AppError';
 import asyncHandler from '@/utils/asyncHandler';
-
-const prisma = new PrismaClient();
 
 /**
  * User signup/registration
@@ -182,7 +181,7 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
     }
 
     // 2. Verify refresh token signature
-    await verifyRefreshToken(refreshToken);
+       await verifyRefreshToken(refreshToken);
 
     // 3. Check if refresh token exists in database and is not expired
     const storedToken = await prisma.refreshToken.findUnique({
