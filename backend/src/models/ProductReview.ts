@@ -4,40 +4,81 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface IProductReview extends Document {
   product: mongoose.Types.ObjectId;
   user: mongoose.Types.ObjectId;
-  
+
   // Review Content
   rating: number;
   title?: string;
   comment: string;
-  
+
   // Media
   images?: string[];
-  
+
   // Verification
   isVerifiedPurchase: boolean;
   orderId?: mongoose.Types.ObjectId;
-  
+
   // Helpful votes
   helpfulCount: number;
   notHelpfulCount: number;
   helpfulVotes: mongoose.Types.ObjectId[]; // User IDs who voted helpful
-  
+
   // Moderation
   status: 'pending' | 'approved' | 'rejected';
   moderatorNote?: string;
   moderatedBy?: mongoose.Types.ObjectId;
   moderatedAt?: Date;
-  
+
   // Reply from seller/admin
   reply?: {
     content: string;
     repliedBy: mongoose.Types.ObjectId;
     repliedAt: Date;
   };
-  
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
+
+  // Virtuals
+  helpfulnessRatio: number;
+  isApproved: boolean;
+
+  // Instance methods
+  approve(moderatorId: string, note?: string): Promise<this>;
+  reject(moderatorId: string, note: string): Promise<this>;
+  addReply(content: string, userId: string): Promise<this>;
+  markHelpful(userId: string): Promise<this>;
+  markNotHelpful(): Promise<this>;
+}
+
+// Static methods interface
+export interface IProductReviewModel extends Model<IProductReview> {
+  getProductReviews(
+    productId: string,
+    options?: {
+      limit?: number;
+      skip?: number;
+      sort?: any;
+      rating?: number | null;
+      verifiedOnly?: boolean;
+    }
+  ): Promise<IProductReview[]>;
+
+  getRatingDistribution(productId: string): Promise<{
+    distribution: Array<{
+      rating: number;
+      count: number;
+      percentage: number;
+    }>;
+    totalReviews: number;
+  }>;
+
+  getUserReviews(
+    userId: string,
+    options?: { limit?: number; skip?: number }
+  ): Promise<IProductReview[]>;
+
+  hasUserReviewed(userId: string, productId: string): Promise<boolean>;
 }
 
 // Product Review Schema
@@ -55,7 +96,7 @@ const ProductReviewSchema = new Schema<IProductReview>(
       required: [true, 'User reference is required'],
       index: true
     },
-    
+
     // Review Content
     rating: {
       type: Number,
@@ -76,18 +117,18 @@ const ProductReviewSchema = new Schema<IProductReview>(
       minlength: [10, 'Comment must be at least 10 characters'],
       maxlength: [2000, 'Comment cannot exceed 2000 characters']
     },
-    
+
     // Media
     images: {
       type: [String],
       validate: {
-        validator: function(v: string[]) {
+        validator: function (v: string[]) {
           return v.length <= 5;
         },
         message: 'Cannot upload more than 5 images per review'
       }
     },
-    
+
     // Verification
     isVerifiedPurchase: {
       type: Boolean,
@@ -98,7 +139,7 @@ const ProductReviewSchema = new Schema<IProductReview>(
       type: Schema.Types.ObjectId,
       ref: 'Order'
     },
-    
+
     // Helpful votes
     helpfulCount: {
       type: Number,
@@ -114,7 +155,7 @@ const ProductReviewSchema = new Schema<IProductReview>(
       type: Schema.Types.ObjectId,
       ref: 'User'
     }],
-    
+
     // Moderation
     status: {
       type: String,
@@ -131,7 +172,7 @@ const ProductReviewSchema = new Schema<IProductReview>(
       ref: 'User'
     },
     moderatedAt: Date,
-    
+
     // Reply
     reply: {
       content: {
@@ -159,19 +200,19 @@ ProductReviewSchema.index({ user: 1, createdAt: -1 });
 ProductReviewSchema.index({ rating: 1, status: 1 });
 
 // Virtual for calculating helpfulness ratio
-ProductReviewSchema.virtual('helpfulnessRatio').get(function() {
+ProductReviewSchema.virtual('helpfulnessRatio').get(function () {
   const total = this.helpfulCount + this.notHelpfulCount;
   if (total === 0) return 0;
   return Math.round((this.helpfulCount / total) * 100);
 });
 
 // Virtual for checking if review is approved
-ProductReviewSchema.virtual('isApproved').get(function() {
+ProductReviewSchema.virtual('isApproved').get(function () {
   return this.status === 'approved';
 });
 
 // Pre-save validation: verify purchase if orderId is provided
-ProductReviewSchema.pre('save', async function(next) {
+ProductReviewSchema.pre('save', async function (next) {
   if (this.isNew && this.orderId) {
     const Order = mongoose.model('Order');
     const order = await Order.findOne({
@@ -179,14 +220,14 @@ ProductReviewSchema.pre('save', async function(next) {
       userId: this.user,
       status: { $in: ['delivered', 'completed'] }
     });
-    
+
     if (order) {
       // Check if product is in the order
       const orderItems = order.items || [];
-      const productInOrder = orderItems.some((item: any) => 
+      const productInOrder = orderItems.some((item: any) =>
         item.product.toString() === this.product.toString()
       );
-      
+
       if (productInOrder) {
         this.isVerifiedPurchase = true;
       }
@@ -197,21 +238,21 @@ ProductReviewSchema.pre('save', async function(next) {
 });
 
 // Post-save middleware to update product rating
-ProductReviewSchema.post('save', async function(doc) {
+ProductReviewSchema.post('save', async function (doc) {
   if (doc.status === 'approved') {
     const Product = mongoose.model('Product');
     const product = await Product.findById(doc.product);
-    
+
     if (product) {
       // Recalculate average rating
       const reviews = await mongoose.model('ProductReview').find({
         product: doc.product,
         status: 'approved'
       });
-      
+
       const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
       const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
-      
+
       product.averageRating = Math.round(avgRating * 10) / 10; // Round to 1 decimal
       product.reviewCount = reviews.length;
       await product.save();
@@ -220,19 +261,19 @@ ProductReviewSchema.post('save', async function(doc) {
 });
 
 // Post-remove middleware to update product rating
-ProductReviewSchema.post('deleteOne', { document: true, query: false }, async function(doc) {
+ProductReviewSchema.post('deleteOne', { document: true, query: false }, async function (doc) {
   const Product = mongoose.model('Product');
   const product = await Product.findById(doc.product);
-  
+
   if (product) {
     const reviews = await mongoose.model('ProductReview').find({
       product: doc.product,
       status: 'approved'
     });
-    
+
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
-    
+
     product.averageRating = Math.round(avgRating * 10) / 10;
     product.reviewCount = reviews.length;
     await product.save();
@@ -240,31 +281,31 @@ ProductReviewSchema.post('deleteOne', { document: true, query: false }, async fu
 });
 
 // Static method to get reviews for a product
-ProductReviewSchema.statics.getProductReviews = function(
+ProductReviewSchema.statics.getProductReviews = function (
   productId: string,
   options: any = {}
 ) {
-  const { 
-    limit = 10, 
-    skip = 0, 
+  const {
+    limit = 10,
+    skip = 0,
     sort = { createdAt: -1 },
     rating = null,
     verifiedOnly = false
   } = options;
-  
+
   const query: any = {
     product: productId,
     status: 'approved'
   };
-  
+
   if (rating) {
     query.rating = rating;
   }
-  
+
   if (verifiedOnly) {
     query.isVerifiedPurchase = true;
   }
-  
+
   return this.find(query)
     .populate('user', 'name email')
     .sort(sort)
@@ -273,10 +314,10 @@ ProductReviewSchema.statics.getProductReviews = function(
 };
 
 // Static method to get rating distribution for a product
-ProductReviewSchema.statics.getRatingDistribution = async function(productId: string) {
+ProductReviewSchema.statics.getRatingDistribution = async function (productId: string) {
   const distribution = await this.aggregate([
-    { 
-      $match: { 
+    {
+      $match: {
         product: new mongoose.Types.ObjectId(productId),
         status: 'approved'
       }
@@ -291,7 +332,7 @@ ProductReviewSchema.statics.getRatingDistribution = async function(productId: st
       $sort: { _id: -1 }
     }
   ]);
-  
+
   // Create a full distribution (1-5 stars)
   const fullDistribution = [5, 4, 3, 2, 1].map(rating => {
     const found = distribution.find(d => d._id === rating);
@@ -300,9 +341,9 @@ ProductReviewSchema.statics.getRatingDistribution = async function(productId: st
       count: found ? found.count : 0
     };
   });
-  
+
   const totalReviews = fullDistribution.reduce((sum, item) => sum + item.count, 0);
-  
+
   return {
     distribution: fullDistribution.map(item => ({
       ...item,
@@ -313,9 +354,9 @@ ProductReviewSchema.statics.getRatingDistribution = async function(productId: st
 };
 
 // Static method to get user's reviews
-ProductReviewSchema.statics.getUserReviews = function(userId: string, options: any = {}) {
+ProductReviewSchema.statics.getUserReviews = function (userId: string, options: any = {}) {
   const { limit = 10, skip = 0 } = options;
-  
+
   return this.find({ user: userId })
     .populate('product', 'name images slug')
     .sort({ createdAt: -1 })
@@ -324,7 +365,7 @@ ProductReviewSchema.statics.getUserReviews = function(userId: string, options: a
 };
 
 // Static method to check if user has already reviewed a product
-ProductReviewSchema.statics.hasUserReviewed = async function(
+ProductReviewSchema.statics.hasUserReviewed = async function (
   userId: string,
   productId: string
 ) {
@@ -332,65 +373,65 @@ ProductReviewSchema.statics.hasUserReviewed = async function(
     user: userId,
     product: productId
   });
-  
+
   return !!review;
 };
 
 // Instance method to approve review
-ProductReviewSchema.methods.approve = async function(moderatorId: string, note?: string) {
+ProductReviewSchema.methods.approve = async function (moderatorId: string, note?: string) {
   this.status = 'approved';
   this.moderatedBy = new mongoose.Types.ObjectId(moderatorId);
   this.moderatedAt = new Date();
   if (note) this.moderatorNote = note;
-  
+
   return this.save();
 };
 
 // Instance method to reject review
-ProductReviewSchema.methods.reject = async function(moderatorId: string, note: string) {
+ProductReviewSchema.methods.reject = async function (moderatorId: string, note: string) {
   this.status = 'rejected';
   this.moderatedBy = new mongoose.Types.ObjectId(moderatorId);
   this.moderatedAt = new Date();
   this.moderatorNote = note;
-  
+
   return this.save();
 };
 
 // Instance method to add reply
-ProductReviewSchema.methods.addReply = async function(content: string, userId: string) {
+ProductReviewSchema.methods.addReply = async function (content: string, userId: string) {
   this.reply = {
     content,
     repliedBy: new mongoose.Types.ObjectId(userId),
     repliedAt: new Date()
   };
-  
+
   return this.save();
 };
 
 // Instance method to mark as helpful
-ProductReviewSchema.methods.markHelpful = async function(userId: string) {
+ProductReviewSchema.methods.markHelpful = async function (userId: string) {
   const userIdObj = new mongoose.Types.ObjectId(userId);
-  
+
   // Check if user already voted
   const hasVoted = this.helpfulVotes.some((id: mongoose.Types.ObjectId) => id.equals(userIdObj));
-  
+
   if (!hasVoted) {
     this.helpfulVotes.push(userIdObj);
     this.helpfulCount += 1;
     await this.save();
   }
-  
+
   return this;
 };
 
 // Instance method to mark as not helpful
-ProductReviewSchema.methods.markNotHelpful = async function() {
+ProductReviewSchema.methods.markNotHelpful = async function () {
   this.notHelpfulCount += 1;
   return this.save();
 };
 
 // Model
-const ProductReview: Model<IProductReview> = mongoose.model<IProductReview>(
+const ProductReview = mongoose.model<IProductReview, IProductReviewModel>(
   'ProductReview',
   ProductReviewSchema
 );

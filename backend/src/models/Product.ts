@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import { QueueService } from 'service/queueService/searchIndexService';
 
 // Product Variant Interface
 export interface IProductVariant {
@@ -381,7 +382,6 @@ ProductSchema.post('save', async function (doc) {
   try {
     // Only sync active products or when deleting (status change)
     if (doc.status === 'active' || (doc.isModified && doc.isModified('status'))) {
-      const { QueueService } = await import('@/service/queueService/searchIndexService');
       await QueueService.syncProductToSearchIndex(doc._id.toString());
     }
   } catch (error) {

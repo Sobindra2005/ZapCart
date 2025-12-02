@@ -8,6 +8,7 @@ import categoryRoutes from './categoryRoutes';
 import productRoutes from './productRoutes';
 import searchRoutes from './searchRoutes';
 import testRoutes from './testRoutes';
+import productReviewRoutes from './productReviewRoutes';
 
 const router = express.Router();
 
@@ -39,6 +40,9 @@ router.use('/products', productRoutes);
 
 // Search routes
 router.use('/search', searchRoutes);
+
+// Product review routes
+router.use('/reviews', productReviewRoutes);
 
 // Test routes (for verifying auth functionality)
 router.use('/test', testRoutes);
