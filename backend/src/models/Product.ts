@@ -83,6 +83,19 @@ export interface IProduct extends Document {
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
+
+  // Instance methods
+  incrementViews(): Promise<this>;
+  updateRating(newRating: number, isNew?: boolean): Promise<this>;
+}
+
+// Product Model Interface with static methods
+export interface IProductModel extends Model<IProduct> {
+  findFeatured(limit?: number): Promise<IProduct[]>;
+  findByCategory(
+    categoryId: string,
+    options?: { limit?: number; skip?: number; sort?: any }
+  ): Promise<IProduct[]>;
 }
 
 // Product Schema
@@ -444,6 +457,6 @@ ProductSchema.methods.updateRating = function (newRating: number, isNew: boolean
 };
 
 // Model
-const Product: Model<IProduct> = mongoose.model<IProduct>('Product', ProductSchema);
+const Product = mongoose.model<IProduct, IProductModel>('Product', ProductSchema);
 
 export default Product;

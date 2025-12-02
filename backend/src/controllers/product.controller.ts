@@ -150,14 +150,8 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response) =
  * GET /api/v1/products/featured
  */
 export const getFeaturedProducts = asyncHandler(async (_req: Request, res: Response) => {
-    const products = await Product.find({
-        status: 'active',
-        visibility: 'featured',
-    })
-        .sort({ salesCount: -1, averageRating: -1 })
-        .limit(10)
-        .populate('category', 'name slug')
-        .lean();
+    // Use static method from Product model
+    const products = await Product.findFeatured(10);
 
     res.status(200).json({
         status: 'success',
@@ -178,16 +172,13 @@ export const getProductsByCategory = asyncHandler(async (req: Request, res: Resp
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
 
+    // Use static method from Product model
     const [products, total] = await Promise.all([
-        Product.find({
-            category: categoryId,
-            status: 'active',
-            visibility: { $in: ['public', 'featured'] },
-        })
-            .sort(sort as string)
-            .limit(limitNum)
-            .skip(skip)
-            .lean(),
+        Product.findByCategory(categoryId, {
+            limit: limitNum,
+            skip,
+            sort: sort as string
+        }),
         Product.countDocuments({
             category: categoryId,
             status: 'active',
@@ -572,15 +563,14 @@ export const bulkDeleteProducts = asyncHandler(async (req: Request, res: Respons
 export const incrementProductViews = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    const product = await Product.findByIdAndUpdate(
-        id,
-        { $inc: { viewCount: 1 } },
-        { new: true }
-    );
+    const product = await Product.findById(id);
 
     if (!product) {
         throw new AppError('Product not found', 404);
     }
+
+    // Use instance method from Product model
+    await product.incrementViews();
 
     res.status(200).json({
         status: 'success',
@@ -606,15 +596,8 @@ export const updateProductRating = asyncHandler(async (req: Request, res: Respon
         throw new AppError('Product not found', 404);
     }
 
-    // Update rating
-    if (isNew) {
-        product.averageRating = ((product.averageRating * product.reviewCount) + rating) / (product.reviewCount + 1);
-        product.reviewCount += 1;
-    } else {
-        product.averageRating = rating;
-    }
-
-    await product.save();
+    // Use instance method from Product model
+    await product.updateRating(rating, isNew);
 
     res.status(200).json({
         status: 'success',

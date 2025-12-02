@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import { QueueService } from 'service/queueService/searchIndexService';
 
 // Category Interface
 export interface ICategory extends Document {
@@ -211,6 +212,30 @@ CategorySchema.post('save', async function (doc) {
         child.ancestors = [...doc.ancestors, doc._id];
         child.level = doc.level + 1;
         await child.save();
+    }
+});
+
+// Post-save hook to sync to search index
+CategorySchema.post('save', async function (doc) {
+    try {
+        // Sync active categories or when status changes
+        if (doc.isActive || (doc.isModified && doc.isModified('isActive'))) {
+            await QueueService.syncCategoryToSearchIndex(doc._id.toString());
+        }
+    } catch (error) {
+        console.error('Error syncing category to search index:', error);
+        // Don't throw - sync failures shouldn't block category saves
+    }
+});
+
+// Post-delete hook to remove from search index
+CategorySchema.post('deleteOne', { document: true, query: false }, async function (doc) {
+    try {
+        const SearchIndex = (await import('@/models/SearchIndex')).default;
+        await SearchIndex.deleteOne({ entityType: 'category', entityId: doc._id });
+        console.log(`Removed category ${doc._id} from search index`);
+    } catch (error) {
+        console.error('Error removing category from search index:', error);
     }
 });
 
