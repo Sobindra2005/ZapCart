@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UserStatus, UserRole } from '@prisma/client';
+import { UserStatus, UserRole } from '@/generated/prisma';
 import { prisma } from '@/config/prisma';
 import { hashPassword, comparePassword } from '@/utils/passwordUtils';
 import {

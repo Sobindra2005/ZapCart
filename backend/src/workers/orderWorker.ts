@@ -2,7 +2,7 @@ import { Worker, Job } from 'bullmq';
 import { config } from '@/config/env';
 import { QueueName } from '@/config/queue';
 import { prisma } from '@/config/prisma';
-import { OrderStatus, InventoryAction } from '@prisma/client';
+import { OrderStatus, InventoryAction } from '@/generated/prisma';
 
 interface OrderJobData {
     orderId: number;

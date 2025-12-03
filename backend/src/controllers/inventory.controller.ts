@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '@/config/prisma';
 import AppError from '@/utils/AppError';
 import asyncHandler from '@/utils/asyncHandler';
-import { InventoryAction } from '@prisma/client';
+import { InventoryAction } from '@/generated/prisma';
 
 /**
  * Get Inventory for a Product

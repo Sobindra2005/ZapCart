@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '@/config/prisma';
 import AppError from '@/utils/AppError';
 import asyncHandler from '@/utils/asyncHandler';
-import { OrderStatus, PaymentStatus, PaymentMethod, InventoryAction } from '@prisma/client';
+import { OrderStatus, PaymentStatus, PaymentMethod, InventoryAction } from '@/generated/prisma';
 import { redis } from '@/config/redis';
 import { orderQueue } from '@/config/queue';
 import { DELIVERY_ESTIMATE_KEY, REDIS_DELIVERY_KEY } from './settings.controller';
