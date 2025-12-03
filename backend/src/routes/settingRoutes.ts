@@ -4,7 +4,7 @@ import {
     getDeliveryEstimate,
 } from '@/controllers/settings.controller';
 import { protect, restrictTo } from '@/middlewares/authMiddleware';
-import { UserRole } from '@/generated/prisma';
+import { UserRole } from '@prisma/client';
 
 const router = express.Router();
 
