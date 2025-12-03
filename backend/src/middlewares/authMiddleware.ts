@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserStatus } from '@/generated/prisma';
+import { UserStatus } from '@prisma/client';
 import { prisma } from '@/config/prisma';
 import { verifyAccessToken, JwtPayload } from '@/utils/jwtUtils';
 import AppError from '@/utils/AppError';
