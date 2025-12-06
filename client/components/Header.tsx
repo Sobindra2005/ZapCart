@@ -15,48 +15,44 @@ export function Header() {
         <header className="sticky top-0 z-50 w-full border-b bg-white">
             <MainContainer className="container flex h-16 items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center ">
+                <Link href="/" className="hidden   md:flex items-center ">
                     <div className="flex h-14 w-42 items-center justify-center">
                         <Image src="/logo.png" alt="Logo" width={168} height={56} />
                     </div>
                 </Link>
 
                 {/* Navigation */}
-                <nav className="hidden items-center gap-6 md:flex flex-1 max-w-3xl">
-                    <button className="flex items-center gap-1 text-sm font-medium hover:text-emerald-600 transition-colors whitespace-nowrap">
+                <nav className="items-center gap-6 flex flex-1 max-w-3xl">
+                    <button className="hidden md:flex items-center gap-1 text-sm font-medium hover:text-emerald-600 transition-colors whitespace-nowrap">
                         Categories
                         <ChevronDown className="h-4 w-4" />
                     </button>
-                    
+
                     <div className="flex items-center gap-6 flex-1">
-                        <Link 
-                            href="/deals" 
-                            className={`text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${
-                                isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                            }`}
+                        <Link
+                            href="/deals"
+                            className={`hidden md:flex text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                                }`}
                         >
                             Deals
                         </Link>
-                        <Link 
-                            href="/new" 
-                            className={`text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${
-                                isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                            }`}
+                        <Link
+                            href="/new"
+                            className={`hidden md:flex text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                                }`}
                         >
                             What&apos;s New
                         </Link>
-                        <Link 
-                            href="/delivery" 
-                            className={`text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${
-                                isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                            }`}
+                        <Link
+                            href="/delivery"
+                            className={`hidden md:flex text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                                }`}
                         >
                             Delivery
                         </Link>
 
-                        <div className={`hidden flex-1  lg:block transition-all duration-300 ${
-                            isSearchFocused ? 'ml-0' : 'ml-8'
-                        }`}>
+                        <div className={` flex-1  lg:block transition-all duration-300 ${isSearchFocused ? 'ml-0' : 'ml-8'
+                            }`}>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
@@ -88,3 +84,6 @@ export function Header() {
         </header>
     );
 }
+
+
+// function 
