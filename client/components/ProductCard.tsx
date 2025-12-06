@@ -16,8 +16,8 @@ export function ProductCard({ product }: ProductCardProps) {
     const [isFavorite, setIsFavorite] = useState(false);
 
     return (
-        <Card className="group overflow-hidden transition-all hover:shadow-lg">
-            <CardContent className="p-4">
+        <Card className="group overflow-hidden transition-all  ">
+            <CardContent className="p-4 cursor-pointer"> 
                 {/* Image Container */}
                 <div className="relative aspect-square mb-4 bg-gray-50 rounded-lg overflow-hidden">
                     {/* Placeholder for product image */}

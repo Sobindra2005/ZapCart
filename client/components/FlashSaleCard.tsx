@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MainContainer } from "./wrapper";
 
 export function FlashSaleCard() {
     const [timeLeft, setTimeLeft] = useState({
@@ -37,8 +38,8 @@ export function FlashSaleCard() {
     }, []);
 
     return (
-        <section className="container mx-auto px-4 py-8">
-            <Card className="overflow-hidden border-0 shadow-2xl">
+        <MainContainer spacing={true}>
+            <Card className="overflow-hidden border-0">
                 <CardContent className="p-0">
                     <div className="relative bg-linear-to-r from-red-500 via-orange-500 to-orange-400 rounded-2xl overflow-hidden">
                         {/* Background Image with Overlay */}
@@ -101,19 +102,19 @@ export function FlashSaleCard() {
                             {/* Right Side - Product Image */}
                             <div className="relative flex items-center justify-center">
                                 <div className="relative w-full h-[300px] lg:h-[400px]">
-                                    <Image
+                                    {/* <Image
                                         src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80"
                                         alt="Featured Product"
                                         fill
                                         className="object-contain drop-shadow-2xl"
                                         priority
-                                    />
+                                    /> */}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
-        </section>
+        </MainContainer>
     );
 }
