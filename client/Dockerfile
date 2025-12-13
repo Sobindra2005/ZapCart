@@ -14,9 +14,7 @@ COPY . .
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Enable file watching for hot reload (important for Docker on Windows)
-ENV WATCHPACK_POLLING=true
-ENV CHOKIDAR_USEPOLLING=true
+
 
 EXPOSE 3000
 

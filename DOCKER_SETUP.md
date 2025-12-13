@@ -13,8 +13,10 @@ docker compose build
 
 ### 3. Start Services
 ```bash
-docker compose up -d
+docker compose up --watch
 ```
+> **Note:** The `--watch` flag is required for hot reloading to work. It enables the file sync between your host and the container.
+
 
 ### 4. Check Status
 ```bash
@@ -47,7 +49,9 @@ docker compose restart client
 docker compose down
 
 # Rebuild and restart
-docker compose up -d --build
+# Rebuild and restart
+docker compose up --watch --build
+
 ```
 
 ## 🔧 Troubleshooting
