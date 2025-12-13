@@ -70,9 +70,10 @@ services:
     container_name: ecommerce-client
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost/api
       - API_URL=http://backend:8080/api
+
     ports:
       - "3000:3000"
     depends_on:
@@ -80,6 +81,34 @@ services:
         condition: service_healthy
     networks:
       - ecommerce-network
+
+    develop:
+      watch:
+        - action: sync
+          path: ./client/app
+          target: /app/app
+          ignore:
+            - node_modules
+        - action: sync
+          path: ./client/components
+          target: /app/components
+          ignore:
+            - node_modules
+        - action: sync
+          path: ./client/contexts
+          target: /app/contexts
+        - action: sync
+          path: ./client/lib
+          target: /app/lib
+        - action: sync
+          path: ./client/types
+          target: /app/types
+        - action: sync
+          path: ./client/public
+          target: /app/public
+        - action: rebuild
+          path: ./client/package.json
+
     healthcheck:
       test:
         [
