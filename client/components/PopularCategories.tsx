@@ -2,23 +2,16 @@
 
 import { popularCategories } from "@/data/categories";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
 import { MainContainer } from "./wrapper";
+import { SectionHeader, SectionViewAllMobile } from "./SectionHeader";
 
 export function PopularCategories() {
     return (
         <MainContainer className="container" spacing={true}>
-            <div className="flex items-center  justify-between mb-6">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                        Popular Categories
-                    </h2>
-                </div>
-                <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors">
-                    View All
-                    <ArrowRight className="w-4 h-4" />
-                </button>
-            </div>
+            <SectionHeader
+                title="Popular Categories"
+                viewAllLink="/categories"
+            />
 
             <div className="grid grid-cols-5 auto-rows-fr gap-2 md:gap-4 border-black" style={{ aspectRatio: '5/2' }}>
                 {popularCategories.slice(0, 6).map((category, index) => {
@@ -68,10 +61,7 @@ export function PopularCategories() {
                 })}
             </div>
 
-            <button className="sm:hidden flex items-center justify-center gap-2 w-full mt-6 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                View All Categories
-                <ArrowRight className="w-4 h-4" />
-            </button>
+            <SectionViewAllMobile href="/categories" text="View All Categories" />
         </MainContainer>
     );
 }

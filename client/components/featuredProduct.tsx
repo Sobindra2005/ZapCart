@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { MainContainer } from "./wrapper"
+import { SectionHeader } from "./SectionHeader"
 
 export function FeaturedProducts() {
     const heroProduct = {
@@ -23,7 +24,7 @@ export function FeaturedProducts() {
 
     return (
         <MainContainer spacing={true}>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground ">Featured Products</h2>
+            <SectionHeader title="Featured Products" viewAllLink="/products" />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Large Featured Product */}

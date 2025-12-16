@@ -4,13 +4,14 @@ import { useState } from "react";
 import { Product } from "@/types/product";
 import { ProductCard } from "@/components/ProductCard";
 import { MainContainer } from "./wrapper";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { SortSelect, SortOption } from "@/components/SortSelect";
+
+// Custom sort options for offers page
+const offerSortOptions: SortOption[] = [
+    { value: "relevance", label: "Relevance" },
+    { value: "price-asc", label: "Price: Low to High" },
+    { value: "price-desc", label: "Price: High to Low" },
+];
 
 interface OfferProductListProps {
     title: string;
@@ -41,17 +42,11 @@ export function OfferProductList({ title, products }: OfferProductListProps) {
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{title}</h1>
 
                     <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-500 whitespace-nowrap">Sort by:</span>
-                        <Select value={sortOption} onValueChange={setSortOption}>
-                            <SelectTrigger className="w-[180px] bg-white">
-                                <SelectValue placeholder="Sort by" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="relevance">Relevance</SelectItem>
-                                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <SortSelect
+                            options={offerSortOptions}
+                            value={sortOption}
+                            onValueChange={setSortOption}
+                        />
                     </div>
                 </div>
 

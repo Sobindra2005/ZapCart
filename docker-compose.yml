@@ -81,6 +81,7 @@ services:
         condition: service_healthy
     networks:
       - ecommerce-network
+
     develop:
       watch:
         - action: sync
@@ -105,6 +106,7 @@ services:
         - action: sync
           path: ./client/public
           target: /app/public
+          
         - action: rebuild
           path: ./client/package.json
 

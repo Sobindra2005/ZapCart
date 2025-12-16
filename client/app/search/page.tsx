@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { mockProducts } from "@/data/mockSearchData";
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
+import { SortSelect, productSortOptions } from "@/components/SortSelect";
 
 export default function SearchPage() {
     const [filters, setFilters] = useState({
@@ -18,6 +19,7 @@ export default function SearchPage() {
         tags: [] as string[]
     });
 
+    const [sortBy, setSortBy] = useState("popular");
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
     const filteredProducts = useMemo(() => {
@@ -93,7 +95,7 @@ export default function SearchPage() {
                 )}
 
                 {/* Desktop Sidebar */}
-                <aside className="hidden md:block w-64 flex-shrink-0">
+                <aside className="hidden md:block w-64 shrink-0">
                     <div className="sticky top-20">
                         <FilterSidebar onFilterChange={setFilters} />
                     </div>
@@ -108,16 +110,13 @@ export default function SearchPage() {
                             Showing {filteredProducts.length} results
                         </p>
 
-                        {/* Sort Dropdown (Mock UI) */}
-                        <div className="flex items-center gap-2 ml-auto">
-                            <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
-                            <select className="h-9 w-[180px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-                                <option value="popular">Most Popular</option>
-                                <option value="newest">Newest</option>
-                                <option value="price-asc">Price: Low to High</option>
-                                <option value="price-desc">Price: High to Low</option>
-                            </select>
-                        </div>
+                        {/* Sort Dropdown */}
+                        <SortSelect
+                            options={productSortOptions}
+                            value={sortBy}
+                            onValueChange={setSortBy}
+                            className="ml-auto"
+                        />
                     </div>
 
                     {/* Product Grid */}

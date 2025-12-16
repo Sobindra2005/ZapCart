@@ -1,16 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function ProductNotFound() {
     return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-            <div className="relative mb-6 h-64 w-64 sm:h-80 sm:w-80">
+        <div className=" flex items-center justify-center px-4 ">
+            <div className="relative w-72 h-72 sm:w-96 sm:h-96 md:w-[500px] md:h-[500px] lg:w-[600px] lg:h-[600px]">
                 <Image
                     src="/images/product-not-found.png"
-                    alt="Product Not Found"
+                    alt="Product Not Found" 
                     fill
                     className="object-contain"
                     priority
