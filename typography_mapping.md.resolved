@@ -1,0 +1,48 @@
+# Semantic Typography Mapping
+
+This document outlines the semantic typography configuration defined in [globals.css](file:///d:/Personal%20Projects/Ecommerce/client/app/globals.css) and provides guidelines for their usage across Desktop and Mobile views.
+
+## Configuration Table
+
+| Semantic Label | CSS Variable | Size (`rem`) | Size (`px` approx) | Intended Use Case | Mobile Strategy |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Hero Title** | `--text-title-hero` | `4.5rem` | `72px` | Massive landing page headlines (e.g., Homepage Hero). | **Switch Class:** Use `text-title-1` or `text-title-2` on mobile. |
+| **Title 1** | `--text-title-1` | `3.5rem` | `56px` | Major section titles, feature highlights. | **Switch Class:** Use `text-header-1` on mobile. |
+| **Title 2** | `--text-title-2` | `2.5rem` | `40px` | Secondary titles, large modal headers. | **Switch Class:** Use `text-header-1` or `text-header-2` on mobile. |
+| **Header 1** | `--text-header-1` | `2rem` | `32px` | **Page Titles** (e.g., "Login", "Search Results"). Standard top-level heading. | **Switch Class:** Often becomes `text-header-2` (`1rem` - `1.5rem`) on mobile to avoid wrapping. |
+| **Header 2** | `--text-header-2` | `1rem` | `16px` | **Section Headings** inside pages, Card Titles, or Important Labels. | **Keep same** or scale down to `text-body-large` if needed. |
+| **Subheader** | `--text-subheader` | `1.25rem` | `20px` | Subtitles, descriptive text below headers, accented text. | **Keep same** or use `text-body`. |
+| **Body Large** | `--text-body-large` | `1.125rem` | `18px` | Lead paragraphs, introductory text, or emphasized body content. | **Keep same**. |
+| **Body** | `--text-body` | `1rem` | `16px` | **Standard Default Text**. Used for inputs, paragraphs, comfortable reading. | **Keep same**. `16px` is the standard minimum for readable inputs on mobile. |
+| **Body Small** | `--text-body-small` | `0.875rem` | `14px` | Secondary text, hints, meta-data, dense informational lists. | **Keep same**. |
+| **Caption** | `--text-caption` | `0.75rem` | `12px` | Tiny labels, legal text, timestamps, footer links. | **Keep same**. |
+
+## Usage Guidelines
+
+### 1. Responsive Headings
+Since the variables define *fixed* sizes, you should handle Mobile responsiveness by **switching classes** using Tailwind's responsive modifiers (`md:`, `lg:`).
+
+**Example: Responsive Page Title**
+```tsx
+// Mobile: Header 2 (Smaller)
+// Desktop: Header 1 (Standard)
+<h1 className="text-header-2 md:text-header-1 font-bold">
+    Welcome Back!
+</h1>
+```
+
+### 2. Standard Body Text
+For standard readable text (inputs, long paragraphs), always default to `text-body` (`1rem / 16px`). This prevents iOS from zooming in on inputs.
+```tsx
+<p className="text-body text-muted-foreground">
+   Sign in to access your cart.
+</p>
+```
+
+### 3. Subtitles & Hints
+Use `text-body-small` or `text-caption` for helper text that shouldn't distract from the main content.
+```tsx
+<p className="text-caption text-muted-foreground/60">
+    Join millions of shoppers.
+</p>
+```

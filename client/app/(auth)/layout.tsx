@@ -7,15 +7,15 @@ export default function AuthLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="w-full lg:grid lg:grid-cols-2">
+        <div className="w-full min-h-svh lg:grid lg:grid-cols-2">
             {/* Left Side - Form Area */}
-            <div className="flex flex-col justify-center px-8 py-12 md:px-12 lg:px-16 xl:px-24">
+            <div className="flex flex-col justify-center px-6 py-12 md:px-12 lg:px-16 xl:px-24">
                 <div className="mx-auto w-full max-w-[440px]">
 
 
                     {children}
 
-                    <p className="mt-8 text-center text-xs text-muted-foreground/60">
+                    <p className="mt-8 text-center text-caption text-muted-foreground/60">
                         Join the millions of satisfied shoppers who trust ZapCart.
                         Log in to manage your orders and discover new products. {/* Updated text for ecommerce */}
                     </p>

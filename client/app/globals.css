@@ -40,6 +40,29 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Semantic Typography */
+  --text-title-hero: 4.5rem;
+  --text-title-hero--line-height: 1;
+  --text-title-1: 3.5rem;
+  --text-title-1--line-height: 1.1;
+  --text-title-2: 2.5rem;
+  --text-title-2--line-height: 1.2;
+  --text-header-1: 2rem;
+  --text-header-1--line-height: 1.25;
+  --text-header-2: 1rem;
+  --text-header-2--line-height: 1.3;
+  --text-subheader: 1.25rem;
+  --text-subheader--line-height: 1.4;
+  --text-body-large: 1.125rem;
+  --text-body-large--line-height: 1.5;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-body-small: 0.875rem;
+  --text-body-small--line-height: 1.5;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.5;
 }
 
 :root {

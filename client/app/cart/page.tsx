@@ -1,11 +1,9 @@
 "use client";
 
-import { ArrowLeft, ShoppingCart, ShoppingBag, Receipt } from "lucide-react";
-import Link from "next/link";
+import { ShoppingCart, ShoppingBag, Receipt } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartItem } from "@/components/CartItem";
 import { OrderSummary } from "@/components/OrderSummary";
-import { Button } from "@/components/ui/button";
 
 export default function CartPage() {
     const { items, updateQuantity, removeFromCart, getSubtotal } = useCart();
@@ -58,15 +56,15 @@ export default function CartPage() {
                         <p className="text-gray-600 mb-8 text-center">
                             Looks like you haven’t added anything to your cart yet. Start exploring our products!
                         </p>
-                       
+
                     </div>
                 ) : (
-                    <div className="flex gap-8 ">
+                    <div className="flex flex-col lg:flex-row gap-8">
                         {/* Cart Items */}
                         <div className="bg-white rounded-lg p-6 w-full">
                             <div className="flex items-center justify-between mb-6">
-                                <h1 className="text-2xl font-bold">Product</h1>
-                                <span className="text-xl font-bold">Total</span>
+                                <h1 className="text-header-1 font-bold">Product</h1>
+                                <span className="text-header-2 font-bold">Total</span>
                             </div>
 
                             <div className="space-y-0">
@@ -80,7 +78,9 @@ export default function CartPage() {
                                 ))}
                             </div>
                         </div>
-                        <OrderSummary subtotal={getSubtotal()} />
+                        <div className="w-full lg:w-[380px] shrink-0">
+                            <OrderSummary subtotal={getSubtotal()} />
+                        </div>
                     </div>
                 )}
             </div>

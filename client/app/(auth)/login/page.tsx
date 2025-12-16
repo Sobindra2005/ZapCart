@@ -38,8 +38,8 @@ export default function LoginPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="text-center md:text-left">
-                <h1 className="text-3xl font-bold">Welcome Back!</h1>
-                <p className="text-muted-foreground mt-2">Sign in to access your cart, orders, and exclusive deals</p>
+                <h1 className="text-header-2 md:text-header-1 font-bold">Welcome Back!</h1>
+                <p className="text-body-small md:text-body text-muted-foreground mt-2">Sign in to access your cart, orders, and exclusive deals</p>
             </div>
 
             {/* Toggle Button */}

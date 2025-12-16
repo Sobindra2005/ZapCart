@@ -50,8 +50,8 @@ export default function SignupPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="text-center md:text-left">
-                <h1 className="text-3xl font-bold">Join Our Store</h1>
-                <p className="text-muted-foreground mt-2">Create an account to start shopping and enjoy exclusive offers</p>
+                <h1 className="text-header-2 md:text-header-1 font-bold">Join Our Store</h1>
+                <p className="text-body-small md:text-body text-muted-foreground mt-2">Create an account to start shopping and enjoy exclusive offers</p>
             </div>
 
             {/* Toggle Button */}

@@ -62,7 +62,7 @@ export default function SearchPage() {
 
                 {/* Mobile Filter Button */}
                 <div className="md:hidden mb-4 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Search Results</h1>
+                    <h1 className="text-header-2 font-bold">Search Results</h1>
                     <Button
                         variant="outline"
                         size="sm"
@@ -79,9 +79,9 @@ export default function SearchPage() {
                     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden">
                         <div className="fixed inset-y-0 right-0 z-50 h-full w-3/4 bg-background border-l p-6 shadow-lg sm:max-w-sm overflow-y-auto">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-lg font-semibold">Filters</h2>
+                                <h2 className="text-subheader font-semibold">Filters</h2>
                                 <Button variant="ghost" size="icon" onClick={() => setIsMobileFiltersOpen(false)}>
-                                    <span className="text-xl">×</span>
+                                    <span className="text-header-2">×</span>
                                 </Button>
                             </div>
                             <FilterSidebar onFilterChange={setFilters} />
@@ -105,8 +105,8 @@ export default function SearchPage() {
                 <main className="flex-1">
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                        <h1 className="text-3xl font-bold hidden md:block">Search Results</h1>
-                        <p className="text-muted-foreground">
+                        <h1 className="text-header-1 font-bold hidden md:block">Search Results</h1>
+                        <p className="text-body text-muted-foreground">
                             Showing {filteredProducts.length} results
                         </p>
 
@@ -121,7 +121,7 @@ export default function SearchPage() {
 
                     {/* Product Grid */}
                     {filteredProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {filteredProducts.map((product) => (
                                 <ProductCard key={product.id} product={product} />
                             ))}
@@ -134,10 +134,11 @@ export default function SearchPage() {
                                     alt="No Results Found"
                                     fill
                                     className="object-contain"
+                                    priority
                                 />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2">No results found</h3>
-                            <p className="text-muted-foreground mb-6 max-w-sm">
+                            <h3 className="text-header-2 font-semibold mb-2">No results found</h3>
+                            <p className="text-body text-muted-foreground mb-6 max-w-sm">
                                 We couldn't find any products matching your search. Try checking for typos or using different keywords.
                             </p>
                             <Button
