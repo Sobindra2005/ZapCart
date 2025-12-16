@@ -7,22 +7,17 @@ export default function AuthLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen w-full lg:grid lg:grid-cols-2">
+        <div className="w-full lg:grid lg:grid-cols-2">
             {/* Left Side - Form Area */}
             <div className="flex flex-col justify-center px-8 py-12 md:px-12 lg:px-16 xl:px-24">
                 <div className="mx-auto w-full max-w-[440px]">
-                    <div className="mb-8 flex items-center gap-2">
-                        <div className="flex items-center gap-2 font-bold text-xl">
-                            <IoShieldCheckmarkSharp className="h-7 w-7 text-blue-600" />
-                            <span>SmartSave</span>
-                        </div>
-                    </div>
+
 
                     {children}
 
                     <p className="mt-8 text-center text-xs text-muted-foreground/60">
-                        Join the millions of smart investors who trust us to manage their finances.
-                        Log in to access your personalized dashboard.
+                        Join the millions of satisfied shoppers who trust ZapCart.
+                        Log in to manage your orders and discover new products. {/* Updated text for ecommerce */}
                     </p>
                 </div>
             </div>
