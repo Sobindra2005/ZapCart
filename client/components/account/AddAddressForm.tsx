@@ -12,7 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { MapPin } from "lucide-react";
+import { FaExclamationCircle } from "react-icons/fa";
 
 interface AddAddressFormProps {
     open: boolean;
@@ -79,22 +86,37 @@ export function AddAddressForm({ open, onOpenChange, onSubmit }: AddAddressFormP
                         <FormField
                             control={form.control}
                             name="type"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <FormItem>
                                     <FormLabel>Address Type</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select address type" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="Home">Home</SelectItem>
-                                            <SelectItem value="Work">Work</SelectItem>
-                                            <SelectItem value="Other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
+                                    <div className="relative">
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className={fieldState.error ? "border-red-500" : ""}>
+                                                    <SelectValue placeholder="Select address type" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Home">Home</SelectItem>
+                                                <SelectItem value="Work">Work</SelectItem>
+                                                <SelectItem value="Other">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {fieldState.error && (
+                                            <TooltipProvider delayDuration={0}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="absolute right-10 top-3 text-red-500 cursor-help z-10">
+                                                            <FaExclamationCircle size={14} />
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="right" className="bg-red-500 text-white">
+                                                        <p>{fieldState.error.message}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        )}
+                                    </div>
                                 </FormItem>
                             )}
                         />
@@ -102,13 +124,32 @@ export function AddAddressForm({ open, onOpenChange, onSubmit }: AddAddressFormP
                         <FormField
                             control={form.control}
                             name="street"
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <FormItem>
                                     <FormLabel>Street Address</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="123 Main Street" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
+                                    <div className="relative">
+                                        <FormControl>
+                                            <Input
+                                                placeholder="123 Main Street"
+                                                {...field}
+                                                className={fieldState.error ? "border-red-500 pr-10" : ""}
+                                            />
+                                        </FormControl>
+                                        {fieldState.error && (
+                                            <TooltipProvider delayDuration={0}>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="absolute right-3 top-3 text-red-500 cursor-help z-10">
+                                                            <FaExclamationCircle size={14} />
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="right" className="bg-red-500 text-white">
+                                                        <p>{fieldState.error.message}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        )}
+                                    </div>
                                 </FormItem>
                             )}
                         />
@@ -117,13 +158,32 @@ export function AddAddressForm({ open, onOpenChange, onSubmit }: AddAddressFormP
                             <FormField
                                 control={form.control}
                                 name="city"
-                                render={({ field }) => (
+                                render={({ field, fieldState }) => (
                                     <FormItem>
                                         <FormLabel>City</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="New York" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="New York"
+                                                    {...field}
+                                                    className={fieldState.error ? "border-red-500 pr-10" : ""}
+                                                />
+                                            </FormControl>
+                                            {fieldState.error && (
+                                                <TooltipProvider delayDuration={0}>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div className="absolute right-3 top-3 text-red-500 cursor-help z-10">
+                                                                <FaExclamationCircle size={14} />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="right" className="bg-red-500 text-white">
+                                                            <p>{fieldState.error.message}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+                                        </div>
                                     </FormItem>
                                 )}
                             />
@@ -131,13 +191,32 @@ export function AddAddressForm({ open, onOpenChange, onSubmit }: AddAddressFormP
                             <FormField
                                 control={form.control}
                                 name="state"
-                                render={({ field }) => (
+                                render={({ field, fieldState }) => (
                                     <FormItem>
                                         <FormLabel>State/Province</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="NY" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="NY"
+                                                    {...field}
+                                                    className={fieldState.error ? "border-red-500 pr-10" : ""}
+                                                />
+                                            </FormControl>
+                                            {fieldState.error && (
+                                                <TooltipProvider delayDuration={0}>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div className="absolute right-3 top-3 text-red-500 cursor-help z-10">
+                                                                <FaExclamationCircle size={14} />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="right" className="bg-red-500 text-white">
+                                                            <p>{fieldState.error.message}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+                                        </div>
                                     </FormItem>
                                 )}
                             />
@@ -147,13 +226,32 @@ export function AddAddressForm({ open, onOpenChange, onSubmit }: AddAddressFormP
                             <FormField
                                 control={form.control}
                                 name="zipCode"
-                                render={({ field }) => (
+                                render={({ field, fieldState }) => (
                                     <FormItem>
                                         <FormLabel>Zip Code</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="10001" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="10001"
+                                                    {...field}
+                                                    className={fieldState.error ? "border-red-500 pr-10" : ""}
+                                                />
+                                            </FormControl>
+                                            {fieldState.error && (
+                                                <TooltipProvider delayDuration={0}>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div className="absolute right-3 top-3 text-red-500 cursor-help z-10">
+                                                                <FaExclamationCircle size={14} />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="right" className="bg-red-500 text-white">
+                                                            <p>{fieldState.error.message}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+                                        </div>
                                     </FormItem>
                                 )}
                             />
@@ -161,13 +259,32 @@ export function AddAddressForm({ open, onOpenChange, onSubmit }: AddAddressFormP
                             <FormField
                                 control={form.control}
                                 name="country"
-                                render={({ field }) => (
+                                render={({ field, fieldState }) => (
                                     <FormItem>
                                         <FormLabel>Country</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="USA" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="USA"
+                                                    {...field}
+                                                    className={fieldState.error ? "border-red-500 pr-10" : ""}
+                                                />
+                                            </FormControl>
+                                            {fieldState.error && (
+                                                <TooltipProvider delayDuration={0}>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div className="absolute right-3 top-3 text-red-500 cursor-help z-10">
+                                                                <FaExclamationCircle size={14} />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="right" className="bg-red-500 text-white">
+                                                            <p>{fieldState.error.message}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+                                        </div>
                                     </FormItem>
                                 )}
                             />

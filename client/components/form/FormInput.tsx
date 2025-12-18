@@ -7,10 +7,16 @@ import {
     FormField,
     FormItem,
     FormLabel,
-    FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { FaExclamationCircle } from "react-icons/fa";
 
 interface FormInputProps<
     TFieldValues extends FieldValues = FieldValues,
@@ -48,7 +54,7 @@ export function FormInput<
                     {label && <FormLabel>{label}</FormLabel>}
                     <div className="relative">
                         {icon && (
-                            <div className="absolute left-3 top-3 text-muted-foreground/60">
+                            <div className="absolute left-3 top-3 text-muted-foreground/60 z-10">
                                 {icon}
                             </div>
                         )}
@@ -59,15 +65,16 @@ export function FormInput<
                                 placeholder={placeholder}
                                 className={cn(
                                     icon && "pl-10",
-                                    fieldState.error && "border-red-500 focus-visible:ring-red-500/50",
-                                    !fieldState.error && field.value && "border-green-500 focus-visible:ring-green-500/50",
+                                    fieldState.error && "border-red-500 focus-visible:ring-red-500/50 pr-10",
+                                    !fieldState.error && field.value && "border-green-500 focus-visible:ring-green-500/50 pr-10",
                                     inputClassName
                                 )}
                             />
                         </FormControl>
+
                         {/* Success icon */}
                         {!fieldState.error && field.value && (
-                            <div className="absolute right-3 top-3 text-green-500">
+                            <div className="absolute right-3 top-3 text-green-500 z-10">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="14"
@@ -83,28 +90,23 @@ export function FormInput<
                                 </svg>
                             </div>
                         )}
-                        {/* Error icon */}
+
+                        {/* Error icon with tooltip */}
                         {fieldState.error && (
-                            <div className="absolute right-3 top-3 text-red-500 animate-in fade-in zoom-in">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="14"
-                                    height="14"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                            </div>
+                            <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="absolute right-3 top-3 text-red-500 animate-in fade-in zoom-in cursor-help z-10">
+                                            <FaExclamationCircle size={14} />
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="bg-red-500 text-white">
+                                        <p>{fieldState.error.message}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         )}
                     </div>
-                    <FormMessage />
                 </FormItem>
             )}
         />

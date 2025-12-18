@@ -3,7 +3,7 @@ import { z } from "zod";
 // Address Schema
 export const addressSchema = z.object({
     type: z.enum(["Home", "Work", "Other"], {
-        required_error: "Please select an address type",
+        message: "Please select an address type",
     }),
     street: z.string().min(5, "Street address must be at least 5 characters"),
     city: z.string().min(2, "City must be at least 2 characters"),
