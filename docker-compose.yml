@@ -65,7 +65,7 @@ services:
   # Next.js client
   client:
     build:
-      context: ./client
+      context: ./zapcart-client
       dockerfile: Dockerfile
     container_name: ecommerce-client
     restart: unless-stopped
@@ -85,29 +85,29 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./client/app
-          target: /app/app
+          path: ./zapcart-client/apps/client/app
+          target: /app/apps/client/app
           ignore: [node_modules]
         - action: sync
-          path: ./client/components
-          target: /app/components
+          path: ./zapcart-client/apps/client/components
+          target: /app/apps/client/components
         - action: sync
-          path: ./client/contexts
-          target: /app/contexts
+          path: ./zapcart-client/apps/client/contexts
+          target: /app/apps/client/contexts
         - action: sync
-          path: ./client/lib
-          target: /app/lib
+          path: ./zapcart-client/apps/client/lib
+          target: /app/apps/client/lib
         - action: sync
-          path: ./client/types
-          target: /app/types
+          path: ./zapcart-client/apps/client/types
+          target: /app/apps/client/types
         - action: sync
-          path: ./client/public
-          target: /app/public
+          path: ./zapcart-client/apps/client/public
+          target: /app/apps/client/public
         - action: sync
-          path: ./client/data
-          target: /app/data
+          path: ./zapcart-client/apps/client/data
+          target: /app/apps/client/data
         - action: rebuild
-          path: ./client/package.json
+          path: ./zapcart-client/package.json
 
     healthcheck:
       test:

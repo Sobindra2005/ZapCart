@@ -20,6 +20,11 @@
 .DS_Store
 Thumbs.db
 
+# Turborepo
+.turbo/
+**/.turbo/
+**/apps/*/.next/
+
 # Documentation (optional - uncomment if you don't want these in images)
 # README.md
 # DEPLOYMENT.md
