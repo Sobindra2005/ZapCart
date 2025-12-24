@@ -274,11 +274,7 @@ export default function SalesPage() {
     return (
         <div className="p-8 max-w-400 mx-auto space-y-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Sales & Orders</h1>
-                    <p className="text-gray-500 font-medium">Real-time financial performance and logistics tracking.</p>
-                </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="font-bold border-gray-200">
                         <Calendar className="h-4 w-4 mr-2" />

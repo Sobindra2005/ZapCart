@@ -32,8 +32,6 @@ import {
     PieChart,
     Pie,
     Cell,
-    BarChart,
-    Bar,
     ScatterChart,
     Scatter,
     ZAxis
@@ -73,8 +71,6 @@ const performanceScatterData = [
     { x: 150, y: 400, z: 500, name: "Product E" },
     { x: 110, y: 280, z: 200, name: "Product F" },
 ];
-
-// --- Sub-components ---
 
 const TrafficChart = () => (
     <Card className="shadow-sm border-gray-200">
@@ -219,15 +215,8 @@ export default function AnalyticsPage() {
     return (
         <div className="p-8 max-w-400 mx-auto space-y-8">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-baseline sm:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">Analytics Console</h1>
-                    <p className="text-gray-500 font-medium flex items-center gap-2">
-                        System Status: <span className="flex items-center gap-1.5 text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full text-xs">
-                            <Activity className="h-3 w-3" /> Operational
-                        </span>
-                    </p>
-                </div>
+            <div className="flex flex-col sm:flex-row items-baseline sm:items-center justify-end gap-6">
+            
                 <div className="flex items-center gap-3">
                     <div className="flex bg-gray-100 p-1 rounded-xl">
                         <Button variant="ghost" size="sm" className="h-8 px-4 font-bold text-[10px] uppercase bg-white shadow-sm">Real-time</Button>
@@ -280,7 +269,7 @@ export default function AnalyticsPage() {
                         <CardDescription>Visualizing the path from session to purchase.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        {funnelData.map((step, i) => (
+                        {funnelData.map((step) => (
                             <FunnelStep key={step.stage} step={step} max={funnelData[0].count} />
                         ))}
                     </CardContent>

@@ -1,9 +1,7 @@
 "use client";
 
 import {
-    Star,
     Plus,
-    Search,
     GripVertical,
     Trash2,
     Settings,
@@ -12,7 +10,6 @@ import {
     Check
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
 import { Input } from "@repo/ui/ui/input";
 import { Button } from "@repo/ui/ui/button";
 import {
@@ -69,14 +66,7 @@ const mockFeaturedProducts: FeaturedProduct[] = [
 export default function FeaturedProductsPage() {
     return (
         <div className="p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <Star className="h-6 w-6 text-orange-400 fill-orange-400" />
-                        Featured Products
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1 font-medium">Curate the products spotlighted on your homepage.</p>
-                </div>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-end gap-4 mb-8">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="gap-2 font-bold border-gray-200">
                         <LayoutGrid className="h-4 w-4" />

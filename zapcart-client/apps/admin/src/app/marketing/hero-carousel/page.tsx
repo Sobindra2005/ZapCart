@@ -3,14 +3,12 @@
 import {
     Plus,
     GripVertical,
-    Image as ImageIcon,
     ExternalLink,
     Settings,
     Eye,
     Edit,
     Trash2,
     Save,
-    Layout
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -22,7 +20,6 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-    CardDescription
 } from "@repo/ui/ui/card";
 
 interface CarouselSlide {
@@ -70,18 +67,12 @@ const mockSlides: CarouselSlide[] = [
 ];
 
 export default function HeroCarouselPage() {
-    const [slides, setSlides] = useState<CarouselSlide[]>(mockSlides);
+    const slides: CarouselSlide[] = mockSlides;
 
     return (
         <div className="p-8">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <Layout className="h-6 w-6 text-primary" />
-                        Hero Carousel
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1 font-medium">Manage top-of-page banners and promotional slides.</p>
-                </div>
+            <div className="flex items-center justify-end mb-8">
+
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="gap-2 font-bold border-gray-200">
                         <Settings className="h-4 w-4" />
@@ -97,7 +88,7 @@ export default function HeroCarouselPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 {/* List View */}
                 <div className="xl:col-span-2 space-y-6">
-                    {slides.map((slide, index) => (
+                    {slides.map((slide) => (
                         <Card key={slide.id} className="shadow-sm border-gray-200 overflow-hidden group">
                             <div className="flex flex-col md:flex-row h-full">
                                 <div className="md:w-64 h-40 md:h-auto relative shrink-0">
@@ -151,7 +142,7 @@ export default function HeroCarouselPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6">
-                            <div className="aspect-[9/16] bg-gray-900 rounded-[2rem] border-[6px] border-gray-800 relative overflow-hidden shadow-2xl mx-auto max-w-[240px]">
+                            <div className="aspect-9/16 bg-gray-900 rounded-4xl border-[6px] border-gray-800 relative overflow-hidden shadow-2xl mx-auto max-w-60">
                                 {/* Screen Content */}
                                 <div className="absolute inset-0 bg-white">
                                     <div className="h-32 relative">
