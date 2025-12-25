@@ -22,9 +22,9 @@ import {
     Area,
     Legend
 } from "recharts";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { AdminCard } from "@/components/AdminCard";
+import { StatsCards, type Stat } from "@/components/common/StatsCards";
 
 // Mock Data for Charts
 const revenueData = [
@@ -59,7 +59,7 @@ const topProducts = [
     { name: "Sweater", price: 56.07, category: "Man Cloths", quantity: 69, amount: 3868.83, image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=200&h=200" },
 ];
 
-const stats = [
+const stats: Stat[] = [
     { label: "Sales", value: "$34,456.00", trend: "+ 14%", trendDir: "up", vs: "VS last week" },
     { label: "Monthly Order", value: "3456", trend: "- 17%", trendDir: "down", vs: "VS last week" },
     { label: "Monthly Revenue", value: "$1,456.00", trend: "+ 14%", trendDir: "up", vs: "VS last week" },
@@ -71,29 +71,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-6 p-8 bg-gray-50/50 min-h-screen">
 
             {/* 1. Summary Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, i) => (
-                    <AdminCard key={i} hoverable className="group">
-                        <div className="flex justify-between items-start mb-4">
-                            <span className="text-sm font-medium text-gray-500">{stat.label}</span>
-                            <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                                <MoreHorizontal className="h-5 w-5" />
-                            </button>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-4">{stat.value}</h3>
-                        <div className="flex items-center gap-2">
-                            <div className={cn(
-                                "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold font-sans",
-                                stat.trendDir === "up" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
-                            )}>
-                                {stat.trendDir === "up" ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                                {stat.trend}
-                            </div>
-                            <span className="text-xs font-medium text-gray-400">{stat.vs}</span>
-                        </div>
-                    </AdminCard>
-                ))}
-            </div>
+            <StatsCards stats={stats} />
 
             {/* 2. Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

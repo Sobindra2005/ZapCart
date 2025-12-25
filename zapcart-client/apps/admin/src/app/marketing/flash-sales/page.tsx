@@ -29,6 +29,7 @@ import {
     CardTitle,
 } from "@repo/ui/ui/card";
 import { AdminCard } from "@/components/AdminCard";
+import { Stat, StatsCards } from "@/components/common/StatsCards";
 
 interface FlashSale {
     id: string;
@@ -78,6 +79,37 @@ const mockFlashSales: FlashSale[] = [
     }
 ];
 
+const stats: Stat[] = [
+    {
+        label: "Active Campaigns",
+        value: "04",
+        trend: "+2 new",
+        trendDir: "up",
+        vs: "Previous Week"
+    },
+    {
+        label: "Avg. Conversion Rate",
+        value: "12.4%",
+        trend: "-1.2%",
+        trendDir: "down",
+        vs: "Previous Week"
+    },
+    {
+        label: "Total Revenue",
+        value: "$4,250.00",
+        trend: "$1,250.00",
+        trendDir: "up",
+        vs: "Previous Week"
+    },
+    {
+        label: "Items Sold Flash",
+        value: "1,842",
+        trend: "420 tps",
+        trendDir: "up",
+        vs: "Previous Week"
+    }
+]
+
 export default function FlashSalesPage() {
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -110,69 +142,7 @@ export default function FlashSalesPage() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <AdminCard className="px-0 bg-linear-to-br from-white to-gray-50/50">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider">Active Campaigns</CardTitle>
-                            <Zap className="h-4 w-4 text-yellow-500" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-end justify-between">
-                            <div>
-                                <span className="text-3xl font-black text-gray-900 tracking-tight">04</span>
-                                <span className="ml-2 text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">+2 new</span>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-bold text-gray-400">CURRENT REVENUE</span>
-                                <span className="text-sm font-bold text-gray-900">$4,250.00</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </AdminCard>
-
-                <AdminCard className="px-0">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider">Avg. Conversion Rate</CardTitle>
-                            <TrendingUp className="h-4 w-4 text-blue-500" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-end justify-between">
-                            <div>
-                                <span className="text-3xl font-black text-gray-900 tracking-tight">12.4%</span>
-                                <span className="ml-2 flex items-center text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
-                                    <ArrowUpRight className="h-3 w-3 mr-0.5" />
-                                    1.2%
-                                </span>
-                            </div>
-                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">vs Last 30 Days</div>
-                        </div>
-                    </CardContent>
-                </AdminCard>
-
-                <AdminCard className="px-0">
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider">Items Sold Flash</CardTitle>
-                            <Tag className="h-4 w-4 text-purple-500" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-end justify-between">
-                            <div>
-                                <span className="text-3xl font-black text-gray-900 tracking-tight">1,842</span>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-bold text-red-500">PEAK LOAD</span>
-                                <span className="text-sm font-bold text-gray-900">420 tps</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </AdminCard>
-            </div>
+            <StatsCards stats={stats} />
 
             {/* Campaign List */}
             <AdminCard className="p-0 ">

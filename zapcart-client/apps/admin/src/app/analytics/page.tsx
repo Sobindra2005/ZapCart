@@ -36,6 +36,7 @@ import {
     ZAxis
 } from "recharts";
 import { AdminCard } from "@/components/AdminCard";
+import { Stat, StatsCards } from "@/components/common/StatsCards";
 
 // --- Mock Data ---
 
@@ -211,6 +212,12 @@ const RetentionHeatmap = () => (
     </div>
 );
 
+const stats: Stat[] = [
+    { label: "Conversion Rate", value: "3.24%", trend: "+0.8%", trendDir: "up", vs: "vs last month" },
+    { label: "Bounce Rate", value: "24.1%", trend: "-2.4%", trendDir: "down", vs: "vs last month" },
+    { label: "Avg. Session", value: "4m 12s", trend: "+12s", trendDir: "up", vs: "vs last month" },
+];
+
 export default function AnalyticsPage() {
     return (
         <div className="p-8 max-w-400 mx-auto space-y-8">
@@ -231,28 +238,7 @@ export default function AnalyticsPage() {
             {/* Top Grid - Metrics & Anomaly */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                            { label: "Conversion Rate", value: "3.24%", trend: "+0.8%", icon: Target, color: "text-blue-600", bg: "bg-blue-50" },
-                            { label: "Bounce Rate", value: "24.1%", trend: "-2.4%", icon: MousePointer2, color: "text-green-600", bg: "bg-green-50" },
-                            { label: "Avg. Session", value: "4m 12s", trend: "+12s", icon: Zap, color: "text-purple-600", bg: "bg-purple-50" },
-                        ].map((m, i) => (
-                            <AdminCard key={i} className="p-3 hover:border-primary/20 transition-colors">
-                                <CardContent className="pt-6">
-                                    <div className="flex justify-between items-start">
-                                        <div className={cn("p-2 rounded-xl", m.bg)}>
-                                            <m.icon className={cn("h-4 w-4", m.color)} />
-                                        </div>
-                                        <Badge variant="secondary" className="font-bold text-[10px]">
-                                            {m.trend}
-                                        </Badge>
-                                    </div>
-                                    <h3 className="text-sm font-bold text-gray-500 mt-4">{m.label}</h3>
-                                    <p className="text-2xl font-black text-gray-900">{m.value}</p>
-                                </CardContent>
-                            </AdminCard>
-                        ))}
-                    </div>
+                    <StatsCards stats={stats} className="lg:grid-cols-3 md:grid-cols-2 grid-cols-1" />
                     <AnomalyAlert />
                     <TrafficChart />
                 </div>

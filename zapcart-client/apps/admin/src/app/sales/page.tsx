@@ -41,12 +41,13 @@ import {
     Pie
 } from "recharts";
 import { AdminCard } from "@/components/AdminCard";
+import { Stat, StatsCards } from "@/components/common/StatsCards";
 
-const kpiData = [
-    { title: "Total Sales", value: "$124,592.00", trend: "+12.5%", icon: DollarSign, color: "text-blue-600", bg: "bg-blue-50" },
-    { title: "Total Orders", value: "1,284", trend: "+8.2%", icon: ShoppingBag, color: "text-green-600", bg: "bg-green-50" },
-    { title: "Avg. Order Value", value: "$97.03", trend: "-2.4%", icon: Zap, color: "text-purple-600", bg: "bg-purple-50" },
-    { title: "Refund Rate", value: "1.2%", trend: "-0.5%", icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
+const stats: Stat[] = [
+    { label: "Total Sales", value: "$124,592.00", trend: "+12.5%", trendDir: "up", vs: "vs last month" },
+    { label: "Total Orders", value: "1,284", trend: "+8.2%", trendDir: "up", vs: "vs last month" },
+    { label: "Avg. Order Value", value: "$97.03", trend: "-2.4%", trendDir: "down", vs: "vs last month" },
+    { label: "Refund Rate", value: "1.2%", trend: "-0.5%", trendDir: "down", vs: "vs last month" },
 ];
 
 const salesTrendData = [
@@ -82,26 +83,6 @@ const recentOrders = [
     { id: "ORD-7388", customer: "Pooja Rai", date: "2024-03-21", amount: "$56.00", status: "Paid", items: 1 },
 ];
 
-const KPICard = ({ item }: { item: typeof kpiData[0] }) => (
-    <AdminCard className="px-0">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-gray-500">{item.title}</CardTitle>
-            <div className={cn("p-2 rounded-lg", item.bg)}>
-                <item.icon className={cn("h-4 w-4", item.color)} />
-            </div>
-        </CardHeader>
-        <CardContent>
-            <div className="text-2xl font-bold">{item.value}</div>
-            <p className={cn(
-                "text-xs font-bold mt-1 flex items-center gap-1",
-                item.trend.startsWith("+") ? "text-green-600" : "text-red-600"
-            )}>
-                {item.trend.startsWith("+") ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                {item.trend} <span className="text-gray-400 font-normal">vs last month</span>
-            </p>
-        </CardContent>
-    </AdminCard>
-);
 
 const OrdersTable = () => {
     const getStatusColor = (status: string) => {
@@ -291,9 +272,7 @@ export default function SalesPage() {
             </div>
 
             {/* KPI Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {kpiData.map((item, i) => <KPICard key={i} item={item} />)}
-            </div>
+            <StatsCards stats={stats} />
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

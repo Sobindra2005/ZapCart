@@ -39,6 +39,7 @@ import {
     Cell
 } from "recharts";
 import { AdminCard } from "@/components/AdminCard";
+import { Stat, StatsCards } from "@/components/common/StatsCards";
 
 interface Category {
     id: string;
@@ -347,69 +348,41 @@ export default function CategoriesPage() {
         }
     ];
 
+    const stats:Stat[] = [
+        {
+            label: "Total Categories",
+            value: "24",
+            trend: "+ 14%",
+            trendDir: "up",
+            vs: "VS last week",
+        },
+        {
+            label: "Inventory Health",
+            value: "88.4%",
+            trend: "+ 14%",
+            trendDir: "up",
+            vs: "VS last week",
+        },
+        {
+            label: "Active Categories",
+            value: "21",
+            trend: "+ 2",
+            trendDir: "up",
+            vs: "VS last month",
+        },
+        {
+            label: "Avg Products/Cat",
+            value: "142",
+            trend: "- 5%",
+            trendDir: "down",
+            vs: "VS last week",
+        }
+    ];
+
     return (
-        <div className="p-8">
+        <div className="p-8 space-y-6">
             {/* Analytics Header */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <AdminCard>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                            <LayoutGrid className="h-4 w-4" />
-                            Total Categories
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <span className="text-3xl font-bold text-gray-900">24</span>
-                            <span className="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                <ArrowUpRight className="h-3 w-3 mr-1" />
-                                +12%
-                            </span>
-                        </div>
-                    </CardContent>
-                </AdminCard>
-                <AdminCard>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                            <Activity className="h-4 w-4" />
-                            Inventory Health
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <span className="text-3xl font-bold text-gray-900">88.4%</span>
-                            <span className="flex items-center text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">
-                                <ArrowDownRight className="h-3 w-3 mr-1" />
-                                -2.4%
-                            </span>
-                        </div>
-                    </CardContent>
-                </AdminCard>
-                <AdminCard className="col-span-1 md:col-span-2 ">
-                    <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                        <div>
-                            <CardTitle className="text-sm font-medium text-gray-500">Sales by Category</CardTitle>
-                        </div>
-                        <BarChart3 className="h-4 w-4 text-gray-400" />
-                    </CardHeader>
-                    <CardContent className="h-24">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={performanceData}>
-                                <Bar dataKey="sales" radius={[4, 4, 0, 0]}>
-                                    {performanceData.map((entry, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={cn(
-                                                index === 0 ? "#10b981" : index === 1 ? "#3b82f6" : "#cbd5e1"
-                                            )}
-                                        />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </AdminCard>
-            </div>
+            <StatsCards stats={stats} />
 
             <div className="flex flex-col lg:flex-row gap-8 items-start">
                 {/* Main List */}
