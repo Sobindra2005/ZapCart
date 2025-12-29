@@ -15,6 +15,8 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Input } from "@repo/ui/ui/input";
 import { SortSelect, SortOption } from "@repo/ui/SortSelect";
+import { BulkActionBar } from "@repo/ui/ui/bulk-action-bar";
+import { GlobeIcon } from "@radix-ui/react-icons";
 
 interface Customer {
     id: number;
@@ -189,6 +191,25 @@ export default function CustomerListingPage() {
         );
     };
 
+    const bulkActions = [
+        {
+            icon: Edit,
+            label: "Bulk Edit",
+            onClick: () => console.log("Bulk edit", Array.from(selectedCustomers))
+        },
+        {
+            icon: GlobeIcon,
+            label: "Update Status",
+            onClick: () => console.log("Update status", Array.from(selectedCustomers))
+        },
+        {
+            icon: Trash2,
+            label: "",
+            onClick: () => console.log("Delete", Array.from(selectedCustomers)),
+            variant: "destructive" as const,
+            className: "h-8 w-8 p-0"
+        }
+    ];
 
     return (
         <div className="p-8">
@@ -381,6 +402,12 @@ export default function CustomerListingPage() {
                     </div>
                 </div>
             </div>
+            <BulkActionBar
+                selectedCount={selectedCustomers.length}
+                onDeselectAll={() => setSelectedCustomers([])}
+                label="Categories Selected"
+                actions={bulkActions}
+            />
         </div>
     );
 }

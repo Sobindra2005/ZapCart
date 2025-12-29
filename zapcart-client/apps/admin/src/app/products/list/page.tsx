@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { Input } from "@repo/ui/ui/input";
 import { SortSelect, SortOption } from "@repo/ui/SortSelect";
 import { AdminCard } from "@/components/AdminCard";
+import { BulkActionBar } from "@repo/ui/ui/bulk-action-bar";
+import { GlobeIcon } from "@radix-ui/react-icons";
 
 interface Product {
   id: number;
@@ -195,7 +197,25 @@ export default function ProductListPage() {
     );
   };
 
-
+  const bulkActions = [
+    {
+      icon: Edit,
+      label: "Bulk Edit",
+      onClick: () => console.log("Bulk edit", Array.from(selectedProducts))
+    },
+    {
+      icon: GlobeIcon,
+      label: "Update Status",
+      onClick: () => console.log("Update status", Array.from(selectedProducts))
+    },
+    {
+      icon: Trash2,
+      label: "",
+      onClick: () => console.log("Delete", Array.from(selectedProducts)),
+      variant: "destructive" as const,
+      className: "h-8 w-8 p-0"
+    }
+  ];
 
 
   return (
@@ -405,6 +425,13 @@ export default function ProductListPage() {
           </div>
         </div>
       </AdminCard>
+
+      <BulkActionBar
+        selectedCount={selectedProducts.length}
+        onDeselectAll={() => setSelectedProducts([])}
+        label="Categories Selected"
+        actions={bulkActions}
+      />
     </div>
   );
 }

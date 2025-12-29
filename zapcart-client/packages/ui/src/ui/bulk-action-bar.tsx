@@ -33,10 +33,10 @@ export function BulkActionBar({
     return (
         <div
             className={cn(
-                "fixed bottom-8 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-4 rounded-2xl shadow-xl flex items-center gap-8",
+                "fixed  left-1/2 -translate-x-1/2 bg-white border-2 border-gray-300 text-black px-6 py-4 rounded-2xl shadow-2xl shadow-black flex items-center gap-8",
                 className
             )}
-            style={{ position: 'fixed', bottom: '2rem', left: '50%', transform: '', zIndex: 9999, display: 'flex' }}
+            style={{bottom: '2rem'}}
         >
             <div className="flex items-center gap-3  pr-8">
                 <div className="bg-primary text-white h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold">
