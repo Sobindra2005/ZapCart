@@ -27,16 +27,18 @@ export function BulkActionBar({
     actions,
     className,
 }: BulkActionBarProps) {
+    console.log("BulkActionBar Rendering, count:", selectedCount);
     if (selectedCount === 0) return null;
 
     return (
         <div
             className={cn(
-                "fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-8 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300",
+                "fixed bottom-8 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-4 rounded-2xl shadow-xl flex items-center gap-8",
                 className
             )}
+            style={{ position: 'fixed', bottom: '2rem', left: '50%', transform: '', zIndex: 9999, display: 'flex' }}
         >
-            <div className="flex items-center gap-3 border-r border-gray-700 pr-8">
+            <div className="flex items-center gap-3  pr-8">
                 <div className="bg-primary text-white h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold">
                     {selectedCount}
                 </div>
@@ -50,7 +52,7 @@ export function BulkActionBar({
                         variant={action.variant || "ghost"}
                         size="sm"
                         className={cn(
-                            "text-white hover:bg-white/10 gap-2 h-9 px-4",
+                            "text-black hover:bg-black/10 gap-2 h-9 px-4",
                             action.variant === "destructive" && "text-red-500 hover:bg-red-500/10",
                             action.className
                         )}
@@ -62,7 +64,7 @@ export function BulkActionBar({
                 ))}
             </div>
 
-            <div className="border-l border-gray-700 pl-8">
+            <div className=" pl-8">
                 <Button
                     variant="ghost"
                     size="sm"
