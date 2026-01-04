@@ -26,6 +26,8 @@ import {
 } from "@repo/ui/ui/card";
 import { AdminCard } from "@/components/AdminCard";
 import { Stat, StatsCards } from "@/components/common/StatsCards";
+import { FormPopup } from "@repo/ui/ui/form-popup";
+import { CreateCampaignForm } from "@/components/forms/CreateCampaignForm";
 
 interface FlashSale {
     id: string;
@@ -130,10 +132,18 @@ export default function FlashSalesPage() {
                         <BarChart3 className="h-4 w-4" />
                         Analytics
                     </Button>
-                    <Button className="flex-1 md:flex-none gap-2 font-bold bg-primary hover:bg-primary/90 shadow-md shadow-primary/20">
-                        <Plus className="h-4 w-4" strokeWidth={3} />
-                        Create Campaign
-                    </Button>
+                    <FormPopup
+                        title="Create New Campaign"
+                        description="Set up a new flash sale campaign."
+                        trigger={
+                            <Button className="flex-1 md:flex-none gap-2 font-bold bg-primary hover:bg-primary/90 shadow-md shadow-primary/20">
+                                <Plus className="h-4 w-4" strokeWidth={3} />
+                                Create Campaign
+                            </Button>
+                        }
+                    >
+                        <CreateCampaignForm onSubmit={(data) => console.log(data)} />
+                    </FormPopup>
                 </div>
             </div>
 

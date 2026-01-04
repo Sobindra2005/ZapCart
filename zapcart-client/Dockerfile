@@ -8,6 +8,7 @@ COPY turbo.json ./
 COPY .npmrc ./
 
 # Copy workspace package.json files first for better layer caching
+COPY apps/admin/package*.json ./apps/admin/
 COPY apps/client/package*.json ./apps/client/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 COPY packages/typescript-config/package.json ./packages/typescript-config/

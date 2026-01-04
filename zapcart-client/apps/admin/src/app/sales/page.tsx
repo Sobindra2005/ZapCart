@@ -36,6 +36,8 @@ import { AdminCard } from "@/components/AdminCard";
 import { Stat, StatsCards } from "@/components/common/StatsCards";
 import { ChartWrapper } from "@/components/wrapper";
 import { LabelFormatter } from "recharts/types/component/Label";
+import { FormPopup } from "@repo/ui/ui/form-popup";
+import { CreateOrderForm } from "@/components/forms/CreateOrderForm";
 
 const stats: Stat[] = [
     { label: "Total Sales", value: "$124,592.00", trend: "+12.5%", trendDir: "up", vs: "vs last month" },
@@ -224,9 +226,17 @@ export default function SalesPage() {
                         <Calendar className="h-4 w-4 mr-2" />
                         Last 30 Days
                     </Button>
-                    <Button className="font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                        Create Order
-                    </Button>
+                    <FormPopup
+                        title="Create New Order"
+                        description="Manually create a new order."
+                        trigger={
+                            <Button className="font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                                Create Order
+                            </Button>
+                        }
+                    >
+                        <CreateOrderForm onSubmit={(data) => console.log(data)} />
+                    </FormPopup>
                 </div>
             </div>
 
@@ -349,7 +359,7 @@ export default function SalesPage() {
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
-                            
+
                         </CardContent>
                     </ChartWrapper>
                 </div>

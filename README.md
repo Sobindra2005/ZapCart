@@ -147,7 +147,21 @@ This platform uses **polyglot persistence** - combining PostgreSQL and MongoDB t
    npx prisma generate
    ```
 
-6. **Start development server**
+6. **Seed the database** (Optional)
+   
+   Populate your databases with 50 sample records for testing:
+   ```bash
+   cd backend
+   npm run seed
+   ```
+   
+   This will create:
+   - **MongoDB**: 50 categories, 50 products, 50 product reviews, search indexes
+   - **PostgreSQL**: 50 users, 50 addresses, 50 orders, payments, inventory records
+   
+   > **Note**: The seed script connects to both databases automatically. Ensure your PostgreSQL and MongoDB instances are running before seeding.
+
+7. **Start development server**
    
    **Backend only:**
    ```bash
@@ -162,6 +176,8 @@ This platform uses **polyglot persistence** - combining PostgreSQL and MongoDB t
    
    Backend API: `http://localhost:8080`  
    Nginx: `http://localhost:80`
+
+
 
 ## 🐳 Docker Deployment
 

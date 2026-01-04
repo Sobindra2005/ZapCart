@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@source "../../../packages/ui/src";
 
 @theme {
   --color-primary: #7C3AED;

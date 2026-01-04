@@ -72,10 +72,6 @@ export default function FeaturedProductsPage() {
                         <LayoutGrid className="h-4 w-4" />
                         Preview Layout
                     </Button>
-                    <Button className="gap-2 font-bold bg-primary hover:bg-primary/90">
-                        <Plus className="h-4 w-4" />
-                        Select Products
-                    </Button>
                 </div>
             </div>
 
@@ -129,17 +125,6 @@ export default function FeaturedProductsPage() {
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Section Title</label>
                                 <Input defaultValue="Recommended for You" className="font-bold text-sm bg-gray-50/50 border-gray-200" />
                             </div>
-
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-gray-600">Smart Sorting</span>
-                                    <div className="w-8 h-4 bg-primary rounded-full relative">
-                                        <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm" />
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-gray-400 leading-relaxed font-medium">Automatically order products based on conversion rates and user behavior.</p>
-                            </div>
-
                             <Button className="w-full font-bold shadow-sm">Save Config</Button>
                         </CardContent>
                     </AdminCard>

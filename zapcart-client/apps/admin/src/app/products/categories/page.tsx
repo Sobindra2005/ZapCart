@@ -28,6 +28,8 @@ import {
 } from "@repo/ui/ui/card";
 import { AdminCard } from "@/components/AdminCard";
 import { Stat, StatsCards } from "@/components/common/StatsCards";
+import { FormPopup } from "@repo/ui/ui/form-popup";
+import { AddCategoryForm } from "@/components/forms/AddCategoryForm";
 
 interface Category {
     id: string;
@@ -329,7 +331,7 @@ export default function CategoriesPage() {
         }
     ];
 
-    const stats:Stat[] = [
+    const stats: Stat[] = [
         {
             label: "Total Categories",
             value: "24",
@@ -383,10 +385,18 @@ export default function CategoriesPage() {
                                 <Filter className="h-4 w-4" />
                                 Filter
                             </Button>
-                            <Button className="flex-1 sm:flex-none gap-2 font-bold bg-primary hover:bg-primary/90">
-                                <Plus className="h-4 w-4" />
-                                Add Category
-                            </Button>
+                            <FormPopup
+                                title="Add New Category"
+                                description="Create a new product category."
+                                trigger={
+                                    <Button className="flex-1 sm:flex-none gap-2 font-bold bg-primary hover:bg-primary/90">
+                                        <Plus className="h-4 w-4" />
+                                        Add Category
+                                    </Button>
+                                }
+                            >
+                                <AddCategoryForm onSubmit={(data) => console.log(data)} />
+                            </FormPopup>
                         </div>
                     </div>
 

@@ -150,7 +150,7 @@ CategorySchema.virtual('children', {
 });
 
 // Pre-save middleware to generate slug if not provided
-CategorySchema.pre('save', async function (next) {
+CategorySchema.pre('save', async function () {
     // Generate slug from name if not provided
     if (!this.slug || this.isModified('name')) {
         this.slug = this.name
@@ -174,18 +174,14 @@ CategorySchema.pre('save', async function (next) {
             this.ancestors = [];
         }
     }
-
-    // @ts-expect-error-next function 
-    next();
 });
 
 // Pre-save validation: prevent circular references
-CategorySchema.pre('save', async function (next) {
+CategorySchema.pre('save', async function () {
     if (this.parent && this.isModified('parent')) {
         // Check if parent is the same as current category
         if (this.parent.equals(this._id)) {
-            // @ts-expect-error-next function 
-            return next(new Error('A category cannot be its own parent'));
+            throw new Error('A category cannot be its own parent');
         }
 
         // Check if parent is one of the descendants
@@ -195,12 +191,9 @@ CategorySchema.pre('save', async function (next) {
 
         const descendantIds = descendants.map(d => d._id.toString());
         if (descendantIds.includes(this.parent.toString())) {
-            // @ts-expect-error-next function 
-            return next(new Error('Cannot set a descendant category as parent (circular reference)'));
+            throw new Error('Cannot set a descendant category as parent (circular reference)');
         }
     }
-    // @ts-expect-error-next function 
-    next();
 });
 
 // Post-save middleware to update children when parent changes
@@ -239,7 +232,7 @@ CategorySchema.post('deleteOne', { document: true, query: false }, async functio
     }
 });
 
-CategorySchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+CategorySchema.pre('deleteOne', { document: true, query: false }, async function () {
     const CategoryModel = mongoose.model('Category');
 
     // Option 1: Recursively update all descendants
@@ -261,8 +254,6 @@ CategorySchema.pre('deleteOne', { document: true, query: false }, async function
 
         await descendant.save();
     }
-    // @ts-expect-error-next function 
-    next();
 });
 
 // Static method to get category tree

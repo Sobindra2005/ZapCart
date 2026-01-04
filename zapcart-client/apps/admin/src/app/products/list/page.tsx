@@ -3,12 +3,7 @@
 import {
   Filter,
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Search,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -18,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { Input } from "@repo/ui/ui/input";
 import { SortSelect, SortOption } from "@repo/ui/SortSelect";
 import { AdminCard } from "@/components/AdminCard";
+import { BulkActionBar } from "@repo/ui/ui/bulk-action-bar";
+import { GlobeIcon } from "@radix-ui/react-icons";
 
 interface Product {
   id: number;
@@ -104,15 +101,7 @@ const initialProducts: Product[] = [
   },
 ];
 
-function SortIcon({ columnKey, sortConfig }: { columnKey: keyof Product; sortConfig: SortConfig }) {
-  const isActive = sortConfig.key === columnKey;
-  if (!isActive || !sortConfig.direction) return <ArrowUpDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />;
-  return sortConfig.direction === "asc" ? (
-    <ArrowUp className="h-4 w-4 text-primary" />
-  ) : (
-    <ArrowDown className="h-4 w-4 text-primary" />
-  );
-}
+
 
 const getStatusStyles = (status: string) => {
   switch (status) {
@@ -139,11 +128,23 @@ const sortOptions: SortOption[] = [
   { value: "stock-low", label: "Stock: Low to High" },
 ];
 
+
+import { Pagination } from "@repo/ui/ui/pagination";
+import { FormPopup } from "@repo/ui/ui/form-popup";
+import { AddProductForm } from "@/components/forms/AddProductForm";
+import { DataTable } from "@/components/common/DataTable";
+
+// ... existing imports
+
 export default function ProductListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: null });
   const [sortOption, setSortOption] = useState<string>("newest");
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleSort = (key: keyof Product) => {
     let direction: "asc" | "desc" | null = "asc";
@@ -181,22 +182,46 @@ export default function ProductListPage() {
     return result;
   }, [searchQuery, sortConfig]);
 
+  // Pagination Logic
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedProducts, currentPage]);
+
   const toggleSelectAll = () => {
-    if (selectedProducts.length === filteredAndSortedProducts.length) {
+    if (selectedProducts.length === paginatedProducts.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(filteredAndSortedProducts.map((p) => p.id));
+      setSelectedProducts(paginatedProducts.map((p) => p.id));
     }
   };
 
-  const toggleSelect = (id: number) => {
+  const toggleSelect = (id: string | number) => {
+    const numericId = Number(id);
     setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(numericId) ? prev.filter((item) => item !== numericId) : [...prev, numericId]
     );
   };
 
-
-
+  const bulkActions = [
+    {
+      icon: Edit,
+      label: "Bulk Edit",
+      onClick: () => console.log("Bulk edit", Array.from(selectedProducts))
+    },
+    {
+      icon: GlobeIcon,
+      label: "Update Status",
+      onClick: () => console.log("Update status", Array.from(selectedProducts))
+    },
+    {
+      icon: Trash2,
+      label: "",
+      onClick: () => console.log("Delete", Array.from(selectedProducts)),
+      variant: "destructive" as const,
+      className: "h-8 w-8 p-0"
+    }
+  ];
 
   return (
     <div className="p-8">
@@ -230,10 +255,18 @@ export default function ProductListPage() {
               <Filter className="h-4 w-4" />
               Filter
             </button>
-            <button className="flex items-center gap-2 px-4 py-1.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-md shadow-primary/20">
-              <Plus className="h-4 w-4" strokeWidth={3} />
-              Add Product
-            </button>
+            <FormPopup
+              title="Add New Product"
+              description="Fill in the details to create a new product."
+              trigger={
+                <button className="flex items-center gap-2 px-4 py-1.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-md shadow-primary/20">
+                  <Plus className="h-4 w-4" strokeWidth={3} />
+                  Add Product
+                </button>
+              }
+            >
+              <AddProductForm onSubmit={(data) => console.log(data)} />
+            </FormPopup>
           </div>
         </div>
 
@@ -252,159 +285,114 @@ export default function ProductListPage() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/30">
-                <th className="px-6 py-4 w-10">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                    checked={
-                      selectedProducts.length === filteredAndSortedProducts.length &&
-                      filteredAndSortedProducts.length > 0
-                    }
-                    onChange={toggleSelectAll}
-                  />
-                </th>
-                <th
-                  className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                  onClick={() => handleSort("name")}
-                >
-                  <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                    Product Name
-                    <SortIcon columnKey="name" sortConfig={sortConfig} />
+        <DataTable
+          data={paginatedProducts}
+          keyExtractor={(product) => product.id}
+          selectedIds={selectedProducts}
+          onSelect={toggleSelect}
+          onSelectAll={toggleSelectAll}
+          sortConfig={sortConfig}
+          onSort={handleSort}
+          columns={[
+            {
+              key: "name",
+              label: "Product Name",
+              sortKey: "name",
+              render: (product) => (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      width={40}
+                      height={40}
+                      className="object-cover h-full w-full"
+                    />
                   </div>
-                </th>
-                <th
-                  className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                  onClick={() => handleSort("category")}
-                >
-                  <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                    Category
-                    <SortIcon columnKey="category" sortConfig={sortConfig} />
-                  </div>
-                </th>
-                <th
-                  className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                  onClick={() => handleSort("price")}
-                >
-                  <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                    Price
-                    <SortIcon columnKey="price" sortConfig={sortConfig} />
-                  </div>
-                </th>
-                <th
-                  className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                  onClick={() => handleSort("stock")}
-                >
-                  <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                    Stock
-                    <SortIcon columnKey="stock" sortConfig={sortConfig} />
-                  </div>
-                </th>
-                <th
-                  className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                  onClick={() => handleSort("status")}
-                >
-                  <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                    Status
-                    <SortIcon columnKey="status" sortConfig={sortConfig} />
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredAndSortedProducts.map((product) => (
-                <tr
-                  key={product.id}
+                  <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">
+                    {product.name}
+                  </span>
+                </div>
+              ),
+            },
+            {
+              key: "category",
+              label: "Category",
+              sortKey: "category",
+              render: (product) => (
+                <span className="text-sm text-gray-600 font-medium">
+                  {product.category}
+                </span>
+              ),
+            },
+            {
+              key: "price",
+              label: "Price",
+              sortKey: "price",
+              render: (product) => (
+                <span className="text-sm text-gray-900 font-bold">
+                  ${product.price.toFixed(2)}
+                </span>
+              ),
+            },
+            {
+              key: "stock",
+              label: "Stock",
+              sortKey: "stock",
+              render: (product) => (
+                <span className="text-sm text-gray-600 font-medium">
+                  {product.stock}
+                </span>
+              ),
+            },
+            {
+              key: "status",
+              label: "Status",
+              sortKey: "status",
+              render: (product) => (
+                <span
                   className={cn(
-                    "hover:bg-gray-50/80 transition-colors group",
-                    selectedProducts.includes(product.id) && "bg-primary/5 hover:bg-primary/10"
+                    "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border",
+                    getStatusStyles(product.status)
                   )}
                 >
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                      checked={selectedProducts.includes(product.id)}
-                      onChange={() => toggleSelect(product.id)}
-                    />
-                  </td>
-                  <td className="px-3 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          width={40}
-                          height={40}
-                          className="object-cover h-full w-full"
-                        />
-                      </div>
-                      <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">
-                        {product.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-4 text-sm text-gray-600 font-medium">{product.category}</td>
-                  <td className="px-3 py-4 text-sm text-gray-900 font-bold">${product.price.toFixed(2)}</td>
-                  <td className="px-3 py-4 text-sm text-gray-600 font-medium">{product.stock}</td>
-                  <td className="px-3 py-4">
-                    <span className={cn(
-                      "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border",
-                      getStatusStyles(product.status)
-                    )}>
-                      {product.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-all">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-all">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  {product.status}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              label: "Action",
+              align: "right",
+              render: (product) => (
+                <div className="flex justify-end gap-2">
+                  <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-all">
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-all">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-          <p className="text-sm text-gray-500 font-medium">
-            Showing <span className="text-gray-900 font-bold">1</span> to <span className="text-gray-900 font-bold">{filteredAndSortedProducts.length}</span> of <span className="text-gray-900 font-bold">128</span> entries
-          </p>
-          <div className="flex items-center gap-1.5">
-            <button className="flex items-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
-              <ChevronLeft className="h-4 w-4" />
-              Prev
-            </button>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, "...", 8, 9].map((page, i) => (
-                <button
-                  key={i}
-                  className={cn(
-                    "w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors",
-                    page === 1 ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-500 hover:bg-gray-50"
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-            <button className="flex items-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredAndSortedProducts.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
       </AdminCard>
+
+      <BulkActionBar
+        selectedCount={selectedProducts.length}
+        onDeselectAll={() => setSelectedProducts([])}
+        label="Categories Selected"
+        actions={bulkActions}
+      />
     </div>
   );
 }

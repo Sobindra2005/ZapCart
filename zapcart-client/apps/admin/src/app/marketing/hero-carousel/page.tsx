@@ -20,6 +20,8 @@ import {
     CardTitle,
 } from "@repo/ui/ui/card";
 import { AdminCard } from "@/components/AdminCard";
+import { FormPopup } from "@repo/ui/ui/form-popup";
+import { AddNewSlideForm } from "@/components/forms/AddNewSlideForm";
 
 interface CarouselSlide {
     id: string;
@@ -77,10 +79,18 @@ export default function HeroCarouselPage() {
                         <Settings className="h-4 w-4" />
                         Settings
                     </Button>
-                    <Button className="gap-2 font-bold bg-primary hover:bg-primary/90">
-                        <Plus className="h-4 w-4" />
-                        Add New Slide
-                    </Button>
+                    <FormPopup
+                        title="Add New Slide"
+                        description="Add a new slide to the hero carousel."
+                        trigger={
+                            <Button className="gap-2 font-bold bg-primary hover:bg-primary/90">
+                                <Plus className="h-4 w-4" />
+                                Add New Slide
+                            </Button>
+                        }
+                    >
+                        <AddNewSlideForm onSubmit={(data) => console.log(data)} />
+                    </FormPopup>
                 </div>
             </div>
 

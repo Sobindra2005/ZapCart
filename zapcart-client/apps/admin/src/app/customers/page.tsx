@@ -15,6 +15,8 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Input } from "@repo/ui/ui/input";
 import { SortSelect, SortOption } from "@repo/ui/SortSelect";
+import { BulkActionBar } from "@repo/ui/ui/bulk-action-bar";
+import { GlobeIcon } from "@radix-ui/react-icons";
 
 interface Customer {
     id: number;
@@ -132,11 +134,27 @@ const sortOptions: SortOption[] = [
     { value: "name-asc", label: "Name: A to Z" },
 ];
 
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@repo/ui/ui/table";
+import { Pagination } from "@repo/ui/ui/pagination";
+
+// ... existing imports
+
 export default function CustomerListingPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: null });
     const [sortOption, setSortOption] = useState<string>("newest");
     const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
+
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleSort = (key: keyof Customer) => {
         let direction: "asc" | "desc" | null = "asc";
@@ -175,11 +193,17 @@ export default function CustomerListingPage() {
         return result;
     }, [searchQuery, sortConfig]);
 
+    // Pagination Logic
+    const paginatedCustomers = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredAndSortedCustomers.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredAndSortedCustomers, currentPage]);
+
     const toggleSelectAll = () => {
-        if (selectedCustomers.length === filteredAndSortedCustomers.length) {
+        if (selectedCustomers.length === paginatedCustomers.length) {
             setSelectedCustomers([]);
         } else {
-            setSelectedCustomers(filteredAndSortedCustomers.map((c) => c.id));
+            setSelectedCustomers(paginatedCustomers.map((c) => c.id));
         }
     };
 
@@ -189,6 +213,25 @@ export default function CustomerListingPage() {
         );
     };
 
+    const bulkActions = [
+        {
+            icon: Edit,
+            label: "Bulk Edit",
+            onClick: () => console.log("Bulk edit", Array.from(selectedCustomers))
+        },
+        {
+            icon: GlobeIcon,
+            label: "Update Status",
+            onClick: () => console.log("Update status", Array.from(selectedCustomers))
+        },
+        {
+            icon: Trash2,
+            label: "",
+            onClick: () => console.log("Delete", Array.from(selectedCustomers)),
+            variant: "destructive" as const,
+            className: "h-8 w-8 p-0"
+        }
+    ];
 
     return (
         <div className="p-8">
@@ -216,171 +259,153 @@ export default function CustomerListingPage() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-gray-100 bg-gray-50/30">
-                                <th className="px-6 py-4 w-10">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-10 pl-6">
+                                <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                                    checked={
+                                        selectedCustomers.length === paginatedCustomers.length &&
+                                        paginatedCustomers.length > 0
+                                    }
+                                    onChange={toggleSelectAll}
+                                />
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer group"
+                                onClick={() => handleSort("name")}
+                            >
+                                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
+                                    Name
+                                    <SortIcon columnKey="name" sortConfig={sortConfig} />
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer group"
+                                onClick={() => handleSort("email")}
+                            >
+                                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
+                                    Email
+                                    <SortIcon columnKey="email" sortConfig={sortConfig} />
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer group"
+                                onClick={() => handleSort("phone")}
+                            >
+                                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
+                                    Phone
+                                    <SortIcon columnKey="phone" sortConfig={sortConfig} />
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer group"
+                                onClick={() => handleSort("country")}
+                            >
+                                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
+                                    Country
+                                    <SortIcon columnKey="country" sortConfig={sortConfig} />
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer group"
+                                onClick={() => handleSort("spent")}
+                            >
+                                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
+                                    Spent
+                                    <SortIcon columnKey="spent" sortConfig={sortConfig} />
+                                </div>
+                            </TableHead>
+                            <TableHead
+                                className="cursor-pointer group"
+                                onClick={() => handleSort("status")}
+                            >
+                                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
+                                    Status
+                                    <SortIcon columnKey="status" sortConfig={sortConfig} />
+                                </div>
+                            </TableHead>
+                            <TableHead className="text-right pr-6 uppercase text-xs font-semibold tracking-wider">Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedCustomers.map((customer) => (
+                            <TableRow
+                                key={customer.id}
+                                className={cn(
+                                    "hover:bg-gray-50/80 transition-colors group",
+                                    selectedCustomers.includes(customer.id) && "bg-primary/5 hover:bg-primary/10"
+                                )}
+                            >
+                                <TableCell className="pl-6">
                                     <input
                                         type="checkbox"
                                         className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                                        checked={
-                                            selectedCustomers.length === filteredAndSortedCustomers.length &&
-                                            filteredAndSortedCustomers.length > 0
-                                        }
-                                        onChange={toggleSelectAll}
+                                        checked={selectedCustomers.includes(customer.id)}
+                                        onChange={() => toggleSelect(customer.id)}
                                     />
-                                </th>
-                                <th
-                                    className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                                    onClick={() => handleSort("name")}
-                                >
-                                    <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                                        Name
-                                        <SortIcon columnKey="name" sortConfig={sortConfig} />
-                                    </div>
-                                </th>
-                                <th
-                                    className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                                    onClick={() => handleSort("email")}
-                                >
-                                    <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                                        Email
-                                        <SortIcon columnKey="email" sortConfig={sortConfig} />
-                                    </div>
-                                </th>
-                                <th
-                                    className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                                    onClick={() => handleSort("phone")}
-                                >
-                                    <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                                        Phone
-                                        <SortIcon columnKey="phone" sortConfig={sortConfig} />
-                                    </div>
-                                </th>
-                                <th
-                                    className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                                    onClick={() => handleSort("country")}
-                                >
-                                    <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                                        Country
-                                        <SortIcon columnKey="country" sortConfig={sortConfig} />
-                                    </div>
-                                </th>
-                                <th
-                                    className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                                    onClick={() => handleSort("spent")}
-                                >
-                                    <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                                        Spent
-                                        <SortIcon columnKey="spent" sortConfig={sortConfig} />
-                                    </div>
-                                </th>
-                                <th
-                                    className="px-3 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer group"
-                                    onClick={() => handleSort("status")}
-                                >
-                                    <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors">
-                                        Status
-                                        <SortIcon columnKey="status" sortConfig={sortConfig} />
-                                    </div>
-                                </th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {filteredAndSortedCustomers.map((customer) => (
-                                <tr
-                                    key={customer.id}
-                                    className={cn(
-                                        "hover:bg-gray-50/80 transition-colors group",
-                                        selectedCustomers.includes(customer.id) && "bg-primary/5 hover:bg-primary/10"
-                                    )}
-                                >
-                                    <td className="px-6 py-4">
-                                        <input
-                                            type="checkbox"
-                                            className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                                            checked={selectedCustomers.includes(customer.id)}
-                                            onChange={() => toggleSelect(customer.id)}
-                                        />
-                                    </td>
-                                    <td className="px-3 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                                <Image
-                                                    src={customer.avatar}
-                                                    alt={customer.name}
-                                                    width={40}
-                                                    height={40}
-                                                    className="object-cover h-full w-full"
-                                                />
-                                            </div>
-                                            <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">
-                                                {customer.name}
-                                            </span>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                                            <Image
+                                                src={customer.avatar}
+                                                alt={customer.name}
+                                                width={40}
+                                                height={40}
+                                                className="object-cover h-full w-full"
+                                            />
                                         </div>
-                                    </td>
-                                    <td className="px-3 py-4 text-sm text-gray-600 font-medium">{customer.email}</td>
-                                    <td className="px-3 py-4 text-sm text-gray-600 font-medium">{customer.phone}</td>
-                                    <td className="px-3 py-4 text-sm text-gray-600 font-medium">{customer.country}</td>
-                                    <td className="px-3 py-4 text-sm text-gray-900 font-bold">${customer.spent.toLocaleString()}</td>
-                                    <td className="px-3 py-4">
-                                        <span className={cn(
-                                            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border",
-                                            customer.status === "Active"
-                                                ? "bg-green-50 text-green-600 border-green-100"
-                                                : "bg-red-50 text-red-600 border-red-100"
-                                        )}>
-                                            {customer.status}
+                                        <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">
+                                            {customer.name}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-all">
-                                                <Edit className="h-4 w-4" />
-                                            </button>
-                                            <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-all">
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-sm text-gray-600 font-medium">{customer.email}</TableCell>
+                                <TableCell className="text-sm text-gray-600 font-medium">{customer.phone}</TableCell>
+                                <TableCell className="text-sm text-gray-600 font-medium">{customer.country}</TableCell>
+                                <TableCell className="text-sm text-gray-900 font-bold">${customer.spent.toLocaleString()}</TableCell>
+                                <TableCell>
+                                    <span className={cn(
+                                        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border",
+                                        customer.status === "Active"
+                                            ? "bg-green-50 text-green-600 border-green-100"
+                                            : "bg-red-50 text-red-600 border-red-100"
+                                    )}>
+                                        {customer.status}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="text-right pr-6">
+                                    <div className="flex justify-end gap-2">
+                                        <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-all">
+                                            <Edit className="h-4 w-4" />
+                                        </button>
+                                        <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-all">
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
 
-                {/* Footer / Pagination State */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-                    <p className="text-sm text-gray-500 font-medium">
-                        Showing <span className="text-gray-900 font-bold">2</span> to <span className="text-gray-900 font-bold">9</span> of <span className="text-gray-900 font-bold">128</span> entries
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                        <button className="flex items-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
-                            <ChevronLeft className="h-4 w-4" />
-                            Prev
-                        </button>
-                        <div className="flex items-center gap-1">
-                            {[1, 2, 3, "...", 8, 9].map((page, i) => (
-                                <button
-                                    key={i}
-                                    className={cn(
-                                        "w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors",
-                                        page === 2 ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-500 hover:bg-gray-50"
-                                    )}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                        </div>
-                        <button className="flex items-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
-                            Next
-                            <ChevronRight className="h-4 w-4" />
-                        </button>
-                    </div>
-                </div>
+                {/* Footer */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalItems={filteredAndSortedCustomers.length}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                />
             </div>
+            <BulkActionBar
+                selectedCount={selectedCustomers.length}
+                onDeselectAll={() => setSelectedCustomers([])}
+                label="Categories Selected"
+                actions={bulkActions}
+            />
         </div>
     );
 }

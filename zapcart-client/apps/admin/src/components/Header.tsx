@@ -2,6 +2,7 @@
 
 import { Search, Bell, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface HeaderProps {
     title: string;
@@ -13,16 +14,12 @@ export function Header({ title }: HeaderProps) {
             <h1 className="text-xl font-bold text-gray-900">{title}</h1>
 
             <div className="flex items-center gap-6">
-                {/* Search */}
-                <button className="text-gray-400 hover:text-gray-600">
-                    <Search className="h-5 w-5" />
-                </button>
 
                 {/* Notifications */}
-                <button className="relative text-gray-400 hover:text-gray-600">
+                <Link href="/notifications" className="relative text-gray-400 hover:text-gray-600">
                     <Bell className="h-5 w-5" />
                     <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500 border-2 border-white"></span>
-                </button>
+                </Link>
 
                 {/* User Profile */}
                 <div className="flex items-center gap-3 cursor-pointer group">
