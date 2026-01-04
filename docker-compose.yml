@@ -62,67 +62,6 @@ services:
       - ./backend/src:/app/src
       - ./backend/dist:/app/dist
 
-  # Next.js client
-  client:
-    build:
-      context: ./zapcart-client
-      dockerfile: Dockerfile
-    container_name: ecommerce-client
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost/api
-      - API_URL=http://backend:8080/api
-
-    ports:
-      - "3000:3000"
-      - "3001:3001"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - ecommerce-network
-
-    develop:
-      watch:
-        - action: sync
-          path: ./zapcart-client/apps/client/app
-          target: /app/apps/client/app
-          ignore: [node_modules]
-        - action: sync
-          path: ./zapcart-client/apps/client/components
-          target: /app/apps/client/components
-        - action: sync
-          path: ./zapcart-client/apps/client/contexts
-          target: /app/apps/client/contexts
-        - action: sync
-          path: ./zapcart-client/apps/client/lib
-          target: /app/apps/client/lib
-        - action: sync
-          path: ./zapcart-client/apps/client/types
-          target: /app/apps/client/types
-        - action: sync
-          path: ./zapcart-client/apps/client/public
-          target: /app/apps/client/public
-        - action: sync
-          path: ./zapcart-client/apps/client/data
-          target: /app/apps/client/data
-        - action: rebuild
-          path: ./zapcart-client/package.json
-
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
-        ]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 15s
-
   # Nginx reverse proxy
   nginx:
     build:
@@ -134,8 +73,6 @@ services:
       - "80:80"
     depends_on:
       backend:
-        condition: service_healthy
-      client:
         condition: service_healthy
     networks:
       - ecommerce-network
