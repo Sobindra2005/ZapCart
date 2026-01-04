@@ -242,7 +242,7 @@ SearchIndexSchema.index({
 });
 
 // Pre-save middleware to build searchText
-SearchIndexSchema.pre('save', function (next) {
+SearchIndexSchema.pre('save', function () {
   // Combine all searchable fields into searchText
   const parts = [
     this.name,
@@ -259,9 +259,6 @@ SearchIndexSchema.pre('save', function (next) {
     .join(' ')
     .toLowerCase()
     .trim();
-
-  // @ts-expect-error-next function
-  next();
 });
 
 // Static method to sync product to search index

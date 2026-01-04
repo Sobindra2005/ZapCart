@@ -51,7 +51,7 @@ export const config = {
     nodeEnv: validateNodeEnv(getEnvVariable('NODE_ENV', 'development')),
 
     // Database configuration
-    databaseUrl: getEnvVariable('DATABASE_URL', 'mongodb://localhost:27017/ecommerce'),
+    databaseUrl: getEnvVariable('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/ecommerce'),
     MONGODB_URL: getEnvVariable('MONGODB_URL', 'mongodb://localhost:27017/ecommerce'),
 
     //redis configuration

@@ -104,7 +104,6 @@ const ProductVariantSchema = new Schema<IProductVariant>(
     sku: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true
     },
@@ -358,7 +357,7 @@ ProductSchema.virtual('discountPercentage').get(function () {
 });
 
 // Pre-save middleware to generate slug if not provided
-ProductSchema.pre('save', function (next) {
+ProductSchema.pre('save', function () {
   if (!this.slug) {
     this.slug = this.name
       .toLowerCase()
@@ -377,17 +376,13 @@ ProductSchema.pre('save', function (next) {
   if (this.hasVariants && this.variants && this.variants.length > 0) {
     this.totalStock = this.variants.reduce((sum, variant) => sum + variant.stock, 0);
   }
-  // @ts-expect-error-next function
-  next();
 });
 
 // Pre-save middleware to set publishedAt when status changes to active
-ProductSchema.pre('save', function (next) {
+ProductSchema.pre('save', function () {
   if (this.isModified('status') && this.status === 'active' && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  // @ts-expect-error-next function
-  next();
 });
 
 // Post-save hook to sync to search index

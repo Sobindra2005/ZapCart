@@ -211,32 +211,6 @@ ProductReviewSchema.virtual('isApproved').get(function () {
   return this.status === 'approved';
 });
 
-// Pre-save validation: verify purchase if orderId is provided
-ProductReviewSchema.pre('save', async function (next) {
-  if (this.isNew && this.orderId) {
-    const Order = mongoose.model('Order');
-    const order = await Order.findOne({
-      _id: this.orderId,
-      userId: this.user,
-      status: { $in: ['delivered', 'completed'] }
-    });
-
-    if (order) {
-      // Check if product is in the order
-      const orderItems = order.items || [];
-      const productInOrder = orderItems.some((item: { product: mongoose.Types.ObjectId }) =>
-        item.product.toString() === this.product.toString()
-      );
-
-      if (productInOrder) {
-        this.isVerifiedPurchase = true;
-      }
-    }
-  }
-  // @ts-expect-error-next function
-  next();
-});
-
 // Post-save middleware to update product rating
 ProductReviewSchema.post('save', async function (doc) {
   if (doc.status === 'approved') {
