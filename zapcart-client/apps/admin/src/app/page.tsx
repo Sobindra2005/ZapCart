@@ -63,17 +63,40 @@ const stats: Stat[] = [
     { label: "Online Visitors", value: "42,456", trend: "- 11%", trendDir: "down", vs: "VS last week" },
 ];
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@repo/ui/ui/table";
-// ... existing imports
+import { DataTable } from "@/components/common/DataTable";
+import { useMemo, useState } from "react";
+
 
 export default function DashboardPage() {
+    const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: "asc" | "desc" | null }>({
+        key: null,
+        direction: null,
+    });
+
+    const handleSort = (key: string) => {
+        let direction: "asc" | "desc" | null = "asc";
+        if (sortConfig.key === key) {
+            if (sortConfig.direction === "asc") direction = "desc";
+            else if (sortConfig.direction === "desc") direction = null;
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedProducts = useMemo(() => {
+        let result = [...topProducts];
+        if (sortConfig.key && sortConfig.direction) {
+            result.sort((a, b) => {
+                const aValue = (a as any)[sortConfig.key!];
+                const bValue = (b as any)[sortConfig.key!];
+
+                if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+                if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+                return 0;
+            });
+        }
+        return result;
+    }, [sortConfig]);
+
     return (
         <div className="flex flex-col gap-6 p-8 bg-gray-50/50 min-h-screen">
 
@@ -178,53 +201,78 @@ export default function DashboardPage() {
                             </button>
                         </div>
                     </div>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-10 pl-6 pb-4 pt-1">
-                                    <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" />
-                                </TableHead>
-                                <TableHead className="pb-4 pt-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Product Name <ChevronDown className="h-3 w-3 inline ml-1" /></TableHead>
-                                <TableHead className="pb-4 pt-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Price <ChevronDown className="h-3 w-3 inline ml-1" /></TableHead>
-                                <TableHead className="pb-4 pt-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Category <ChevronDown className="h-3 w-3 inline ml-1" /></TableHead>
-                                <TableHead className="pb-4 pt-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Quantity <ChevronDown className="h-3 w-3 inline ml-1" /></TableHead>
-                                <TableHead className="pb-4 pt-1 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Amount <ChevronDown className="h-3 w-3 inline ml-1" /></TableHead>
-                                <TableHead className="pb-4 pt-1 px-6 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {topProducts.map((product, i) => (
-                                <TableRow key={i} className="hover:bg-gray-50/50 transition-colors group">
-                                    <TableCell className="py-4 pl-6">
-                                        <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" />
-                                    </TableCell>
-                                    <TableCell className="py-4 px-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                                                <Image
-                                                    src={product.image}
-                                                    alt={product.name}
-                                                    width={40}
-                                                    height={40}
-                                                    className="object-cover h-full w-full"
-                                                />
-                                            </div>
-                                            <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">{product.name}</span>
+                    <DataTable
+                        data={sortedProducts}
+                        keyExtractor={(product) => product.name}
+                        sortConfig={sortConfig as any}
+                        onSort={handleSort as any}
+                        columns={[
+                            {
+                                key: "name",
+                                label: "Product Name",
+                                sortKey: "name",
+                                render: (product) => (
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+                                            <Image
+                                                src={product.image}
+                                                alt={product.name}
+                                                width={40}
+                                                height={40}
+                                                className="object-cover h-full w-full"
+                                            />
                                         </div>
-                                    </TableCell>
-                                    <TableCell className="py-4 px-3 text-sm text-gray-500 font-medium text-right">${product.price.toFixed(2)}</TableCell>
-                                    <TableCell className="py-4 px-3 text-sm text-gray-500 font-medium">{product.category}</TableCell>
-                                    <TableCell className="py-4 px-3 text-sm text-gray-500 font-medium text-right">{product.quantity}</TableCell>
-                                    <TableCell className="py-4 px-3 text-sm text-gray-900 font-bold text-right">${product.amount.toFixed(2)}</TableCell>
-                                    <TableCell className="py-4 pr-6 pl-4 text-right">
-                                        <button className="text-gray-400 hover:text-primary transition-colors">
-                                            <ArrowUpRight className="h-5 w-5" />
-                                        </button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                        <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">{product.name}</span>
+                                    </div>
+                                )
+                            },
+                            {
+                                key: "price",
+                                label: "Price",
+                                sortKey: "price",
+                                align: "right",
+                                render: (product) => (
+                                    <span className="text-sm text-gray-500 font-medium">${product.price.toFixed(2)}</span>
+                                )
+                            },
+                            {
+                                key: "category",
+                                label: "Category",
+                                sortKey: "category",
+                                render: (product) => (
+                                    <span className="text-sm text-gray-500 font-medium">{product.category}</span>
+                                )
+                            },
+                            {
+                                key: "quantity",
+                                label: "Quantity",
+                                sortKey: "quantity",
+                                align: "right",
+                                render: (product) => (
+                                    <span className="text-sm text-gray-500 font-medium">{product.quantity}</span>
+                                )
+                            },
+                            {
+                                key: "amount",
+                                label: "Amount",
+                                sortKey: "amount",
+                                align: "right",
+                                render: (product) => (
+                                    <span className="text-sm text-gray-900 font-bold">${product.amount.toFixed(2)}</span>
+                                )
+                            },
+                            {
+                                key: "action",
+                                label: "Action",
+                                align: "right",
+                                render: () => (
+                                    <button className="text-gray-400 hover:text-primary transition-colors">
+                                        <ArrowUpRight className="h-5 w-5" />
+                                    </button>
+                                )
+                            }
+                        ]}
+                    />
                 </AdminCard>
 
                 {/* Monthly Target Radial Chart */}

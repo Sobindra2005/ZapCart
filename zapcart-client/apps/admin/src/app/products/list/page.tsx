@@ -3,12 +3,7 @@
 import {
   Filter,
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Search,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -106,15 +101,7 @@ const initialProducts: Product[] = [
   },
 ];
 
-function SortIcon({ columnKey, sortConfig }: { columnKey: keyof Product; sortConfig: SortConfig }) {
-  const isActive = sortConfig.key === columnKey;
-  if (!isActive || !sortConfig.direction) return <ArrowUpDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />;
-  return sortConfig.direction === "asc" ? (
-    <ArrowUp className="h-4 w-4 text-primary" />
-  ) : (
-    <ArrowDown className="h-4 w-4 text-primary" />
-  );
-}
+
 
 const getStatusStyles = (status: string) => {
   switch (status) {
@@ -141,17 +128,11 @@ const sortOptions: SortOption[] = [
   { value: "stock-low", label: "Stock: Low to High" },
 ];
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/ui/ui/table";
+
 import { Pagination } from "@repo/ui/ui/pagination";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { AddProductForm } from "@/components/forms/AddProductForm";
+import { DataTable } from "@/components/common/DataTable";
 
 // ... existing imports
 
@@ -215,9 +196,10 @@ export default function ProductListPage() {
     }
   };
 
-  const toggleSelect = (id: number) => {
+  const toggleSelect = (id: string | number) => {
+    const numericId = Number(id);
     setSelectedProducts((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(numericId) ? prev.filter((item) => item !== numericId) : [...prev, numericId]
     );
   };
 
@@ -303,126 +285,98 @@ export default function ProductListPage() {
         </div>
 
         {/* Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10 pl-6">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                  checked={
-                    selectedProducts.length === paginatedProducts.length &&
-                    paginatedProducts.length > 0
-                  }
-                  onChange={toggleSelectAll}
-                />
-              </TableHead>
-              <TableHead
-                className="cursor-pointer group"
-                onClick={() => handleSort("name")}
-              >
-                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
-                  Product Name
-                  <SortIcon columnKey="name" sortConfig={sortConfig} />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer group"
-                onClick={() => handleSort("category")}
-              >
-                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
-                  Category
-                  <SortIcon columnKey="category" sortConfig={sortConfig} />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer group"
-                onClick={() => handleSort("price")}
-              >
-                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
-                  Price
-                  <SortIcon columnKey="price" sortConfig={sortConfig} />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer group"
-                onClick={() => handleSort("stock")}
-              >
-                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
-                  Stock
-                  <SortIcon columnKey="stock" sortConfig={sortConfig} />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer group"
-                onClick={() => handleSort("status")}
-              >
-                <div className="flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider">
-                  Status
-                  <SortIcon columnKey="status" sortConfig={sortConfig} />
-                </div>
-              </TableHead>
-              <TableHead className="text-right pr-6 uppercase text-xs font-semibold tracking-wider">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedProducts.map((product) => (
-              <TableRow
-                key={product.id}
-                className={cn(
-                  "hover:bg-gray-50/80 transition-colors group",
-                  selectedProducts.includes(product.id) && "bg-primary/5 hover:bg-primary/10"
-                )}
-              >
-                <TableCell className="pl-6">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                    checked={selectedProducts.includes(product.id)}
-                    onChange={() => toggleSelect(product.id)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        width={40}
-                        height={40}
-                        className="object-cover h-full w-full"
-                      />
-                    </div>
-                    <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">
-                      {product.name}
-                    </span>
+        <DataTable
+          data={paginatedProducts}
+          keyExtractor={(product) => product.id}
+          selectedIds={selectedProducts}
+          onSelect={toggleSelect}
+          onSelectAll={toggleSelectAll}
+          sortConfig={sortConfig}
+          onSort={handleSort}
+          columns={[
+            {
+              key: "name",
+              label: "Product Name",
+              sortKey: "name",
+              render: (product) => (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      width={40}
+                      height={40}
+                      className="object-cover h-full w-full"
+                    />
                   </div>
-                </TableCell>
-                <TableCell className="text-sm text-gray-600 font-medium">{product.category}</TableCell>
-                <TableCell className="text-sm text-gray-900 font-bold">${product.price.toFixed(2)}</TableCell>
-                <TableCell className="text-sm text-gray-600 font-medium">{product.stock}</TableCell>
-                <TableCell>
-                  <span className={cn(
+                  <span className="font-bold text-gray-900 group-hover:text-primary transition-colors">
+                    {product.name}
+                  </span>
+                </div>
+              ),
+            },
+            {
+              key: "category",
+              label: "Category",
+              sortKey: "category",
+              render: (product) => (
+                <span className="text-sm text-gray-600 font-medium">
+                  {product.category}
+                </span>
+              ),
+            },
+            {
+              key: "price",
+              label: "Price",
+              sortKey: "price",
+              render: (product) => (
+                <span className="text-sm text-gray-900 font-bold">
+                  ${product.price.toFixed(2)}
+                </span>
+              ),
+            },
+            {
+              key: "stock",
+              label: "Stock",
+              sortKey: "stock",
+              render: (product) => (
+                <span className="text-sm text-gray-600 font-medium">
+                  {product.stock}
+                </span>
+              ),
+            },
+            {
+              key: "status",
+              label: "Status",
+              sortKey: "status",
+              render: (product) => (
+                <span
+                  className={cn(
                     "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border",
                     getStatusStyles(product.status)
-                  )}>
-                    {product.status}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right pr-6">
-                  <div className="flex justify-end gap-2">
-                    <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-all">
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-all">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  )}
+                >
+                  {product.status}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              label: "Action",
+              align: "right",
+              render: (product) => (
+                <div className="flex justify-end gap-2">
+                  <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-all">
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-all">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {/* Footer */}
         <Pagination
