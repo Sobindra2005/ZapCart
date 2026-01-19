@@ -8,11 +8,11 @@ import asyncHandler from '@/utils/asyncHandler';
  * POST /api/v1/addresses
  */
 export const createAddress = asyncHandler(async (req: Request, res: Response) => {
-    const { fullName, phone, addressLine1, addressLine2, city, state, country, postalCode, isDefault } = req.body;
+    const { fullName, phone, address, city, state, country, postalCode, isDefault, location } = req.body;
     const userId = req.user!.id;
 
     // 1. Validate required fields
-    if (!fullName || !phone || !addressLine1 || !city || !state || !country || !postalCode) {
+    if (!fullName || !phone || !address || !city || !state || !country || !postalCode) {
         throw new AppError('Please provide all required address fields', 400);
     }
 
@@ -25,24 +25,24 @@ export const createAddress = asyncHandler(async (req: Request, res: Response) =>
     }
 
     // 3. Create address
-    const address = await prisma.address.create({
+    const addressRes = await prisma.address.create({
         data: {
             userId,
             fullName,
             phone,
-            addressLine1,
-            addressLine2,
+            address,
             city,
             state,
             country,
             postalCode,
             isDefault: isDefault || false,
+            location
         },
     });
 
     res.status(201).json({
         status: 'success',
-        data: { address },
+        data: { address: addressRes },
     });
 });
 
@@ -98,7 +98,7 @@ export const getAddress = asyncHandler(async (req: Request, res: Response) => {
  */
 export const updateAddress = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { fullName, phone, addressLine1, addressLine2, city, state, country, postalCode, isDefault } = req.body;
+    const { fullName, phone, address, city, state, country, postalCode, isDefault, location } = req.body;
     const userId = req.user!.id;
 
     // 1. Check if address exists and belongs to user
@@ -128,14 +128,14 @@ export const updateAddress = asyncHandler(async (req: Request, res: Response) =>
         data: {
             fullName,
             phone,
-            addressLine1,
-            addressLine2,
+            address,
             city,
             state,
             country,
             postalCode,
             isDefault,
-        },
+            location,
+        }
     });
 
     res.status(200).json({
@@ -183,7 +183,7 @@ export const getUserAddresses = asyncHandler(async (req: Request, res: Response)
         where: { userId },
         orderBy: { createdAt: 'desc' },
     });
-    
+
     res.status(200).json({
         status: 'success',
         results: addresses.length,
