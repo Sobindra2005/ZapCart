@@ -27,6 +27,8 @@ export default function CartPage() {
 
     })
 
+    console.log("User addresses:", data);
+
     const handlePlaceOrder = (details: { paymentMethod: string }) => {
         console.log("Order placed:", details);
         clearCart();
