@@ -1,14 +1,22 @@
 import { Product } from "./product";
 
 export interface Address {
-    id: string;
-    type: "Home" | "Work" | "Other";
-    street: string;
+    id: number;
+    userId: number;
+    fullName: string;
+    phone: string;
+    address: string;
     city: string;
     state: string;
-    zipCode: string;
+    postalCode: string;
     country: string;
+    location: {
+        latitude: number;
+        longitude: number;
+    };
     isDefault: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface OrderItem {

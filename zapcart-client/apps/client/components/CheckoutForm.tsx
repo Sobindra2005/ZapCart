@@ -15,6 +15,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MdEmail, MdPerson } from "react-icons/md";
 import { Checkbox } from "@repo/ui/ui/checkbox";
 import { selectUser, useUserStore } from "@/stores";
+import { useQuery } from "@tanstack/react-query";
+import { addressApi } from "@/utils/api";
+import { Address } from "@/types/user";
 
 interface OrderDetails {
     paymentMethod: string;
@@ -49,21 +52,41 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
         mode: "onChange",
     });
 
+    const { data } = useQuery({
+        queryKey: ['userAddresses'],
+        queryFn: addressApi.getUserAddress
+
+    })
+
+    const defaultAddress: Address[] = data?.data.addresses
+
     useEffect(() => {
         if (user) {
             form.setValue("firstName", user.firstName || "");
             form.setValue("lastName", user.lastName || "");
             form.setValue("email", user.email || "");
+            if (defaultAddress && defaultAddress.length > 0) {
+                form.setValue("address", defaultAddress[0].address || "");
+                form.setValue("city", defaultAddress[0].city || "");
+                form.setValue("zip", defaultAddress[0].postalCode || "");
+                form.setValue("shippingCoordinates", {
+                    lat: defaultAddress[0].location.latitude,
+                    lng: defaultAddress[0].location.longitude,
+                });
+            }
         }
-    }, [user, form]);
+    }, [user, form , defaultAddress]);
 
     const sameAsBilling = form.watch("sameAsBilling");
 
     const onSubmit = (data: CheckoutFormData) => {
+
+        console.log("Checkout data:", data);
+
         // Simulate processing
-        setTimeout(() => {
-            onPlaceOrder({ paymentMethod: data.paymentMethod });
-        }, 1000);
+        // setTimeout(() => {
+        //     onPlaceOrder({ paymentMethod: data.paymentMethod });
+        // }, 1000);
     };
 
     const handleLocationSelect = (location: { lat: number; lng: number; address: string; city: string; zip: string }) => {

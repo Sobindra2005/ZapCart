@@ -11,6 +11,7 @@ import { CheckoutForm } from "@/components/CheckoutForm";
 import { OrderConfirmation } from "@/components/OrderConfirmation";
 import { useQuery } from "@tanstack/react-query";
 import { addressApi } from "@/utils/api";
+import { Address } from "@/types/user";
 
 export default function CartPage() {
     const { items, updateQuantity, removeFromCart, getSubtotal, clearCart } = useCart();
@@ -20,14 +21,6 @@ export default function CartPage() {
         setStep("checkout");
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
-
-    const { data } = useQuery({
-        queryKey: ['userAddresses'],
-        queryFn: addressApi.getUserAddress
-
-    })
-
-    console.log("User addresses:", data);
 
     const handlePlaceOrder = (details: { paymentMethod: string }) => {
         console.log("Order placed:", details);
