@@ -15,7 +15,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MdEmail, MdPerson } from "react-icons/md";
 import { Checkbox } from "@repo/ui/ui/checkbox";
 import { selectUser, useUserStore } from "@/stores";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { addressApi } from "@/utils/api";
 import { Address } from "@/types/user";
 
@@ -60,6 +60,67 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
 
     const defaultAddress: Address[] = data?.data.addresses
 
+    // Mutation for creating addresses
+    const createAddressMutation = useMutation({
+        mutationFn: async (formData: CheckoutFormData) => {
+            const { sameAsBilling } = formData;
+            
+            // Prepare shipping address
+            const shippingAddressData = {
+                fullName: `${formData.firstName} ${formData.lastName}`,
+                phone: "", // Add phone field if available
+                addressLine1: formData.address,
+                city: formData.city,
+                state: "", // Add state field if available
+                country: "", // Add country field if available
+                postalCode: formData.zip,
+                isDefault: true,
+                location: formData.shippingCoordinates ? {
+                    latitude: formData.shippingCoordinates.lat,
+                    longitude: formData.shippingCoordinates.lng
+                } : undefined
+            };
+
+            if (sameAsBilling) {
+                // Create only shipping address
+                return await addressApi.createAddress(shippingAddressData);
+            } else {
+                // Create both shipping and billing addresses
+                const billingAddressData = {
+                    fullName: `${formData.firstName} ${formData.lastName}`,
+                    phone: "",
+                    addressLine1: formData.billingAddress || "",
+                    city: formData.billingCity || "",
+                    state: "",
+                    country: "",
+                    postalCode: formData.billingZip || "",
+                    isDefault: false,
+                    location: formData.billingCoordinates ? {
+                        latitude: formData.billingCoordinates.lat,
+                        longitude: formData.billingCoordinates.lng
+                    } : undefined
+                };
+
+                // Create both addresses
+                const [shippingResult, billingResult] = await Promise.all([
+                    addressApi.createAddress(shippingAddressData),
+                    addressApi.createAddress(billingAddressData)
+                ]);
+
+                return { shipping: shippingResult, billing: billingResult };
+            }
+        },
+        onSuccess: (data, variables) => {
+            console.log("Address(es) created successfully", data);
+            // Proceed with order placement
+            onPlaceOrder({ paymentMethod: variables.paymentMethod });
+        },
+        onError: (error) => {
+            console.error("Error creating address:", error);
+            // Handle error (show toast, etc.)
+        }
+    });
+
     useEffect(() => {
         if (user) {
             form.setValue("firstName", user.firstName || "");
@@ -80,13 +141,8 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
     const sameAsBilling = form.watch("sameAsBilling");
 
     const onSubmit = (data: CheckoutFormData) => {
-
-        console.log("Checkout data:", data);
-
-        // Simulate processing
-        // setTimeout(() => {
-        //     onPlaceOrder({ paymentMethod: data.paymentMethod });
-        // }, 1000);
+        // Trigger the mutation to create address(es)
+        createAddressMutation.mutate(data);
     };
 
     const handleLocationSelect = (location: { lat: number; lng: number; address: string; city: string; zip: string }) => {
@@ -237,9 +293,9 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
                         <Button
                             type="submit"
                             className="flex-1 bg-black text-white hover:bg-gray-800"
-                            disabled={!form.formState.isValid || form.formState.isSubmitting}
+                            disabled={!form.formState.isValid || form.formState.isSubmitting || createAddressMutation.isPending}
                         >
-                            {form.formState.isSubmitting ? "Processing..." : "Place Order"}
+                            {createAddressMutation.isPending ? "Processing..." : "Place Order"}
                         </Button>
                     </div>
                 </form>
