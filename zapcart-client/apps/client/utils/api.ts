@@ -193,7 +193,7 @@ export const addressApi = {
     getAllAddress: () => {
         return apiClient.get('/addresses');
     },
-    createAddress: (data: { fullName: string; phone: string; addressLine1: string; addressLine2?: string; city: string; state: string; country: string; postalCode: string; isDefault: boolean }) => {
+    createAddress: (data: { fullName: string; phone: string; address?: string;  city: string; postalCode: string; isDefault: boolean }) => {
         return apiClient.post('/addresses', data);
     },
     getUserAddress:()=>{
@@ -202,7 +202,7 @@ export const addressApi = {
     getAddressById: (id: string) => {
         return apiClient.get(`/addresses/${id}`);
     },
-    updateAddress: (id: string, data: { fullName?: string; phone?: string; addressLine1?: string; addressLine2?: string; city?: string; state?: string; country?: string; postalCode?: string; isDefault?: boolean }) => {
+    updateAddress: (id: string, data: { fullName?: string; phone?: string; address?: string;  city?: string; postalCode?: string; isDefault?: boolean }) => {
         return apiClient.put(`/addresses/${id}`, data);
     },
     deleteAddress: (id: string) => {

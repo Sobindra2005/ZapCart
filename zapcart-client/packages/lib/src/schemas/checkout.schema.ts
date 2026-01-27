@@ -5,6 +5,10 @@ export const checkoutSchema = z.object({
     firstName: z.string().min(2, "First name must be at least 2 characters"),
     lastName: z.string().min(2, "Last name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email address"),
+    phone: z.string().regex(
+        /^(\+977)?[9][6-9]\d{8}$/,
+        "Please enter a valid Nepali phone number (e.g., 9812345678 or +9779812345678)"
+    ),
     address: z.string().min(5, "Address must be at least 5 characters"),
     city: z.string().min(2, "City must be at least 2 characters"),
     zip: z.string().min(3, "ZIP code must be at least 3 characters"),

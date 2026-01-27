@@ -18,26 +18,30 @@ import { selectUser, useUserStore } from "@/stores";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { addressApi } from "@/utils/api";
 import { Address } from "@/types/user";
+import { toast } from "sonner";
 
 interface OrderDetails {
     paymentMethod: string;
 }
 
 interface CheckoutFormProps {
-    onPlaceOrder: (details: OrderDetails) => void;
+    onPlaceOrder: (details: OrderDetails, addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined }) => void;
     onBack: () => void;
+
 }
 
 export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
     const [showLocationPicker, setShowLocationPicker] = useState(false);
     const [isShippingPicker, setIsShippingPicker] = useState(true);
     const user = useUserStore(selectUser);
+    console.log("User in CheckoutForm:", user);
     const form = useForm<CheckoutFormData>({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
             firstName: user?.firstName || "",
             lastName: user?.lastName || "",
             email: user?.email || "",
+            phone: user?.phone || "",
             address: "",
             city: "",
             zip: "",
@@ -68,11 +72,9 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
             // Prepare shipping address
             const shippingAddressData = {
                 fullName: `${formData.firstName} ${formData.lastName}`,
-                phone: "", // Add phone field if available
-                addressLine1: formData.address,
+                phone: formData.phone,
+                address: formData.address,
                 city: formData.city,
-                state: "", // Add state field if available
-                country: "", // Add country field if available
                 postalCode: formData.zip,
                 isDefault: true,
                 location: formData.shippingCoordinates ? {
@@ -88,11 +90,9 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
                 // Create both shipping and billing addresses
                 const billingAddressData = {
                     fullName: `${formData.firstName} ${formData.lastName}`,
-                    phone: "",
-                    addressLine1: formData.billingAddress || "",
+                    phone: formData.phone,
+                    address: formData.billingAddress || "",
                     city: formData.billingCity || "",
-                    state: "",
-                    country: "",
                     postalCode: formData.billingZip || "",
                     isDefault: false,
                     location: formData.billingCoordinates ? {
@@ -112,11 +112,27 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
         },
         onSuccess: (data, variables) => {
             console.log("Address(es) created successfully", data);
+            toast.success("Order placed successfully!");
+            
+            let billingAddressId: string | undefined;
+            let shippingAddressId: string | undefined;
+            
+            if (sameAsBilling) {
+                // Single address response
+                shippingAddressId = data?.data?.address.id;
+                billingAddressId = data?.data?.address.id;
+            } else {
+                // Both addresses response
+                shippingAddressId = data?.shipping?.data?.address.id;
+                billingAddressId = data?.billing?.data?.address.id;
+            }
+            
             // Proceed with order placement
-            onPlaceOrder({ paymentMethod: variables.paymentMethod });
+            onPlaceOrder({ paymentMethod: variables.paymentMethod }, { billingAddressId, shippingAddressId });
         },
-        onError: (error) => {
+        onError: (error: any) => {
             console.error("Error creating address:", error);
+            toast.error(`${error.response?.data?.message ? ` ${error.response.data.message}` : ""}`);
             // Handle error (show toast, etc.)
         }
     });
@@ -126,6 +142,7 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
             form.setValue("firstName", user.firstName || "");
             form.setValue("lastName", user.lastName || "");
             form.setValue("email", user.email || "");
+            form.setValue("phone", user.phone || "");
             if (defaultAddress && defaultAddress.length > 0) {
                 form.setValue("address", defaultAddress[0].address || "");
                 form.setValue("city", defaultAddress[0].city || "");
@@ -209,6 +226,14 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
                             disabled={!!user?.email}
                             placeholder="john@example.com"
                             icon={<MdEmail size={18} />}
+                        />
+
+                        <FormInput
+                            control={form.control}
+                            name="phone"
+                            label="Phone Number"
+                            type="tel"
+                            placeholder="+977 9XXXXXXXX"
                         />
 
                         <AddressFields

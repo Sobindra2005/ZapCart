@@ -66,11 +66,11 @@ async function findNearbyAddress(
  * If a nearby address exists, updates it instead of creating a new one.
  */
 export const createAddress = asyncHandler(async (req: Request, res: Response) => {
-    const { fullName, phone, address, city, state, country, postalCode, isDefault, location } = req.body;
+    const { fullName, phone, address, city,  postalCode, isDefault, location } = req.body;
     const userId = req.user!.id;
 
     // 1. Validate required fields
-    if (!fullName || !phone || !address || !city || !state || !country || !postalCode) {
+    if (!fullName || !phone || !address || !city  || !postalCode) {
         throw new AppError('Please provide all required address fields', 400);
     }
 
@@ -97,8 +97,6 @@ export const createAddress = asyncHandler(async (req: Request, res: Response) =>
                 phone,
                 address,
                 city,
-                state,
-                country,
                 postalCode,
                 location,
                 // Only update isDefault if explicitly provided
@@ -130,8 +128,6 @@ export const createAddress = asyncHandler(async (req: Request, res: Response) =>
             phone,
             address,
             city,
-            state,
-            country,
             postalCode,
             isDefault: isDefault || false,
             location,

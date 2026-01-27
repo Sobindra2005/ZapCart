@@ -9,9 +9,6 @@ import { OrderSummary } from "@/components/OrderSummary";
 import { Button } from "@repo/ui/ui/button";
 import { CheckoutForm } from "@/components/CheckoutForm";
 import { OrderConfirmation } from "@/components/OrderConfirmation";
-import { useQuery } from "@tanstack/react-query";
-import { addressApi } from "@/utils/api";
-import { Address } from "@/types/user";
 
 export default function CartPage() {
     const { items, updateQuantity, removeFromCart, getSubtotal, clearCart } = useCart();
@@ -22,8 +19,8 @@ export default function CartPage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handlePlaceOrder = (details: { paymentMethod: string }) => {
-        console.log("Order placed:", details);
+    const handlePlaceOrder = (details: { paymentMethod: string }, addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined }) => {
+        console.log("Order placed:", {details, addressIds, items, discount: 0 ,shippingCost:100,tax:13, });
         clearCart();
         setStep("order");
         window.scrollTo({ top: 0, behavior: "smooth" });
