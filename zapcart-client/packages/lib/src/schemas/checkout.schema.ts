@@ -29,7 +29,7 @@ export const checkoutSchema = z.object({
         })
         .nullable()
         .optional(),
-    paymentMethod: z.enum(["card", "paypal", "cod"], {
+    paymentMethod: z.enum(["BANK_TRANSFER", "CASH_ON_DELIVERY"], {
         message: "Please select a payment method",
     }),
 

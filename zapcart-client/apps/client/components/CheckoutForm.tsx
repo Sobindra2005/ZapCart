@@ -21,7 +21,7 @@ import { Address } from "@/types/user";
 import { toast } from "sonner";
 
 interface OrderDetails {
-    paymentMethod: string;
+    paymentMethod: "BANK_TRANSFER" | "CASH_ON_DELIVERY";
 }
 
 interface CheckoutFormProps {
@@ -51,7 +51,7 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
             billingCity: "",
             billingZip: "",
             billingCoordinates: null,
-            paymentMethod: "card",
+            paymentMethod: "CASH_ON_DELIVERY",
         },
         mode: "onChange",
     });
@@ -295,16 +295,12 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
                                     className="flex flex-col space-y-2"
                                 >
                                     <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-gray-50">
-                                        <RadioGroupItem value="card" id="card" />
-                                        <Label htmlFor="card" className="flex-1 cursor-pointer">Credit Card</Label>
+                                        <RadioGroupItem value="BANK_TRANSFER" id="BANK_TRANSFER" />
+                                        <Label htmlFor="BANK_TRANSFER" className="flex-1 cursor-pointer">Bank Transfer</Label>
                                     </div>
                                     <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-gray-50">
-                                        <RadioGroupItem value="paypal" id="paypal" />
-                                        <Label htmlFor="paypal" className="flex-1 cursor-pointer">PayPal</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-gray-50">
-                                        <RadioGroupItem value="cod" id="cod" />
-                                        <Label htmlFor="cod" className="flex-1 cursor-pointer">Cash on Delivery</Label>
+                                        <RadioGroupItem value="CASH_ON_DELIVERY" id="CASH_ON_DELIVERY" />
+                                        <Label htmlFor="CASH_ON_DELIVERY" className="flex-1 cursor-pointer">Cash on Delivery</Label>
                                     </div>
                                 </RadioGroup>
                             )}

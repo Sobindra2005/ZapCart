@@ -49,7 +49,7 @@ model Address {
   userId         Int?
   fullName       String
   phone          String
-  address     String
+  address        String
   city           String
   postalCode     String
   isDefault      Boolean  @default(false)
@@ -101,10 +101,7 @@ model OrderItem {
   id           Int            @id @default(autoincrement())
   orderId      Int
   productId    String
-  productName  String
   sku          String?
-  variantId    String?
-  variantName  String?
   quantity     Int
   unitPrice    Decimal        @db.Decimal(10, 2)
   totalPrice   Decimal        @db.Decimal(10, 2)
@@ -175,7 +172,6 @@ model Transaction {
 model Inventory {
   id                Int            @id @default(autoincrement())
   productId         String         @unique
-  variantId         String?        @unique
   sku               String         @unique
   quantityInStock   Int            @default(0)
   reservedQuantity  Int            @default(0)

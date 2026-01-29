@@ -9,6 +9,7 @@ import { OrderSummary } from "@/components/OrderSummary";
 import { Button } from "@repo/ui/ui/button";
 import { CheckoutForm } from "@/components/CheckoutForm";
 import { OrderConfirmation } from "@/components/OrderConfirmation";
+import { orderApi } from "@/utils/api";
 
 export default function CartPage() {
     const { items, updateQuantity, removeFromCart, getSubtotal, clearCart } = useCart();
@@ -19,11 +20,48 @@ export default function CartPage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handlePlaceOrder = (details: { paymentMethod: string }, addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined }) => {
+    // Mutation function to create order
+    const createOrderMutation = async (
+        details: { paymentMethod: string },
+        addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined },
+        items: typeof items
+    ) => {
+        // Prepare items for back
+        // end
+        const orderItems = items.map((item) => ({
+            productId: item.id,
+            sku: item.sku || "",
+            quantity: item.quantity,
+            unitPrice: item.price,
+            discount: item.discount || 0,
+        }));
+        // Example static values for shippingCost, tax, discount
+        const shippingCost = 100;
+        const tax = 13;
+        const discount = 0;
+        // Call API
+        return orderApi.createOrder({
+            shippingAddressId: parseInt(addressIds.shippingAddressId || "0"),
+            billingAddressId: parseInt(addressIds.billingAddressId || "0"),
+            items: orderItems,
+            shippingCost,
+            tax,
+            discount,
+            paymentMethod: details.paymentMethod,
+        });
+    };
+
+    const handlePlaceOrder = async (details: { paymentMethod: string }, addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined }) => {
         console.log("Order placed:", {details, addressIds, items, discount: 0 ,shippingCost:100,tax:13, });
-        clearCart();
-        setStep("order");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        
+        try {
+            await createOrderMutation(details, addressIds, items);
+            clearCart();
+            setStep("order");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch (error) {
+            console.error("Order creation failed:", error);
+        }
     };
 
     return (

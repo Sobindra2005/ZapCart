@@ -31,11 +31,7 @@ const getEstimatedDeliveryDays = async (): Promise<number> => {
 };
 
 interface OrderItemInput {
-    productId: number;
-    productName: string;
-    sku: string;
-    variantId?: number;
-    variantName?: string;
+    productId: number;    sku: string;
     quantity: number;
     unitPrice: number;
     discount?: number;
@@ -80,10 +76,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
         subtotal += itemTotal;
         return {
             productId: item.productId,
-            productName: item.productName,
-            sku: item.sku,
-            variantId: item.variantId,
-            variantName: item.variantName,
+            sku: item.sku || 'N/A',
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             totalPrice: itemTotal,

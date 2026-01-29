@@ -193,19 +193,25 @@ export const addressApi = {
     getAllAddress: () => {
         return apiClient.get('/addresses');
     },
-    createAddress: (data: { fullName: string; phone: string; address?: string;  city: string; postalCode: string; isDefault: boolean }) => {
+    createAddress: (data: { fullName: string; phone: string; address?: string; city: string; postalCode: string; isDefault: boolean }) => {
         return apiClient.post('/addresses', data);
     },
-    getUserAddress:()=>{
+    getUserAddress: () => {
         return apiClient.get('/addresses/user');
     },
     getAddressById: (id: string) => {
         return apiClient.get(`/addresses/${id}`);
     },
-    updateAddress: (id: string, data: { fullName?: string; phone?: string; address?: string;  city?: string; postalCode?: string; isDefault?: boolean }) => {
+    updateAddress: (id: string, data: { fullName?: string; phone?: string; address?: string; city?: string; postalCode?: string; isDefault?: boolean }) => {
         return apiClient.put(`/addresses/${id}`, data);
     },
     deleteAddress: (id: string) => {
         return apiClient.delete(`/addresses/${id}`);
+    }
+};
+
+export const orderApi = {
+    createOrder: (data: { items: Array<{ productId: string;  sku: string;  quantity: number; unitPrice: number; discount:number; }>; shippingAddressId: number; billingAddressId: number; paymentMethod: string; shippingCost: number; tax: number; discount: number }) => {
+        return apiClient.post('/orders', data);
     }
 };
