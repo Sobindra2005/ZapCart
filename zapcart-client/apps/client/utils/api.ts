@@ -211,7 +211,16 @@ export const addressApi = {
 };
 
 export const orderApi = {
-    createOrder: (data: { items: Array<{ productId: string;  sku: string;  quantity: number; unitPrice: number; discount:number; }>; shippingAddressId: number; billingAddressId: number; paymentMethod: string; shippingCost: number; tax: number; discount: number }) => {
+    createOrder: (data: { items: Array<{ productId: string; sku: string; quantity: number; unitPrice: number; discount: number; }>; shippingAddressId: number; billingAddressId: number; paymentMethod: string; shippingCost: number; tax: number; discount: number }) => {
         return apiClient.post('/orders', data);
     }
 };
+
+export const searchApi = {
+    searchSuggestions: (query: string) => {
+        return apiClient.get(`/search/suggestions?q=${encodeURIComponent(query)}`);
+    },
+    searchProducts: (query: string) => {
+        return apiClient.get(`/search?q=${encodeURIComponent(query)}`);
+    }
+}

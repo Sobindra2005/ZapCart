@@ -20,13 +20,19 @@ export interface ISearchIndex extends Document {
   sku?: string;
 
   // Metadata for filtering
-  price?: number;
+  basePrice?: number;
   rating?: number;
   isActive: boolean;
+
+  thumbnail?: string;
 
   // Search optimization
   searchText: string; // Combined text for full-text search
   popularity: number; // Based on views, sales, etc.
+
+  compareAtPrice?: number;
+  reviewCount?: number;
+  discountPercentage?: number;
 
   // Timestamps
   lastSyncedAt: Date;
@@ -93,6 +99,12 @@ interface ISearchSuggestion {
   name: string;
   entityType: 'product' | 'category';
   brand?: string;
+  thumbnail?: string;
+  price?: number;
+  rating?: number;
+  compareAtPrice?: number;
+  reviewCount?: number;
+  discountPercentage?: number;
 }
 
 // Popular search interface
@@ -103,6 +115,7 @@ interface IPopularSearch {
   brand?: string;
   price?: number;
   rating?: number;
+  thumbnail?: string;
 }
 
 interface ISearchIndexModel extends Model<ISearchIndex> {
@@ -177,7 +190,7 @@ const SearchIndexSchema = new Schema<ISearchIndex, ISearchIndexModel>(
     },
 
     // Metadata for filtering
-    price: {
+    basePrice: {
       type: Number,
       index: true
     },
@@ -190,7 +203,10 @@ const SearchIndexSchema = new Schema<ISearchIndex, ISearchIndexModel>(
       default: true,
       index: true
     },
-
+    thumbnail: {
+      type: String,
+      index: true
+    },
     // Search optimization
     searchText: {
       type: String,
@@ -200,6 +216,16 @@ const SearchIndexSchema = new Schema<ISearchIndex, ISearchIndexModel>(
       type: Number,
       default: 0,
       index: true
+    },
+    compareAtPrice: {
+      type: Number
+    },
+    reviewCount: {
+      type: Number,
+      default: 0
+    },
+    discountPercentage: {
+      type: Number
     },
 
     // Timestamps
@@ -299,11 +325,18 @@ SearchIndexSchema.statics.syncProduct = async function (productId: string) {
     brand: product.brand,
     tags: product.tags,
     sku: skus.length > 0 ? skus[0] : undefined, // Primary SKU
-    price: product.basePrice,
+    basePrice: product.basePrice,
     rating: product.averageRating,
     isActive: product.status === 'active' && product.visibility !== 'hidden',
+    thumbnail: product.thumbnail,
     popularity: (product.viewCount || 0) + (product.salesCount || 0) * 10,
-    lastSyncedAt: new Date()
+    lastSyncedAt: new Date(),
+
+    compareAtPrice: product.compareAtPrice,
+    reviewCount: product.reviewCount,
+    discountPercentage: product.discountPercentage,
+
+
   };
 
   return this.findOneAndUpdate(
@@ -436,7 +469,7 @@ SearchIndexSchema.statics.getSuggestions = async function (query: string, limit:
     ],
     isActive: true
   })
-    .select('name entityType brand')
+    .select('name entityType brand basePrice reviewCount discountPercentage compareAtPrice rating thumbnail entityId description')
     .sort({ popularity: -1 })
     .limit(limit)
     .lean();
@@ -448,7 +481,7 @@ SearchIndexSchema.statics.getPopular = async function (entityType: string = 'pro
     entityType,
     isActive: true
   })
-    .select('name entityType brand price rating')
+    .select('name entityType brand basePrice rating entityId')
     .sort({ popularity: -1, rating: -1 })
     .limit(limit)
     .lean();

@@ -7,10 +7,14 @@ import { Button } from "@repo/ui/ui/button";
 import Image from "next/image";
 import { MainContainer } from "./wrapper";
 import { useState, useEffect, useRef } from "react";
-import { searchProducts, popularCategoriesSearch, SearchProduct, PopularCategory } from "@/data/searchSuggestions";
+import { popularCategoriesSearch, SearchProduct, PopularCategory } from "@/data/searchSuggestions";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { selectIsAuthenticated, useAuthStore } from "@/stores";
+import { useQuery } from "@tanstack/react-query";
+import { searchApi } from "@/utils/api";
+import { useDebounce } from 'use-debounce';
+import { useRouter } from "next/navigation";
 
 export function Header() {
     const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -20,24 +24,24 @@ export function Header() {
     const { getTotalItems } = useCart();
     const totalItems = getTotalItems();
     const isAuthenticated = useAuthStore(selectIsAuthenticated)
+    const [debouncedSearch] = useDebounce(searchQuery, 400);
+    const router = useRouter();
 
-    // Filter products based on search query
+    const {
+        data,
+        isSuccess,
+    } = useQuery({
+        queryKey: ['products', debouncedSearch],
+        queryFn: () => searchApi.searchSuggestions(debouncedSearch),
+        enabled: debouncedSearch.trim().length > 0,
+    });
+
     useEffect(() => {
-        const timeout = setTimeout(() => {
-            if (searchQuery.trim()) {
-                const filtered = searchProducts.filter((product) =>
-                    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-                );
-                setFilteredProducts(filtered);
-            } else {
-                setFilteredProducts([]);
-            }
-        }, 0);
+        if (isSuccess && data) {
+            setFilteredProducts(data.data.suggestions);
+        }
+    }, [isSuccess, data]);
 
-        return () => clearTimeout(timeout);
-    }, [searchQuery, searchProducts]);
-
-    // Handle click outside to close dropdown
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -50,6 +54,10 @@ export function Header() {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+
+    const handleSearch = () => {
+        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
 
     const showDropdown = isSearchFocused;
     const showPopularCategories = showDropdown && !searchQuery.trim();
@@ -106,6 +114,11 @@ export function Header() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onFocus={() => setIsSearchFocused(true)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            handleSearch()
+                                        }
+                                    }}
                                 />
 
                                 {/* Dropdown */}
@@ -137,8 +150,8 @@ export function Header() {
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 transition={{ duration: 0.5 }} className="py-2">
-                                                {filteredProducts.map((product) => (
-                                                    <ProductSuggestion key={product.id} product={product} />
+                                                {filteredProducts.map((product, index) => (
+                                                    <ProductSuggestion key={index} product={product} />
                                                 ))}
                                             </motion.div>
                                         )}
@@ -221,11 +234,11 @@ function CategoryCard({ category }: { category: PopularCategory }) {
 // Product Suggestion Component
 function ProductSuggestion({ product }: { product: SearchProduct }) {
     return (
-        <div className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
+        <Link href={`/product/${product.entityId}`} className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
             {/* Product Image */}
             <div className="shrink-0 w-12 h-12 bg-gray-100 rounded-lg overflow-hidden relative">
                 <Image
-                    src={product.image}
+                    src={product.thumbnail}
                     alt={product.name}
                     fill
                     className="object-cover"
@@ -249,14 +262,13 @@ function ProductSuggestion({ product }: { product: SearchProduct }) {
                             />
                         ))}
                     </div>
-                    <span className="text-xs text-gray-500">({product.reviews})</span>
                 </div>
             </div>
 
             {/* Price */}
             <div className="shrink-0">
-                <p className="text-sm font-semibold text-gray-900">₹{product.price.toFixed(2)}</p>
+                <p className="text-sm font-semibold text-gray-900">₹{product.basePrice.toFixed(2)}</p>
             </div>
-        </div>
+        </Link>
     );
 } 

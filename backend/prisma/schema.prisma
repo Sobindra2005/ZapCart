@@ -25,6 +25,7 @@ model User {
   orders        Order[]
   payments      Payment[]
   refreshTokens RefreshToken[]
+  wishlists     Wishlist[]
 
   @@index([email])
   @@index([role])
@@ -284,4 +285,17 @@ enum SystemSettingKey {
   SHIPPING_INFO
   SUPPORT_EMAIL
   MAINTENANCE_MODE
+}
+
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([productId])
+  @@map("wishlist")
 }

@@ -34,7 +34,6 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
     const [showLocationPicker, setShowLocationPicker] = useState(false);
     const [isShippingPicker, setIsShippingPicker] = useState(true);
     const user = useUserStore(selectUser);
-    console.log("User in CheckoutForm:", user);
     const form = useForm<CheckoutFormData>({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
@@ -62,7 +61,7 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
 
     })
 
-    const defaultAddress: Address[] = data?.data.addresses
+    const defaultAddress: Address[] = data?.data.addresses || []
 
     // Mutation for creating addresses
     const createAddressMutation = useMutation({
