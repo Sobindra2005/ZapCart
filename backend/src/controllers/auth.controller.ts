@@ -158,7 +158,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        path: `/api/${config.apiVersion}/auth/refresh-token`,
+        path: `/api/${config.apiVersion}/auth`,
     });
 
     // 8. Prepare user data (exclude password)
