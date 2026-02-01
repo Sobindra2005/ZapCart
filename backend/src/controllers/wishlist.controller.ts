@@ -3,6 +3,7 @@ import { prisma } from '@/config/prisma';
 import { getRedisClient } from '@/config/redis';
 import AppError from '@/utils/AppError';
 import asyncHandler from '@/utils/asyncHandler';
+import { Product } from '../models';
 
 // Redis cache keys
 const CACHE_PREFIX = 'wishlist:';
@@ -43,7 +44,7 @@ const invalidateWishlistCache = async (userId: number): Promise<void> => {
  * @route   GET /api/wishlist
  * @access  Private
  */
-export const getUserWishlist = asyncHandler(async (req: Request, res: Response) => {
+export const getUserWishlist = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user?.id;
 
     if (!userId) {
@@ -73,7 +74,7 @@ export const getUserWishlist = asyncHandler(async (req: Request, res: Response) 
         }
     }
 
-    // Get from database
+    // Get wishlist from PostgreSQL
     const wishlist = await prisma.wishlist.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
@@ -84,10 +85,50 @@ export const getUserWishlist = asyncHandler(async (req: Request, res: Response) 
         },
     });
 
-    // Cache the result
+    // Extract product IDs
+    const productIds = wishlist.map(item => item.productId);
+
+    // Fetch all products from MongoDB in a single query
+    let enrichedWishlist = wishlist;
+    
+    if (productIds.length > 0) {
+        const products = await Product.find(
+            { _id: { $in: productIds } },
+            { 
+                _id: 1, 
+                name: 1, 
+                slug: 1,
+                thumbnail: 1, 
+                images: 1,
+                basePrice: 1,
+                compareAtPrice: 1,
+                status: 1,
+                averageRating: 1,
+                reviewCount: 1,
+                totalStock: 1,
+                hasVariants: 1,
+                variants: 1
+            }
+        ).lean();
+
+        // Create product lookup map
+        const productMap = new Map(
+            products.map(product => [product._id.toString(), product])
+        );
+
+        // Enrich wishlist with product data
+        enrichedWishlist = wishlist.map(item => ({
+            id: item.id,
+            productId: item.productId,
+            createdAt: item.createdAt,
+            product: productMap.get(item.productId) || null,
+        }));
+    }
+
+    // Cache the enriched result
     if (redisClient) {
         try {
-            await redisClient.setex(cacheKey, CACHE_TTL, JSON.stringify(wishlist));
+            await redisClient.setex(cacheKey, CACHE_TTL, JSON.stringify(enrichedWishlist));
         } catch (error) {
             console.error('Redis set error:', error);
             // Don't throw - caching failure shouldn't break the response
@@ -97,12 +138,10 @@ export const getUserWishlist = asyncHandler(async (req: Request, res: Response) 
     res.status(200).json({
         success: true,
         source: 'database',
-        count: wishlist.length,
-        data: wishlist,
+        count: enrichedWishlist.length,
+        data: enrichedWishlist,
     });
-    return;
 });
-
 /**
  * @desc    Add product to wishlist
  * @route   POST /api/wishlist
@@ -288,58 +327,6 @@ export const checkWishlistItem = asyncHandler(async (req: Request, res: Response
     return;
 });
 
-/**
- * @desc    Get wishlist count for user
- * @route   GET /api/wishlist/count
- * @access  Private
- */
-export const getWishlistCount = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-
-    if (!userId) {
-        throw new AppError('User not authenticated', 401);
-    }
-
-    const redisClient = getRedisClient();
-    const countKey = `${CACHE_PREFIX}user:${userId}:count`;
-
-    try {
-        // Try cache first
-        if (redisClient) {
-            const cachedCount = await redisClient.get(countKey);
-            if (cachedCount !== null) {
-                res.status(200).json({
-                    success: true,
-                    source: 'cache',
-                    count: parseInt(cachedCount, 10),
-                });
-                return;
-            }
-        }
-
-        // Get from database
-        const count = await prisma.wishlist.count({
-            where: { userId },
-        });
-
-        // Cache the count
-        if (redisClient) {
-            await redisClient.setex(countKey, CACHE_TTL, count.toString());
-        }
-
-        res.status(200).json({
-            success: true,
-            source: 'database',
-            count,
-        });
-    } catch (error) {
-        console.error('Error fetching wishlist count:', error);
-        res.status(500).json({
-            success: false,
-            message: 'An error occurred while fetching the wishlist count',
-        });
-    }
-});
 
 /**
  * @desc    Toggle product in wishlist (add if not present, remove if present)

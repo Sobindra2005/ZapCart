@@ -174,7 +174,6 @@ export function Header() {
                 </nav>
 
                 {/* Actions */}
-                {/* Actions */}
                 <div className="flex items-center gap-4">
                     {isAuthenticated ? (
                         <>

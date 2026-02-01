@@ -5,7 +5,6 @@ import {
     removeFromWishlist,
     clearWishlist,
     checkWishlistItem,
-    getWishlistCount,
     toggleWishlistItem,
 } from '@/controllers/wishlist.controller';
 import { protect } from '@/middlewares/authMiddleware';
@@ -15,8 +14,6 @@ const router = express.Router();
 // Protect all routes - user must be authenticated
 router.use(protect);
 
-// Get wishlist count
-router.get('/count', getWishlistCount);
 
 // Check if specific product is in wishlist
 router.get('/check/:productId', checkWishlistItem);

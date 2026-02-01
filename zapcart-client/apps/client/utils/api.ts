@@ -213,7 +213,10 @@ export const addressApi = {
 export const orderApi = {
     createOrder: (data: { items: Array<{ productId: string; sku: string; quantity: number; unitPrice: number; discount: number; }>; shippingAddressId: number; billingAddressId: number; paymentMethod: string; shippingCost: number; tax: number; discount: number }) => {
         return apiClient.post('/orders', data);
-    }
+    },
+    getMyOrders: () => {
+        return apiClient.get('/orders');
+    },
 };
 
 export const searchApi = {
@@ -222,5 +225,20 @@ export const searchApi = {
     },
     searchProducts: (query: string) => {
         return apiClient.get(`/search?q=${encodeURIComponent(query)}`);
+    }
+}
+
+export const wishListApi = {
+    getWishlist: () => {
+        return apiClient.get('/wishlist');
+    },
+    addToWishlist: (productId: string) => {
+        return apiClient.post('/wishlist', { productId });
+    },
+    removeFromWishlist: (productId: string) => {
+        return apiClient.delete(`/wishlist/${productId}`);
+    },
+    checkWishlistItem: (productId: string) => {
+        return apiClient.get(`/wishlist/check/${productId}`);
     }
 }

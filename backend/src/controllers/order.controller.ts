@@ -6,6 +6,7 @@ import { OrderStatus, PaymentStatus, PaymentMethod, InventoryAction } from '@/ge
 import { redis } from '@/config/redis';
 import { orderQueue } from '@/config/queue';
 import { DELIVERY_ESTIMATE_KEY, REDIS_DELIVERY_KEY } from './settings.controller';
+import { Product } from '../models';
 
 // Helper to get estimated delivery days
 const getEstimatedDeliveryDays = async (): Promise<number> => {
@@ -202,13 +203,39 @@ export const getMyOrders = asyncHandler(async (req: Request, res: Response) => {
         orderBy: { createdAt: 'desc' },
     });
 
+    // Extract all unique product IDs from all orders
+    const productIds = [...new Set(
+        orders.flatMap(order => 
+            order.orderItems.map(item => item.productId)
+        )
+    )];
+
+    // Fetch all products in a single query from MongoDB
+    const products = await Product.find(
+        { _id: { $in: productIds } },
+        { _id: 1, name: 1, thumbnail: 1, slug: 1 }
+    ).lean();
+
+    // Create a product lookup map for O(1) access
+    const productMap = new Map(
+        products.map(product => [product._id.toString(), product])
+    );
+
+    // Enrich order items with product details
+    const enrichedOrders = orders.map(order => ({
+        ...order,
+        orderItems: order.orderItems.map(item => ({
+            ...item,
+            product: productMap.get(item.productId) || null,
+        })),
+    }));
+
     res.status(200).json({
         status: 'success',
-        results: orders.length,
-        data: { orders },
+        results: enrichedOrders.length,
+        data: { orders: enrichedOrders },
     });
 });
-
 /**
  * Get a specific order
  * GET /api/v1/orders/:id
