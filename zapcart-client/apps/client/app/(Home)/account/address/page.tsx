@@ -16,14 +16,14 @@ export default function AddressPage() {
         setAddresses(
             addresses.map((addr) => ({
                 ...addr,
-                isDefault: addr.id === id,
+                isDefault: addr.id === Number(id),
             }))
         );
     };
 
     const handleDelete = (id: string) => {
         // Prevent deleting default address logic if enforced, for now filtered
-        setAddresses(addresses.filter((addr) => addr.id !== id));
+        setAddresses(addresses.filter((addr) => addr.id !== Number(id)));
     };
 
     const handleEdit = (id: string) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
     User,
     MapPin,
@@ -13,6 +13,11 @@ import {
 } from "lucide-react";
 import { cn } from "@repo/lib/utils";
 import { Button } from "@repo/ui/ui/button";
+import { authApi } from "@/utils/api";
+import { removeAuthToken } from "@/app/actions/auth.actions";
+import { useAuthStore } from "@/stores";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const sidebarItems = [
     {
@@ -49,6 +54,25 @@ const sidebarItems = [
 
 export function AccountSidebar({ className }: { className?: string }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const logout = useAuthStore((state) => state.logout);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        if (isLoggingOut) return;
+        
+        setIsLoggingOut(true);
+        try {
+            await authApi.logout();
+        } catch (error) {
+            console.error("Logout error:", error);
+            toast.error("Failed to logout. Please try again.");
+        } finally {
+            await removeAuthToken();
+            logout();
+            router.push("/login");
+        }
+    };
 
     return (
         <div className={cn("w-full md:w-64 flex flex-col h-full bg-card border rounded-lg overflow-hidden", className)}>
@@ -82,9 +106,14 @@ export function AccountSidebar({ className }: { className?: string }) {
             </nav>
 
             <div className="p-4 border-t mt-auto">
-                <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => console.log("Logout")}>
+                <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" 
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                >
                     <LogOut className="h-4 w-4 mr-2" />
-                    Logout
+                    {isLoggingOut ? "Logging out..." : "Logout"}
                 </Button>
             </div>
         </div>

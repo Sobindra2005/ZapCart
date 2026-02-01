@@ -242,7 +242,9 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
  * POST /api/v1/auth/logout
  */
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies.refreshToken;
+
+    console.log("Logout refreshToken:", refreshToken);
 
     // 1. Validate refresh token is provided
     if (!refreshToken) {
