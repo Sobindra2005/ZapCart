@@ -15,14 +15,19 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MdEmail, MdPerson } from "react-icons/md";
 import { Checkbox } from "@repo/ui/ui/checkbox";
 import { selectUser, useUserStore } from "@/stores";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { addressApi } from "@/utils/api";
+import { Address } from "@/types/user";
+import { toast } from "sonner";
 
 interface OrderDetails {
-    paymentMethod: string;
+    paymentMethod: "BANK_TRANSFER" | "CASH_ON_DELIVERY";
 }
 
 interface CheckoutFormProps {
-    onPlaceOrder: (details: OrderDetails) => void;
+    onPlaceOrder: (details: OrderDetails, addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined }) => void;
     onBack: () => void;
+
 }
 
 export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
@@ -35,6 +40,7 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
             firstName: user?.firstName || "",
             lastName: user?.lastName || "",
             email: user?.email || "",
+            phone: user?.phone || "",
             address: "",
             city: "",
             zip: "",
@@ -44,9 +50,90 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
             billingCity: "",
             billingZip: "",
             billingCoordinates: null,
-            paymentMethod: "card",
+            paymentMethod: "CASH_ON_DELIVERY",
         },
         mode: "onChange",
+    });
+
+    const { data } = useQuery({
+        queryKey: ['userAddresses'],
+        queryFn: addressApi.getUserAddress
+
+    })
+
+    const defaultAddress: Address[] = data?.data.addresses || []
+
+    // Mutation for creating addresses
+    const createAddressMutation = useMutation({
+        mutationFn: async (formData: CheckoutFormData) => {
+            const { sameAsBilling } = formData;
+            
+            // Prepare shipping address
+            const shippingAddressData = {
+                fullName: `${formData.firstName} ${formData.lastName}`,
+                phone: formData.phone,
+                address: formData.address,
+                city: formData.city,
+                postalCode: formData.zip,
+                isDefault: true,
+                location: formData.shippingCoordinates ? {
+                    latitude: formData.shippingCoordinates.lat,
+                    longitude: formData.shippingCoordinates.lng
+                } : undefined
+            };
+
+            if (sameAsBilling) {
+                // Create only shipping address
+                return await addressApi.createAddress(shippingAddressData);
+            } else {
+                // Create both shipping and billing addresses
+                const billingAddressData = {
+                    fullName: `${formData.firstName} ${formData.lastName}`,
+                    phone: formData.phone,
+                    address: formData.billingAddress || "",
+                    city: formData.billingCity || "",
+                    postalCode: formData.billingZip || "",
+                    isDefault: false,
+                    location: formData.billingCoordinates ? {
+                        latitude: formData.billingCoordinates.lat,
+                        longitude: formData.billingCoordinates.lng
+                    } : undefined
+                };
+
+                // Create both addresses
+                const [shippingResult, billingResult] = await Promise.all([
+                    addressApi.createAddress(shippingAddressData),
+                    addressApi.createAddress(billingAddressData)
+                ]);
+
+                return { shipping: shippingResult, billing: billingResult };
+            }
+        },
+        onSuccess: (data, variables) => {
+            console.log("Address(es) created successfully", data);
+            toast.success("Order placed successfully!");
+            
+            let billingAddressId: string | undefined;
+            let shippingAddressId: string | undefined;
+            
+            if (sameAsBilling) {
+                // Single address response
+                shippingAddressId = data?.data?.address.id;
+                billingAddressId = data?.data?.address.id;
+            } else {
+                // Both addresses response
+                shippingAddressId = data?.shipping?.data?.address.id;
+                billingAddressId = data?.billing?.data?.address.id;
+            }
+            
+            // Proceed with order placement
+            onPlaceOrder({ paymentMethod: variables.paymentMethod }, { billingAddressId, shippingAddressId });
+        },
+        onError: (error: any) => {
+            console.error("Error creating address:", error);
+            toast.error(`${error.response?.data?.message ? ` ${error.response.data.message}` : ""}`);
+            // Handle error (show toast, etc.)
+        }
     });
 
     useEffect(() => {
@@ -54,16 +141,24 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
             form.setValue("firstName", user.firstName || "");
             form.setValue("lastName", user.lastName || "");
             form.setValue("email", user.email || "");
+            form.setValue("phone", user.phone || "");
+            if (defaultAddress && defaultAddress.length > 0) {
+                form.setValue("address", defaultAddress[0].address || "");
+                form.setValue("city", defaultAddress[0].city || "");
+                form.setValue("zip", defaultAddress[0].postalCode || "");
+                form.setValue("shippingCoordinates", {
+                    lat: defaultAddress[0].location.latitude,
+                    lng: defaultAddress[0].location.longitude,
+                });
+            }
         }
-    }, [user, form]);
+    }, [user, form , defaultAddress]);
 
     const sameAsBilling = form.watch("sameAsBilling");
 
     const onSubmit = (data: CheckoutFormData) => {
-        // Simulate processing
-        setTimeout(() => {
-            onPlaceOrder({ paymentMethod: data.paymentMethod });
-        }, 1000);
+        // Trigger the mutation to create address(es)
+        createAddressMutation.mutate(data);
     };
 
     const handleLocationSelect = (location: { lat: number; lng: number; address: string; city: string; zip: string }) => {
@@ -132,6 +227,14 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
                             icon={<MdEmail size={18} />}
                         />
 
+                        <FormInput
+                            control={form.control}
+                            name="phone"
+                            label="Phone Number"
+                            type="tel"
+                            placeholder="+977 9XXXXXXXX"
+                        />
+
                         <AddressFields
                             control={form.control}
                             showMapPicker={true}
@@ -191,16 +294,12 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
                                     className="flex flex-col space-y-2"
                                 >
                                     <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-gray-50">
-                                        <RadioGroupItem value="card" id="card" />
-                                        <Label htmlFor="card" className="flex-1 cursor-pointer">Credit Card</Label>
+                                        <RadioGroupItem value="BANK_TRANSFER" id="BANK_TRANSFER" />
+                                        <Label htmlFor="BANK_TRANSFER" className="flex-1 cursor-pointer">Bank Transfer</Label>
                                     </div>
                                     <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-gray-50">
-                                        <RadioGroupItem value="paypal" id="paypal" />
-                                        <Label htmlFor="paypal" className="flex-1 cursor-pointer">PayPal</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2 border p-4 rounded-md cursor-pointer hover:bg-gray-50">
-                                        <RadioGroupItem value="cod" id="cod" />
-                                        <Label htmlFor="cod" className="flex-1 cursor-pointer">Cash on Delivery</Label>
+                                        <RadioGroupItem value="CASH_ON_DELIVERY" id="CASH_ON_DELIVERY" />
+                                        <Label htmlFor="CASH_ON_DELIVERY" className="flex-1 cursor-pointer">Cash on Delivery</Label>
                                     </div>
                                 </RadioGroup>
                             )}
@@ -214,9 +313,9 @@ export function CheckoutForm({ onPlaceOrder, onBack }: CheckoutFormProps) {
                         <Button
                             type="submit"
                             className="flex-1 bg-black text-white hover:bg-gray-800"
-                            disabled={!form.formState.isValid || form.formState.isSubmitting}
+                            disabled={!form.formState.isValid || form.formState.isSubmitting || createAddressMutation.isPending}
                         >
-                            {form.formState.isSubmitting ? "Processing..." : "Place Order"}
+                            {createAddressMutation.isPending ? "Processing..." : "Place Order"}
                         </Button>
                     </div>
                 </form>

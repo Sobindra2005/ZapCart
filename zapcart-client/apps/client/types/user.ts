@@ -1,14 +1,20 @@
 import { Product } from "./product";
 
 export interface Address {
-    id: string;
-    type: "Home" | "Work" | "Other";
-    street: string;
+    id: number;
+    userId: number;
+    fullName: string;
+    phone: string;
+    address: string;
     city: string;
-    state: string;
-    zipCode: string;
-    country: string;
+    postalCode: string;
+    location: {
+        latitude: number;
+        longitude: number;
+    };
     isDefault: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface OrderItem {
@@ -36,19 +42,4 @@ export interface PaymentMethod {
     isDefault: boolean;
 }
 
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    avatar?: string;
-    addresses: Address[];
-    orders: Order[];
-    wishlist: Product[]; // Reusing Product type
-    paymentMethods: PaymentMethod[];
-    notifications: {
-        email: boolean;
-        sms: boolean;
-        promotional: boolean;
-    };
-}
+

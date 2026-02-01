@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { mockUser } from "@/data/mockAccountData";
+import { useEffect, useState } from "react";
 import { Button } from "@repo/ui/ui/button";
 import { Input } from "@repo/ui/ui/input";
 import { User as UserIcon, Mail, Phone, Camera } from "lucide-react";
 import Image from "next/image";
-import { useUserStore } from "@/stores";
+import { User, useUserStore } from "@/stores";
 
 export default function AccountPage() {
     const userDetails = useUserStore((state) => state.user);
     const [isEditing, setIsEditing] = useState(false);
-    const [user, setUser] = useState(mockUser);
+    const [user, setUser] = useState<User>(null as unknown as User);
 
 
     const handleSave = (e: React.FormEvent) => {
@@ -19,6 +18,12 @@ export default function AccountPage() {
         setIsEditing(false);
 
     };
+
+    useEffect(() => {
+        setUser(userDetails as User);
+    }, [userDetails]);
+
+    console.log("User Details:", userDetails);
 
     return (
         <div className="space-y-6">
@@ -36,12 +41,17 @@ export default function AccountPage() {
                 {/* Avatar Section */}
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-muted">
-                        {user.avatar ? (
+                        {user?.avatar ? (
                             <Image
-                                src={user.avatar}
-                                alt={user.name}
+                                src={user?.avatar}
+                                alt={user?.firstName + " " + user?.lastName}
                                 fill
                                 className="object-cover"
+                                onError={
+                                    (e) => {
+                                        e.currentTarget.src = "https://placehold.co/600x400/orange/white";
+                                    }
+                                }
                             />
                         ) : (
                             <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -67,8 +77,11 @@ export default function AccountPage() {
                             <div className="relative">
                                 <UserIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    value={user.name}
-                                    onChange={(e) => setUser({ ...user, name: e.target.value })}
+                                    value={user?.firstName + " " + user?.lastName}
+                                    onChange={(e) => {
+                                        const [firstName, lastName] = e.target.value.split(" ");
+                                        setUser({ ...user, firstName, lastName });
+                                    }}
                                     disabled={!isEditing}
                                     className="pl-9"
                                 />
@@ -80,7 +93,7 @@ export default function AccountPage() {
                             <div className="relative">
                                 <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    value={user.phone}
+                                    value={user?.phone || ""}
                                     onChange={(e) => setUser({ ...user, phone: e.target.value })}
                                     disabled={!isEditing}
                                     className="pl-9"
@@ -94,7 +107,7 @@ export default function AccountPage() {
                         <div className="relative">
                             <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                value={user.email}
+                                value={user?.email}
                                 disabled // Email usually read-only or requires verify flow
                                 className="pl-9 bg-muted/50"
                             />

@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { setAuthToken, removeAuthToken } from '@/app/actions/auth.actions';
 import { useAuthStore } from '@/stores';
+import { get } from 'http';
 
 const baseUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8080/api';
 
@@ -121,7 +122,7 @@ const apiClient = {
     put: async (endpoint: string, body: any, config = {}) => {
         const response = await axiosInstance.put(endpoint, body, config);
         return response.data;
-    }   
+    }
 }
 
 export const authApi = {
@@ -187,3 +188,57 @@ export const systemSettingsApi = {
         return apiClient.get('/settings');
     }
 };
+
+export const addressApi = {
+    getAllAddress: () => {
+        return apiClient.get('/addresses');
+    },
+    createAddress: (data: { fullName: string; phone: string; address?: string; city: string; postalCode: string; isDefault: boolean }) => {
+        return apiClient.post('/addresses', data);
+    },
+    getUserAddress: () => {
+        return apiClient.get('/addresses/user');
+    },
+    getAddressById: (id: string) => {
+        return apiClient.get(`/addresses/${id}`);
+    },
+    updateAddress: (id: string, data: { fullName?: string; phone?: string; address?: string; city?: string; postalCode?: string; isDefault?: boolean }) => {
+        return apiClient.put(`/addresses/${id}`, data);
+    },
+    deleteAddress: (id: string) => {
+        return apiClient.delete(`/addresses/${id}`);
+    }
+};
+
+export const orderApi = {
+    createOrder: (data: { items: Array<{ productId: string; sku: string; quantity: number; unitPrice: number; discount: number; }>; shippingAddressId: number; billingAddressId: number; paymentMethod: string; shippingCost: number; tax: number; discount: number }) => {
+        return apiClient.post('/orders', data);
+    },
+    getMyOrders: () => {
+        return apiClient.get('/orders');
+    },
+};
+
+export const searchApi = {
+    searchSuggestions: (query: string) => {
+        return apiClient.get(`/search/suggestions?q=${encodeURIComponent(query)}`);
+    },
+    searchProducts: (query: string) => {
+        return apiClient.get(`/search?q=${encodeURIComponent(query)}`);
+    }
+}
+
+export const wishListApi = {
+    getWishlist: () => {
+        return apiClient.get('/wishlist');
+    },
+    addToWishlist: (productId: string) => {
+        return apiClient.post('/wishlist', { productId });
+    },
+    removeFromWishlist: (productId: string) => {
+        return apiClient.delete(`/wishlist/${productId}`);
+    },
+    checkWishlistItem: (productId: string) => {
+        return apiClient.get(`/wishlist/check/${productId}`);
+    }
+}

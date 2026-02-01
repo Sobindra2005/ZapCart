@@ -218,7 +218,7 @@ export function CreateOrderForm({ onCancel, onSubmit }: CreateOrderFormProps) {
                                             <Plus className="h-3 w-3" />
                                         </button>
                                     </div>
-                                    <div className="text-right min-w-[60px]">
+                                    <div className="text-right min-w-15">
                                         <p className="text-xs font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
                                     </div>
                                     <button

@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { FilterSidebar } from "@/components/search/FilterSidebar";
 import { ProductCard } from "@/components/product/ProductCard";
-import { mockProducts } from "@/data/mockSearchData";
 import { Button } from "@repo/ui/ui/button";
 import { Filter } from "lucide-react";
 import { SortSelect, productSortOptions } from "@repo/ui/SortSelect";
+import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { searchApi } from "@/utils/api";
 
 export default function SearchPage() {
     const [filters, setFilters] = useState({
@@ -18,42 +20,33 @@ export default function SearchPage() {
         minRating: null as number | null,
         tags: [] as string[]
     });
+    const params = useSearchParams()
+    const debouncedSearch = useMemo(() => {
+        return params.get('q') || ''
+    }, [params]);
 
     const [sortBy, setSortBy] = useState("popular");
     const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+    const [filteredProducts, setFilteredProducts] = useState([])
 
-    const filteredProducts = useMemo(() => {
-        return mockProducts.filter(product => {
-            // Brand Filter
-            if (filters.brands.length > 0 && !filters.brands.includes(product.name.split(' ')[0])) {
+    const {
+        data,
+        isSuccess,
+    } = useQuery({
+        queryKey: ['products', debouncedSearch],
+        queryFn: () => searchApi.searchSuggestions(debouncedSearch),
+        enabled: debouncedSearch.trim().length > 0,
+    });
 
-                const productBrand = filters.brands.find(brand => product.name.toLowerCase().includes(brand.toLowerCase()));
-                if (!productBrand) return false;
-            }
-
-            // Category Filter
-            if (filters.categories.length > 0 && !filters.categories.includes(product.category)) {
-                return false;
-            }
-
-            // Price Filter
-            if (filters.minPrice !== "" && product.basePrice < filters.minPrice) return false;
-            if (filters.maxPrice !== "" && product.basePrice > filters.maxPrice) return false;
-
-            // Rating Filter
-            if (filters.minRating !== null && product.rating < filters.minRating) return false;
-
-            if (filters.tags.length > 0) {
-                const productTags = product.tags as string[] | undefined;
-                if (!productTags || !filters.tags.some(tag => productTags.includes(tag))) {
-
-                    if (!productTags) return false;
-                }
-            }
-
-            return true;
-        });
-    }, [filters]);
+    useEffect(() => {
+        if (isSuccess && data) {
+            setFilteredProducts(data.data.suggestions.map((product: any) => ({
+                ...product,
+                averageRating: product.rating || 0,
+                id: product.entityId,
+            })));
+        }
+    }, [isSuccess, data]);
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -121,8 +114,8 @@ export default function SearchPage() {
                     {/* Product Grid */}
                     {filteredProducts.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredProducts.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                            {filteredProducts.map((product, index) => (
+                                <ProductCard key={index} product={product} />
                             ))}
                         </div>
                     ) : (
@@ -135,7 +128,6 @@ export default function SearchPage() {
                                     className="object-contain"
                                 />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2">No results found</h3>
                             <p className="text-muted-foreground mb-6 max-w-sm">
                                 We couldn&apos;t find any products matching your search. Try checking for typos or using different keywords.
                             </p>

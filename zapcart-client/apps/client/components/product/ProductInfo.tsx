@@ -66,7 +66,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 sku: currentVariant.sku,
                 color: currentVariant.color,
                 material: currentVariant.material,
-            } as any : undefined,
+            } as any : 'N/A',
         });
         router.push("/cart");
     };

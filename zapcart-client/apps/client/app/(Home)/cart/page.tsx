@@ -3,27 +3,68 @@
 import { useState } from "react";
 import { ShoppingCart, ShoppingBag, Receipt } from "lucide-react";
 import Link from "next/link";
-import { useCart } from "@/contexts/CartContext";
+import { useCart, CartItem as CartItemType } from "@/contexts/CartContext";
 import { CartItem } from "@/components/CartItem";
 import { OrderSummary } from "@/components/OrderSummary";
 import { Button } from "@repo/ui/ui/button";
 import { CheckoutForm } from "@/components/CheckoutForm";
 import { OrderConfirmation } from "@/components/OrderConfirmation";
+import { orderApi } from "@/utils/api";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 export default function CartPage() {
     const { items, updateQuantity, removeFromCart, getSubtotal, clearCart } = useCart();
     const [step, setStep] = useState<"cart" | "checkout" | "order">("cart");
+
+    const createOrderMutation = useMutation({
+            mutationFn: async ({ details, addressIds }: { details: { paymentMethod: string }; addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined } }) => {
+                const orderItems = items.map((item) => ({
+                    productId: item.id,
+                    sku: item.variant?.sku || "",
+                    quantity: item.quantity,
+                    unitPrice: item.price,
+                    //individual item level discount, not cart level discount
+                    discount: 0,
+                }));
+                
+                //will use this data from the system
+                const shippingCost = 100;
+                const tax = 13;
+                //this is a coupon discount placeholder
+                const discount = 0;
+
+                return orderApi.createOrder({
+                    shippingAddressId: parseInt(addressIds.shippingAddressId || "0"),
+                    billingAddressId: parseInt(addressIds.billingAddressId || "0"),
+                    items: orderItems,
+                    shippingCost,
+                    tax,
+                    discount,
+                    paymentMethod: details.paymentMethod,
+                });
+            },
+            onSuccess: () => {
+                toast.success("Order placed successfully!");
+                clearCart();
+                setStep("order");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            },
+            onError: (error:AxiosError) => {
+                console.error("Order creation failed:", error);
+                const errorMessage = (error?.response?.data as { message?: string })?.message || "Failed to place order. Please try again.";
+                toast.error(errorMessage);
+            },
+        });
 
     const handleCheckout = () => {
         setStep("checkout");
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handlePlaceOrder = (details: { paymentMethod: string }) => {
-        console.log("Order placed:", details);
-        clearCart();
-        setStep("order");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    const handlePlaceOrder = (details: { paymentMethod: string }, addressIds: { billingAddressId: string | undefined; shippingAddressId: string | undefined }) => {
+        createOrderMutation.mutate({ details, addressIds });
     };
 
     return (
