@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { systemSettingsApi } from "@/utils/api";
 import { ShippingSettingsDescription, SystemSetting } from "@/types/systemSetting";
 import { SizeSelector } from "../SizeSelector";
+import { useWishlist } from "@/hooks/useWishlist";
 
 interface ProductInfoProps {
     product: Product;
@@ -27,13 +28,14 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
     const [selectedSize, setSelectedSize] = useState(availableSizes[0] || "");
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
-    const [isFavorite, setIsFavorite] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [descriptionOpen, setDescriptionOpen] = useState(true);
     const [shippingOpen, setShippingOpen] = useState(true);
 
     const { addToCart } = useCart();
     const router = useRouter();
+    
+    const { isFavorite, isCheckingWishlist, toggleWishlist } = useWishlist(product.id || product._id);
 
     // Get current variant based on selected size or index
     const currentVariant = product.hasVariants && product.variants
@@ -186,12 +188,13 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     variant="outline"
                     size="icon"
                     className={cn(
-                        "h-12 w-12 rounded-full",
+                        "h-12 w-12 rounded-full transition-colors",
                         isFavorite && "text-red-500 border-red-500"
                     )}
-                    onClick={() => setIsFavorite(!isFavorite)}
+                    onClick={toggleWishlist}
+                    disabled={isCheckingWishlist}
                 >
-                    <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
+                    <Heart className={cn("h-5 w-5 transition-all", isFavorite && "fill-current")} />
                 </Button>
             </div>
 

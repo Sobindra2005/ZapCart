@@ -59,6 +59,12 @@ export function Header() {
         router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
 
+    const navLinks = [
+        { key: "deals", label: "Deals", href: "#flashSale" },
+        { key: "whats-new", label: "What's New", href: "/whats-new" },
+        { key: "wishlist", label: "Wishlist", href: "/account/wishlist" },
+    ];
+
     const showDropdown = isSearchFocused;
     const showPopularCategories = showDropdown && !searchQuery.trim();
     const showProductSuggestions = showDropdown && searchQuery.trim() && filteredProducts.length > 0;
@@ -81,27 +87,16 @@ export function Header() {
                     </button>
 
                     <div className="flex items-center gap-6 flex-1">
-                        <Link
-                            href="/deals"
-                            className={`hidden md:flex text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                                }`}
-                        >
-                            Deals
-                        </Link>
-                        <Link
-                            href="/new"
-                            className={`hidden md:flex text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                                }`}
-                        >
-                            What&apos;s New
-                        </Link>
-                        <Link
-                            href="/delivery"
-                            className={`hidden md:flex text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                                }`}
-                        >
-                            Delivery
-                        </Link>
+                        {navLinks.map((item) => (
+                            <Link
+                                key={item.key}
+                                href={item.href}
+                                className={`hidden md:flex text-sm font-medium hover:text-emerald-600 transition-all duration-300 whitespace-nowrap ${isSearchFocused ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                                    }`}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
 
                         <div className={` flex-1  lg:block transition-all duration-300 ${isSearchFocused ? 'ml-0' : 'ml-8'
                             }`}>
