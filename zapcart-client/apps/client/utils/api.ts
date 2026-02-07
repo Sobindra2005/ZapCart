@@ -229,6 +229,9 @@ export const searchApi = {
 }
 
 export const wishListApi = {
+    toggleWishListItem: (productId: string) => {
+        return apiClient.post('/wishlist/toggle', { productId });
+    },
     getWishlist: () => {
         return apiClient.get('/wishlist');
     },

@@ -7,6 +7,8 @@ import { Card, CardContent } from "@repo/ui/ui/card";
 import { Button } from "@repo/ui/ui/button";
 import { Product } from "@/types/product";
 import { cn } from "@repo/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { wishListApi } from "@/utils/api";
 
 interface ProductCardProps {
     product: Product;
@@ -14,15 +16,72 @@ interface ProductCardProps {
 
 
 export function ProductCard({ product }: ProductCardProps) {
-    const [isFavorite, setIsFavorite] = useState(false);
     const [imageError, setImageError] = useState(false);
-    console.log("Product in ProductCard:", product);
+    const queryClient = useQueryClient();
+    const productId = product.id || product._id;
+
+    // Check if product is in wishlist
+    const { data: wishlistData, isLoading: isCheckingWishlist } = useQuery({
+        queryKey: ['wishlist-check', productId],
+        queryFn: () => wishListApi.checkWishlistItem(productId),
+        enabled: !!productId,
+        retry: false,
+    });
+
+    const isFavorite = wishlistData?.inWishlist || false;
+
+    // Toggle wishlist mutation with optimistic updates
+    const toggleWishlistMutation = useMutation({
+        mutationFn: (productId: string) => wishListApi.toggleWishListItem(productId),
+        // Optimistic update
+        onMutate: async (productId: string) => {
+            // Cancel any outgoing refetches to avoid overwriting optimistic update
+            await queryClient.cancelQueries({ queryKey: ['wishlist-check', productId] });
+            await queryClient.cancelQueries({ queryKey: ['wishlist'] });
+
+            // Snapshot the previous value
+            const previousWishlistCheck = queryClient.getQueryData(['wishlist-check', productId]);
+            const previousWishlist = queryClient.getQueryData(['wishlist']);
+
+            // Optimistically update the wishlist check
+            queryClient.setQueryData(['wishlist-check', productId], (old: any) => {
+                return {
+                    ...old,
+                    inWishlist: !isFavorite
+                };
+            });
+
+            // Return context with the previous values to rollback on error
+            return { previousWishlistCheck, previousWishlist };
+        },
+        onError: (error, productId, context) => {
+            // Rollback to previous state on error
+            if (context?.previousWishlistCheck) {
+                queryClient.setQueryData(['wishlist-check', productId], context.previousWishlistCheck);
+            }
+            if (context?.previousWishlist) {
+                queryClient.setQueryData(['wishlist'], context.previousWishlist);
+            }
+            console.error('Failed to toggle wishlist item:', error);
+            // You can add toast notification here
+        },
+        onSettled: (data, error, productId) => {
+            // Always refetch after error or success to ensure we're in sync with the server
+            queryClient.invalidateQueries({ queryKey: ['wishlist-check', productId] });
+            queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+        },
+    });
 
     const handleFavoriteClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsFavorite(!isFavorite);
+
+        if (!productId) return;
+
+        toggleWishlistMutation.mutate(productId);
     };
+
+    const isUpdatingWishlist = toggleWishlistMutation.isPending;
 
     return (
         <Link href={`/product/${product.id || product._id}`}>
@@ -49,12 +108,13 @@ export function ProductCard({ product }: ProductCardProps) {
                             variant="ghost"
                             size="icon"
                             className={cn(
-                                "absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white",
+                                "absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors",
                                 isFavorite && "text-red-500"
                             )}
                             onClick={handleFavoriteClick}
+                            disabled={isCheckingWishlist}
                         >
-                            <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
+                            <Heart className={cn("h-4 w-4 transition-all", isFavorite && "fill-current")} />
                         </Button>
                     </div>
 
