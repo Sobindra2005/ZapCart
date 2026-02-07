@@ -39,8 +39,8 @@ export function FlashSaleCard() {
     }, []);
 
     return (
-        <MainContainer spacing={true}>
-            <Card className="overflow-hidden border-0">
+        <MainContainer  spacing={true}>
+            <Card  className="overflow-hidden border-0">
                 <CardContent className="p-0">
                     <div className="relative bg-linear-to-r from-red-500 via-orange-500 to-orange-400 rounded-2xl overflow-hidden">
                         {/* Background Image with Overlay */}

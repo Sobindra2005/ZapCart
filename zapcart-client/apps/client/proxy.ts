@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const publicRoutes = ["/login", "/signup"]; 
 
-export function middleware(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const url = req.nextUrl.clone();
   const token = req.cookies.get("token"); 
   

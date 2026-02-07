@@ -7,6 +7,7 @@ import { Card, CardContent } from "@repo/ui/ui/card";
 import { Button } from "@repo/ui/ui/button";
 import { Product } from "@/types/product";
 import { cn } from "@repo/lib/utils";
+import { useWishlist } from "@/hooks/useWishlist";
 
 interface ProductCardProps {
     product: Product;
@@ -14,14 +15,15 @@ interface ProductCardProps {
 
 
 export function ProductCard({ product }: ProductCardProps) {
-    const [isFavorite, setIsFavorite] = useState(false);
     const [imageError, setImageError] = useState(false);
-    console.log("Product in ProductCard:", product);
+    const productId = product.id || product._id;
+    
+    const { isFavorite, isCheckingWishlist, toggleWishlist } = useWishlist(productId);
 
     const handleFavoriteClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsFavorite(!isFavorite);
+        toggleWishlist();
     };
 
     return (
@@ -49,12 +51,13 @@ export function ProductCard({ product }: ProductCardProps) {
                             variant="ghost"
                             size="icon"
                             className={cn(
-                                "absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white",
+                                "absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors",
                                 isFavorite && "text-red-500"
                             )}
                             onClick={handleFavoriteClick}
+                            disabled={isCheckingWishlist}
                         >
-                            <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
+                            <Heart className={cn("h-4 w-4 transition-all", isFavorite && "fill-current")} />
                         </Button>
                     </div>
 

@@ -26,12 +26,18 @@ const getWishlistItemKey = (userId: number, productId: string): string => {
 /**
  * Invalidate user's wishlist cache
  */
-const invalidateWishlistCache = async (userId: number): Promise<void> => {
+const invalidateWishlistCache = async (userId: number, productId?: string): Promise<void> => {
     const redisClient = getRedisClient();
     if (redisClient) {
         try {
             const wishlistKey = getUserWishlistKey(userId);
             await redisClient.del(wishlistKey);
+            
+            // Also invalidate the specific item cache if productId is provided
+            if (productId) {
+                const itemKey = getWishlistItemKey(userId, productId);
+                await redisClient.del(itemKey);
+            }
         } catch (error) {
             console.error('Redis cache invalidation error:', error);
             // Don't throw error - cache invalidation failure shouldn't break the operation
@@ -90,15 +96,15 @@ export const getUserWishlist = asyncHandler(async (req: Request, res: Response):
 
     // Fetch all products from MongoDB in a single query
     let enrichedWishlist = wishlist;
-    
+
     if (productIds.length > 0) {
         const products = await Product.find(
             { _id: { $in: productIds } },
-            { 
-                _id: 1, 
-                name: 1, 
+            {
+                _id: 1,
+                name: 1,
                 slug: 1,
-                thumbnail: 1, 
+                thumbnail: 1,
                 images: 1,
                 basePrice: 1,
                 compareAtPrice: 1,
@@ -142,6 +148,7 @@ export const getUserWishlist = asyncHandler(async (req: Request, res: Response):
         data: enrichedWishlist,
     });
 });
+
 /**
  * @desc    Add product to wishlist
  * @route   POST /api/wishlist
@@ -150,6 +157,8 @@ export const getUserWishlist = asyncHandler(async (req: Request, res: Response):
 export const addToWishlist = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const { productId } = req.body;
+
+    console.log('Adding to wishlist:', { userId, productId });
 
     if (!userId) {
         throw new AppError('User not authenticated', 401);
@@ -184,8 +193,10 @@ export const addToWishlist = asyncHandler(async (req: Request, res: Response) =>
         },
     });
 
+    console.log('Wishlist item created:', wishlistItem);
+
     // Invalidate cache
-    await invalidateWishlistCache(userId);
+    await invalidateWishlistCache(userId, productId);
 
     res.status(201).json({
         success: true,
@@ -202,6 +213,8 @@ export const addToWishlist = asyncHandler(async (req: Request, res: Response) =>
 export const removeFromWishlist = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const { productId } = req.params;
+
+    console.log('Removing from wishlist:', { userId, productId });
 
     if (!userId) {
         throw new AppError('User not authenticated', 401);
@@ -223,12 +236,14 @@ export const removeFromWishlist = asyncHandler(async (req: Request, res: Respons
         throw new AppError('Product not found in wishlist', 404);
     }
 
-    await prisma.wishlist.delete({
+    const response = await prisma.wishlist.delete({
         where: { id: wishlistItem.id },
     });
 
+    console.log('Wishlist item removed:', response);
+
     // Invalidate cache
-    await invalidateWishlistCache(userId);
+    await invalidateWishlistCache(userId, productId);
 
     res.status(200).json({
         success: true,
@@ -380,7 +395,7 @@ export const toggleWishlistItem = asyncHandler(async (req: Request, res: Respons
     }
 
     // Invalidate cache
-    await invalidateWishlistCache(userId);
+    await invalidateWishlistCache(userId, productId);
 
     res.status(200).json({
         success: true,
