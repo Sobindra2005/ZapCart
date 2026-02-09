@@ -408,7 +408,6 @@ export default function CustomerListingPage() {
                     totalItems={filteredAndSortedCustomers.length}
                     itemsPerPage={itemsPerPage}
                     onPageChange={setCurrentPage}
-                    className="border-2 border-blue-800"
                 />
             </div>
             <BulkActionBar

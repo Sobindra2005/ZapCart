@@ -176,7 +176,7 @@ const Pagination = ({
             <p className="text-sm text-gray-500 font-medium">
                 Showing <span className="text-gray-900 font-bold">{startItem}</span> to <span className="text-gray-900 font-bold">{endItem}</span> of <span className="text-gray-900 font-bold">{totalItems}</span> entries
             </p>
-            <PaginationRoot className="w-fit border-2 border-gray-300 rounded-lg">
+            <PaginationRoot className="w-fit">
                 <PaginationContent>
                     <PaginationItem>
                         <PaginationPrevious
