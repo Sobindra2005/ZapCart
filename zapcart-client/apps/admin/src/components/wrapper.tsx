@@ -26,6 +26,20 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
     const title = getPageTitle(pathname);
 
+    // Check if current route is an auth route (login, signup, etc.)
+    const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/signup");
+
+    // For auth routes, render without sidebar and header
+    if (isAuthRoute) {
+        return (
+            <div className="flex min-h-screen bg-background text-foreground">
+                <main className="flex-1">
+                    {children}
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen bg-background text-foreground">
             <Sidebar />

@@ -10,6 +10,7 @@ import searchRoutes from './searchRoutes';
 import testRoutes from './testRoutes';
 import productReviewRoutes from './productReviewRoutes';
 import wishlistRoutes from './wishlistRoutes';
+import adminRoutes from './adminRoutes';
 
 const router = express.Router();
 
@@ -42,6 +43,9 @@ router.use('/reviews', productReviewRoutes);
 
 // Wishlist routes
 router.use('/wishlist', wishlistRoutes);
+
+// Admin routes
+router.use('/admin', adminRoutes);
 
 // Test routes (for verifying auth functionality)
 router.use('/test', testRoutes);

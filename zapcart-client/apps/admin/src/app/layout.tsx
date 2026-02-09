@@ -14,6 +14,8 @@ export const metadata: Metadata = {
 
 import { SidebarProvider } from "@/lib/SidebarContext";
 import { LayoutWrapper } from "@/components/wrapper";
+import { ReactQueryWrapper } from "@repo/ui/wrapper";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -23,11 +25,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-background`}>
-        <SidebarProvider>
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
-        </SidebarProvider>
+        <ReactQueryWrapper>
+          <SidebarProvider>
+            <LayoutWrapper>
+              <Toaster />
+              {children}
+            </LayoutWrapper>
+          </SidebarProvider>
+        </ReactQueryWrapper>
       </body>
     </html>
   );
