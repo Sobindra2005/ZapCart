@@ -1,8 +1,121 @@
 
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import * as React from "react"
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MoreHorizontalIcon,
+} from "lucide-react"
 import { cn } from "@repo/lib/utils"
-// import { ButtonProps, buttonVariants } from "@/registry/new-york/ui/button" // Assuming we might want to use button variants later, but for now styling directly to match design
 
+// Shadcn Pagination Primitives
+function PaginationRoot({ className, ...props }: React.ComponentProps<"nav">) {
+  return (
+    <nav
+      role="navigation"
+      aria-label="pagination"
+      data-slot="pagination"
+      className={cn("flex justify-center", className)}
+      {...props}
+    />
+  )
+}
+
+function PaginationContent({
+  className,
+  ...props
+}: React.ComponentProps<"ul">) {
+  return (
+    <ul
+      data-slot="pagination-content"
+      className={cn("flex flex-row items-center gap-1", className)}
+      {...props}
+    />
+  )
+}
+
+function PaginationItem({ ...props }: React.ComponentProps<"li">) {
+  return <li data-slot="pagination-item" {...props} />
+}
+
+function PaginationLink({
+  className,
+  isActive,
+  ...props
+}: React.ComponentProps<"button"> & { isActive?: boolean }) {
+  return (
+    <button
+      aria-current={isActive ? "page" : undefined}
+      data-slot="pagination-link"
+      data-active={isActive}
+      className={cn(
+        "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+        isActive
+          ? "bg-primary text-white shadow-md shadow-primary/20"
+          : "text-gray-500 hover:bg-gray-50",
+        "h-8 w-8",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function PaginationPrevious({
+  className,
+  ...props
+}: React.ComponentProps<"button">) {
+  return (
+    <button
+      aria-label="Go to previous page"
+      className={cn(
+        "inline-flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed",
+        className
+      )}
+      {...props}
+    >
+      <ChevronLeftIcon className="h-4 w-4" />
+      <span>Prev</span>
+    </button>
+  )
+}
+
+function PaginationNext({
+  className,
+  ...props
+}: React.ComponentProps<"button">) {
+  return (
+    <button
+      aria-label="Go to next page"
+      className={cn(
+        "inline-flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed",
+        className
+      )}
+      {...props}
+    >
+      <span>Next</span>
+      <ChevronRightIcon className="h-4 w-4" />
+    </button>
+  )
+}
+
+function PaginationEllipsis({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      aria-hidden
+      data-slot="pagination-ellipsis"
+      className={cn("flex h-8 w-8 items-center justify-center", className)}
+      {...props}
+    >
+      <MoreHorizontalIcon className="h-4 w-4" />
+      <span className="sr-only">More pages</span>
+    </span>
+  )
+}
+
+// Main Pagination Component
 interface PaginationProps {
     currentPage: number;
     totalItems: number;
@@ -63,42 +176,47 @@ const Pagination = ({
             <p className="text-sm text-gray-500 font-medium">
                 Showing <span className="text-gray-900 font-bold">{startItem}</span> to <span className="text-gray-900 font-bold">{endItem}</span> of <span className="text-gray-900 font-bold">{totalItems}</span> entries
             </p>
-            <div className="flex items-center gap-1.5">
-                <button
-                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <ChevronLeft className="h-4 w-4" />
-                    Prev
-                </button>
-                <div className="flex items-center gap-1">
+            <PaginationRoot className="w-fit border-2 border-gray-300 rounded-lg">
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious
+                            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                        />
+                    </PaginationItem>
                     {pages.map((page, i) => (
-                        <button
-                            key={i}
-                            onClick={() => typeof page === 'number' ? onPageChange(page) : undefined}
-                            disabled={page === '...'}
-                            className={cn(
-                                "w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-colors",
-                                page === currentPage ? "bg-primary text-white shadow-md shadow-primary/20" : "text-gray-500 hover:bg-gray-50",
-                                page === '...' && "cursor-default hover:bg-transparent"
+                        <PaginationItem key={i}>
+                            {page === '...' ? (
+                                <PaginationEllipsis />
+                            ) : (
+                                <PaginationLink
+                                    isActive={page === currentPage}
+                                    onClick={() => typeof page === 'number' ? onPageChange(page) : undefined}
+                                >
+                                    {page}
+                                </PaginationLink>
                             )}
-                        >
-                            {page}
-                        </button>
+                        </PaginationItem>
                     ))}
-                </div>
-                <button
-                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                </button>
-            </div>
+                    <PaginationItem>
+                        <PaginationNext
+                            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                        />
+                    </PaginationItem>
+                </PaginationContent>
+            </PaginationRoot>
         </div>
     );
 };
 
-export { Pagination };
+export { 
+    Pagination,
+    PaginationRoot,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationPrevious,
+    PaginationNext,
+    PaginationEllipsis
+};
