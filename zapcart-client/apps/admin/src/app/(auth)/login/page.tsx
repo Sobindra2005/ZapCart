@@ -59,6 +59,7 @@ export default function AdminLoginPage() {
     });
 
     const onSubmit = (data: LoginFormData) => {
+        console.log("here is the data",{data})
         loginMutation.mutate({
             email: data.email,
             password: data.password,

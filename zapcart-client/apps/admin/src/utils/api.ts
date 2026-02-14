@@ -111,3 +111,9 @@ export const authApi = {
         return axiosInstance.post(endpoints.logout, {});
     }
 };
+
+export const customersApi = {
+    getCustomers: (params?: { page?: number; limit?: number; sortBy?: 'newest' | 'name' }) => {
+        return axiosInstance.get('/admin/users', { params });
+    }
+};

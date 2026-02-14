@@ -10,14 +10,16 @@ import AppError from '@/utils/AppError';
  */
 export const getUsersList = asyncHandler(async (req: Request, res: Response) => {
     // Parse pagination parameters
-    const start = parseInt(req.query.start as string) || 0;
+    const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const sortBy = req.query.sortBy as string || 'newest';
 
     // Validate pagination parameters
-    if (start < 0 || limit < 1 || limit > 100) {
-        throw new AppError('Invalid pagination parameters. Start must be >= 0 and limit must be between 1 and 100.', 400);
+    if (page < 1 || limit < 1 || limit > 100) {
+        throw new AppError('Invalid pagination parameters. Page must be >= 1 and limit must be between 1 and 100.', 400);
     }
+
+    const start = (page - 1) * limit;
 
     // Determine sort order
     let orderBy: any;
@@ -91,10 +93,10 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
         status: 'success',
         results: usersWithTotalSpent.length,
         pagination: {
-            start,
+            page,
             limit,
             total: totalCount,
-            hasMore: start + limit < totalCount,
+            hasMore: page * limit < totalCount,
         },
         data: {
             users: usersWithTotalSpent,
