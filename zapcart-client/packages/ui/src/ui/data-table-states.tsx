@@ -42,7 +42,7 @@ export function TableErrorState({
 }: TableErrorStateProps) {
     return (
         <TableRow>
-            <TableCell colSpan={colSpan} className="h-[600px] text-center">
+            <TableCell colSpan={colSpan} style={{height:'500px'}} className=" text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
                         <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -89,7 +89,7 @@ export function TableEmptyState({
 
     return (
         <TableRow>
-            <TableCell colSpan={colSpan} className="h-[600px] text-center">
+            <TableCell style={{height:'500px'}} colSpan={colSpan} className="h-[600px] text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted/50">
                         {Icon}
