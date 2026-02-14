@@ -6,16 +6,20 @@ import {
     ArrowUpDown,
     Edit,
     Trash2,
-    ChevronLeft,
-    ChevronRight,
     ArrowUp,
     ArrowDown,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Input } from "@repo/ui/ui/input";
-import { SortSelect, SortOption } from "@repo/ui/SortSelect";
 import { BulkActionBar } from "@repo/ui/ui/bulk-action-bar";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { GlobeIcon } from "@radix-ui/react-icons";
 
 interface Customer {
@@ -127,7 +131,7 @@ type SortConfig = {
     direction: "asc" | "desc" | null;
 };
 
-const sortOptions: SortOption[] = [
+const sortOptions = [
     { value: "newest", label: "Newest" },
     { value: "spent-desc", label: "Spent: High to Low" },
     { value: "spent-asc", label: "Spent: Low to High" },
@@ -249,12 +253,18 @@ export default function CustomerListingPage() {
                         />
                     </div>
                     <div className="flex items-center gap-4">
-                        <SortSelect
-                            options={sortOptions}
-                            value={sortOption}
-                            onValueChange={setSortOption}
-                            className="flex items-center"
-                        />
+                        <Select value={sortOption} onValueChange={setSortOption}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 

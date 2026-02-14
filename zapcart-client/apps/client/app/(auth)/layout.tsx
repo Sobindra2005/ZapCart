@@ -8,7 +8,7 @@ export default function AuthLayout({
     return (
         <div className="w-full lg:grid lg:grid-cols-2">
             {/* Left Side - Form Area */}
-            <div className="flex flex-col justify-center px-8 py-12 md:px-12 lg:px-16 xl:px-24">
+            <div className="flex flex-col  px-8 py-12 md:px-12 lg:px-16 xl:px-24">
                 <div className="mx-auto w-full max-w-110">
 
 
