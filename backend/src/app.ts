@@ -17,7 +17,7 @@ app.use(cookieParser());
 
 // Enable CORS for all routes
 app.use(cors({
-    origin: [`${config.frontendUrl}`],
+    origin: [`${config.frontendUrl}`,`${config.adminUrl}`],
     credentials: true,
 }));
 

@@ -26,8 +26,8 @@ export default function AdminLoginPage() {
     const form = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            email: "admin@zapcart.com",
-            password: "Admin@123456",
+            email: "admin@ecommerce.com",
+            password: "Test@123456",
         },
     });
 
@@ -36,8 +36,8 @@ export default function AdminLoginPage() {
         onSuccess: async (response: any) => {
             console.log("Login response:", response);
 
-            if (response?.data?.tokens?.accessToken) {
-                await setAuthToken(response.data.tokens.accessToken);
+            if (response?.data.data?.tokens?.accessToken) {
+                await setAuthToken(response.data.data.tokens.accessToken);
             }
 
             toast.success("Login successful!", {
