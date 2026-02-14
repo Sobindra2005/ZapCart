@@ -2,27 +2,66 @@ import { AlertCircle, Inbox, SearchX } from "lucide-react";
 import { TableCell, TableRow } from "./table";
 import { Skeleton } from "./skeleton";
 import { Button } from "./button";
+import { cn } from "@repo/lib/utils";
 
 interface TableLoadingStateProps {
     rowCount?: number;
     columnCount?: number;
 }
 
+interface SkeletonLoaderProps {
+    className?: string
+    count?: number
+}
+
+
+export function SkeletonLoader({ className, count = 1 }:SkeletonLoaderProps) {
+    return (
+        <>
+            {Array.from({ length: count }).map((_, i) => (
+                <div
+                    key={i}
+                    className={cn(
+                        'h-12 bg-gradient-to-r from-[hsl(var(--card))] via-[hsl(var(--muted))] to-[hsl(var(--card))] animate-shimmer rounded-lg',
+                        className
+                    )}
+                />
+            ))}
+        </>
+    )
+}
+
+export function SkeletonTableRow() {
+    return (
+        <tr className="border-b border-border hover:bg-secondary/50">
+            <td className="px-6 py-4">
+                <SkeletonLoader className="h-4 w-32" />
+            </td>
+            <td className="px-6 py-4">
+                <SkeletonLoader className="h-4 w-40" />
+            </td>
+            <td className="px-6 py-4">
+                <SkeletonLoader className="h-4 w-24" />
+            </td>
+            <td className="px-6 py-4">
+                <SkeletonLoader className="h-6 w-16" />
+            </td>
+            <td className="px-6 py-4">
+                <SkeletonLoader className="h-4 w-20" />
+            </td>
+        </tr>
+    )
+}
+
 export function TableLoadingState({
-    rowCount = 10,
+    rowCount = 15,
     columnCount = 5,
 }: TableLoadingStateProps) {
     return (
         <>
-            {Array.from({ length: rowCount }).map((_, i) => (
-                <TableRow key={i} className="hover:bg-transparent">
-                    {Array.from({ length: columnCount }).map((_, j) => (
-                        <TableCell key={j}>
-                            <Skeleton className="h-6 w-full" />
-                        </TableCell>
-                    ))}
-                </TableRow>
-            ))}
+            {
+                Array.from({ length: 10 }).map((_, i) => <SkeletonTableRow key={i} />)
+            }
         </>
     );
 }
@@ -42,7 +81,7 @@ export function TableErrorState({
 }: TableErrorStateProps) {
     return (
         <TableRow>
-            <TableCell colSpan={colSpan} style={{height:'500px'}} className=" text-center">
+            <TableCell colSpan={colSpan} style={{ height: '500px' }} className=" text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
                         <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -89,7 +128,7 @@ export function TableEmptyState({
 
     return (
         <TableRow>
-            <TableCell style={{height:'500px'}} colSpan={colSpan} className="h-[600px] text-center">
+            <TableCell style={{ height: '500px' }} colSpan={colSpan} className="h-[600px] text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted/50">
                         {Icon}
