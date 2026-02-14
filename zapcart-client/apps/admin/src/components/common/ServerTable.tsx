@@ -207,8 +207,8 @@ export function ServerTable<T>({
             )}
 
             <Table className={tableClassName}>
-                <TableHeader className="bg-gray-100 border-b-2 border-gray-200">
-                    <TableRow className="hover:bg-gray-100">
+                <TableHeader>
+                    <TableRow>
                         {(onRowSelect && onSelectAll) && (
                             <TableHead className="w-10 pl-6">
                                 <input
@@ -230,7 +230,7 @@ export function ServerTable<T>({
                                     key={String(column.accessorKey)}
                                     className={cn(
                                         column.className,
-                                        sortable && "cursor-pointer",
+                                        sortable && "cursor-pointer group",
                                         column.align === "right" && "text-right",
                                         column.align === "center" && "text-center"
                                     )}
@@ -238,7 +238,7 @@ export function ServerTable<T>({
                                 >
                                     <div
                                         className={cn(
-                                            "flex items-center gap-1.5 text-gray-700 uppercase text-xs font-semibold tracking-wider",
+                                            "flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider",
                                             column.align === "right" && "justify-end",
                                             column.align === "center" && "justify-center"
                                         )}
@@ -259,7 +259,6 @@ export function ServerTable<T>({
                 <TableBody>
                     {isLoading ? (
                         <TableLoadingState
-                            rowCount={10}
                             columnCount={columns.length + (onRowSelect ? 1 : 0)}
                         />
                     ) : error ? (

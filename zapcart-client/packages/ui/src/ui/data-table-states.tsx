@@ -31,36 +31,28 @@ export function SkeletonLoader({ className, count = 1 }:SkeletonLoaderProps) {
     )
 }
 
-export function SkeletonTableRow() {
+interface SkeletonTableRowProps {
+    columnCount?: number;
+}
+
+export function SkeletonTableRow({ columnCount = 5 }: SkeletonTableRowProps) {
     return (
-        <tr className="border-b border-border hover:bg-secondary/50">
-            <td className="px-6 py-4">
-                <SkeletonLoader className="h-4 w-32" />
-            </td>
-            <td className="px-6 py-4">
-                <SkeletonLoader className="h-4 w-40" />
-            </td>
-            <td className="px-6 py-4">
-                <SkeletonLoader className="h-4 w-24" />
-            </td>
-            <td className="px-6 py-4">
-                <SkeletonLoader className="h-6 w-16" />
-            </td>
-            <td className="px-6 py-4">
-                <SkeletonLoader className="h-4 w-20" />
-            </td>
-        </tr>
+        <TableRow className="border-b border-border hover:bg-secondary/50">
+                <TableCell colSpan={columnCount}  className="px-6 py-4">
+                    <SkeletonLoader className="h-4 w-32" />
+                </TableCell>
+        </TableRow>
     )
 }
 
 export function TableLoadingState({
-    rowCount = 15,
     columnCount = 5,
 }: TableLoadingStateProps) {
     return (
         <>
             {
-                Array.from({ length: 10 }).map((_, i) => <SkeletonTableRow key={i} />)
+                
+                Array.from({ length: 10 }).map((_, i) => <SkeletonTableRow key={i} columnCount={columnCount} />)
             }
         </>
     );
