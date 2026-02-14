@@ -113,7 +113,13 @@ export const authApi = {
 };
 
 export const customersApi = {
-    getCustomers: (params?: { page?: number; limit?: number; sortBy?: 'newest' | 'name' }) => {
+    getCustomers: (params?: { 
+        page?: number; 
+        limit?: number; 
+        sortBy?: string;
+        sortOrder?: 'asc' | 'desc';
+        search?: string;
+    }) => {
         return axiosInstance.get('/admin/users', { params });
     }
 };

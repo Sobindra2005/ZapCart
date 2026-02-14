@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+    Check,
     Edit,
     Trash2,
+    X,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -20,13 +22,7 @@ import { GlobeIcon } from "@radix-ui/react-icons";
 import { customersApi } from "@/utils/api";
 import { Customer } from "@/types/customer";
 import { ServerTable, ServerTableColumn, SortConfig } from "@/components/common/ServerTable";
-
-
-
-const sortOptions = [
-    { value: "newest", label: "Newest" },
-    { value: "name", label: "Name: A to Z" },
-];
+import { Badge } from "@/components/ui/badge";
 
 type ApiResponse = {
     data: {
@@ -40,10 +36,22 @@ type ApiResponse = {
     };
 };
 
+const getRoleVariant = (role: string) => {
+    switch (role) {
+        case "SUPERADMIN":
+            return "destructive";
+        case "ADMIN":
+            return "secondary";
+        case "CUSTOMER":
+            return "default";
+        default:
+            return "default";
+    }
+};
+
 export default function CustomerListingPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: null });
-    const [sortOption, setSortOption] = useState<string>("newest");
     const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
@@ -62,17 +70,21 @@ export default function CustomerListingPage() {
 
     // Fetch customers with useQuery
     const { data, isLoading, error, refetch } = useQuery<ApiResponse>({
-        queryKey: ['customers', currentPage, itemsPerPage, sortOption, debouncedSearchQuery],
+        queryKey: ['customers', currentPage, itemsPerPage, sortConfig, debouncedSearchQuery],
         queryFn: async () => {
 
             const params: any = {
                 page: (currentPage),
                 limit: itemsPerPage,
-                sortBy: sortOption,
             };
 
             if (debouncedSearchQuery) {
                 params.search = debouncedSearchQuery;
+            }
+
+            if (sortConfig.key && sortConfig.direction) {
+                params.sortBy = sortConfig.key;
+                params.sortOrder = sortConfig.direction;
             }
 
             const response = await customersApi.getCustomers(params);
@@ -202,9 +214,23 @@ export default function CustomerListingPage() {
             cellClassName: "text-sm text-gray-600 font-medium",
         },
         {
-            header: "Country",
-            accessorKey: "country",
-            cell: () => "N/A",
+            header: "Verified",
+            accessorKey: "emailVerified",
+            cell: (customer) => (
+                <div className="flex items-center">
+                    {customer.emailVerified ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                        <X className="h-4 w-4 text-red-500" />
+                    )}
+                </div>
+            ),
+            cellClassName: "text-sm text-gray-600 font-medium",
+        },
+        {
+            header: "Total Orders",
+            accessorKey: "orders.length",
+            cell: (customer) => customer.orders.length ,
             cellClassName: "text-sm text-gray-600 font-medium",
         },
         {
@@ -213,7 +239,7 @@ export default function CustomerListingPage() {
             sortable: true,
             sortKey: "totalSpent",
             cell: (customer) => `$${customer.totalSpent?.toLocaleString() || "0"}`,
-            cellClassName: "text-sm text-gray-900 font-bold",
+            cellClassName: "text-sm text-orange-500 font-bold ",
         },
         {
             header: "Status",
@@ -232,20 +258,17 @@ export default function CustomerListingPage() {
             ),
         },
         {
-            header: "Action",
-            accessorKey: "actions",
-            align: "right",
-            cell: () => (
-                <div className="flex justify-end gap-2">
-                    <button className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 rounded-lg transition-all">
-                        <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-all">
-                        <Trash2 className="h-4 w-4" />
-                    </button>
-                </div>
+            header: "Role",
+            accessorKey: "role",
+            sortable: true,
+            sortKey: "role",
+            cell: (customer) => (
+                <Badge variant={getRoleVariant(customer.role)}>
+                    {customer.role}
+                </Badge>
             ),
-        },
+            cellClassName: "text-sm text-gray-600 font-medium",
+        }
     ], [getCustomerName, getCustomerStatus, getCustomerStatusColor]);
 
     return (
@@ -272,20 +295,6 @@ export default function CustomerListingPage() {
                 onRetry={refetch}
                 emptyTitle="No customers found"
                 emptyMessage="Try adjusting your search or filters"
-                toolbarContent={(
-                    <Select value={sortOption} onValueChange={setSortOption}>
-                        <SelectTrigger className="w-45">
-                            <SelectValue placeholder="Sort by" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {sortOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                )}
             />
             <BulkActionBar
                 selectedCount={selectedCustomers.length}
