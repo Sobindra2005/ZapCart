@@ -43,6 +43,7 @@ import { ChartWrapper } from "@/components/wrapper";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateOrderForm } from "@/components/forms/CreateOrderForm";
 import { StatCard } from "@/components/common/StatCard";
+import { ServerTable, ServerTableColumn } from "@/components/common/ServerTable";
 
 const stats: Stat[] = [
     { label: "Total Sales", value: "$124,592.00", trend: "+12.5%", trendDir: "up", vs: "vs last month" },
@@ -76,7 +77,18 @@ const channelData = [
     { name: "Search", value: 10, color: "#ef4444" },
 ];
 
-const recentOrders = [
+type OrderStatus = "Paid" | "Pending" | "Refunded";
+
+interface Order {
+    id: string;
+    customer: string;
+    date: string;
+    amount: string;
+    status: OrderStatus;
+    items: number;
+}
+
+const recentOrders: Order[] = [
     { id: "ORD-7392", customer: "Amrita Shrestha", date: "2024-03-23", amount: "$129.00", status: "Paid", items: 2 },
     { id: "ORD-7391", customer: "Bibek Poudel", date: "2024-03-23", amount: "$45.50", status: "Pending", items: 1 },
     { id: "ORD-7390", customer: "Sita Thapa", date: "2024-03-22", amount: "$899.00", status: "Paid", items: 3 },
@@ -86,7 +98,10 @@ const recentOrders = [
 
 
 const OrdersTable = () => {
-    const getStatusColor = (status: string) => {
+    const [page, setPage] = React.useState(1);
+    const [searchValue, setSearchValue] = React.useState("");
+    
+    const getStatusColor = (status: OrderStatus) => {
         switch (status) {
             case "Paid": return "bg-green-50 text-green-700 border-green-200";
             case "Pending": return "bg-orange-50 text-orange-700 border-orange-200";
@@ -95,61 +110,65 @@ const OrdersTable = () => {
         }
     };
 
+    const columns: ServerTableColumn<Order>[] = [
+        {
+            header: "Order ID",
+            accessorKey: "id",
+            cell: (row) => <span className="font-bold text-primary">#{row.id}</span>,
+            sortable: true,
+        },
+        {
+            header: "Customer",
+            accessorKey: "customer",
+            cell: (row) => <span className="font-semibold text-gray-900">{row.customer}</span>,
+            sortable: true,
+        },
+        {
+            header: "Date",
+            accessorKey: "date",
+            cell: (row) => <span className="text-gray-500">{row.date}</span>,
+            sortable: true,
+        },
+        {
+            header: "Items",
+            accessorKey: "items",
+            cell: (row) => <span className="text-gray-600 font-bold">{row.items}</span>,
+            align: "center",
+            sortable: true,
+        },
+        {
+            header: "Amount",
+            accessorKey: "amount",
+            cell: (row) => <span className="font-bold text-gray-900">{row.amount}</span>,
+            sortable: true,
+        },
+        {
+            header: "Status",
+            accessorKey: "status",
+            cell: (row) => (
+                <Badge variant="outline" className={cn("px-2 py-0.5 font-bold", getStatusColor(row.status))}>
+                    {row.status}
+                </Badge>
+            ),
+        }
+    ];
+
     return (
-        <AdminCard className="p-0">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <Input placeholder="Search orders..." className="pl-10 bg-gray-50/50 border-gray-200" />
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="gap-2 font-bold border-gray-200">
-                        <Filter className="h-4 w-4" />
-                        Filter
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2 font-bold border-gray-200">
-                        <Download className="h-4 w-4" />
-                        Export
-                    </Button>
-                </div>
-            </div>
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50/50 text-[10px] uppercase tracking-wider font-bold text-gray-500 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4">Order ID</th>
-                            <th className="px-6 py-4">Customer</th>
-                            <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4 text-center">Items</th>
-                            <th className="px-6 py-4">Amount</th>
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {recentOrders.map((order) => (
-                            <tr key={order.id} className="hover:bg-gray-50 transition-colors cursor-pointer group">
-                                <td className="px-6 py-4 font-bold text-primary">#{order.id}</td>
-                                <td className="px-6 py-4 font-semibold text-gray-900">{order.customer}</td>
-                                <td className="px-6 py-4 text-gray-500">{order.date}</td>
-                                <td className="px-6 py-4 text-center text-gray-600 font-bold">{order.items}</td>
-                                <td className="px-6 py-4 font-bold text-gray-900">{order.amount}</td>
-                                <td className="px-6 py-4">
-                                    <Badge variant="outline" className={cn("px-2 py-0.5 font-bold", getStatusColor(order.status))}>
-                                        {order.status}
-                                    </Badge>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-primary transition-opacity group-hover:opacity-100 sm:opacity-0 lg:opacity-100">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </AdminCard>
+        <ServerTable
+            columns={columns}
+            data={recentOrders}
+            getRowId={(row) => row.id}
+            page={page}
+            limit={5}
+            total={recentOrders.length}
+            onPageChange={setPage}
+            enableSearch
+            searchValue={searchValue}
+            searchPlaceholder="Search orders..."
+            onSearchChange={setSearchValue}
+            fileName="orders"
+            containerClassName="shadow-none"
+        />
     );
 };
 
@@ -353,10 +372,17 @@ export default function SalesPage() {
 
                 {/* Secondary Charts */}
                 <div>
+                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        Top Selling Products
+                       
+                    </h3>
                     {/* Top Products */}
                     <ChartWrapper
-                        label="Top Selling Products"
-                        className="mb-6"
+                        topComponent={
+                            <div className="flex items-center justify-between">
+                                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+                            </div>
+                        }
                         menuItems={[
                             { label: "View All Products", accessorKey: "viewAll" },
                             { label: "Export List", accessorKey: "exportList" },

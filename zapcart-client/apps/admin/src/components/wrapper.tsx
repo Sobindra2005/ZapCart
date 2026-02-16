@@ -72,7 +72,7 @@ export interface MenuItem {
 
 interface ChartWrapperProps {
     children: React.ReactNode;
-    label: string;
+    label?: string;
     topComponent?: React.ReactNode;
     className?: string;
     menuItems?: MenuItem[];
