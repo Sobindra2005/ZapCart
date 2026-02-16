@@ -76,6 +76,7 @@ export const config = {
     CLOUDINARY_API_SECRET: getEnvVariable('CLOUDINARY_API_SECRET'),
 
     frontendUrl: getEnvVariable('FRONTEND_URL'),
+    adminUrl: getEnvVariable('ADMIN_URL'),
 } as const;
 
 /**

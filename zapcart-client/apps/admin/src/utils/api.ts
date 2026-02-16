@@ -3,7 +3,7 @@ import axios from 'axios';
 import { setAuthToken, removeAuthToken } from '@repo/lib/actions/auth.actions';
 import { useAuthStore } from '@/stores';
 
-const baseUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8080/api';
+const baseUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8080/api/v1';
 
 const endpoints = {
     login: '/auth/login',
@@ -43,8 +43,8 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // Check if error is 401 and we haven't already tried to refresh
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Check if error is 401 and we haven't already tried to refresh, and it's not a login request
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes(endpoints.login)) {
             if (isRefreshing) {
                 // If already refreshing, queue this request
                 return new Promise((resolve, reject) => {
@@ -109,5 +109,17 @@ export const authApi = {
     },
     logout: () => {
         return axiosInstance.post(endpoints.logout, {});
+    }
+};
+
+export const customersApi = {
+    getCustomers: (params?: { 
+        page?: number; 
+        limit?: number; 
+        sortBy?: string;
+        sortOrder?: 'asc' | 'desc';
+        search?: string;
+    }) => {
+        return axiosInstance.get('/admin/users', { params });
     }
 };

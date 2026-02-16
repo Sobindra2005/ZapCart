@@ -6,7 +6,13 @@ import { Header } from "@/components/Header";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { AdminCard } from "./AdminCard";
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const { isCollapsed } = useSidebar();
@@ -58,26 +64,61 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     );
 }
 
-interface ChartWrapperProps {
-    children: React.ReactNode;
+export interface MenuItem {
     label: string;
-    topComponent?: React.ReactNode;
-    className?: string;
+    accessorKey: string;
+    visible?: boolean;
 }
 
-export function ChartWrapper({ children, label, topComponent, className }: ChartWrapperProps) {
+interface ChartWrapperProps {
+    children: React.ReactNode;
+    label?: string;
+    topComponent?: React.ReactNode;
+    className?: string;
+    menuItems?: MenuItem[];
+    onMenuSelect?: (accessorKey: string) => void;
+}
+
+export function ChartWrapper({ children, label, topComponent, className, menuItems, onMenuSelect }: ChartWrapperProps) {
+    const visibleMenuItems = menuItems?.filter(item => item.visible !== false) ?? [];
+    const hasMenuItems = visibleMenuItems.length > 0;
+
+    const handleMenuChange = (value: string) => {
+        onMenuSelect?.(value);
+    };
+
     return (
         <AdminCard hoverable className={cn("lg:col-span-8 overflow-hidden", className)}>
             <div className="flex justify-between items-center mb-10">
                 <h2 className="text-lg font-bold text-gray-900">{label}</h2>
                 <div className="flex items-center gap-4">
                     {topComponent}
-                    <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <MoreHorizontal className="h-5 w-5" />
-                    </button>
+                    {hasMenuItems && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    aria-label="More options"
+                                    type="button"
+                                >
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {visibleMenuItems.map((item) => (
+                                    <DropdownMenuItem
+                                        key={item.accessorKey}
+                                        onClick={() => handleMenuChange(item.accessorKey)}
+                                    >
+                                        {item.label}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </div>
             </div>
-            <div className="h-75 w-full">
+            <div className="w-full">
                 {children}
             </div>
         </AdminCard>
