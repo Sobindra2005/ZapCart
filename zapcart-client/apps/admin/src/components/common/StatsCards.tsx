@@ -2,9 +2,7 @@ import React from "react";
 import { cn } from "@repo/lib/utils";
 import { StatCard} from "./StatCard";
 
-/**
- * @deprecated Use StatCardProps instead
- */
+
 export interface Stat {
     label: string;
     value: string | number;

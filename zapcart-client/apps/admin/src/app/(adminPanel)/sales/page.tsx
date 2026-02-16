@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
     Search,
     Filter,
@@ -8,6 +9,10 @@ import {
     Calendar,
     ChevronRight,
 } from "lucide-react";
+import { addDays } from "date-fns";
+import { type DateRange } from "react-day-picker";
+import { DatePickerWithRange } from "@/components/common/Date-Picker-Range";
+import { SectionDivider } from "@/components/common/SectionDivider";
 import { cn } from "@/lib/utils";
 import { Input } from "@repo/ui/ui/input";
 import { Button } from "@repo/ui/ui/button";
@@ -33,9 +38,8 @@ import {
     LabelList
 } from "recharts";
 import { AdminCard } from "@/components/AdminCard";
-import { Stat, StatsCards } from "@/components/common/StatsCards";
+import { Stat } from "@/components/common/StatsCards";
 import { ChartWrapper } from "@/components/wrapper";
-import { LabelFormatter } from "recharts/types/component/Label";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateOrderForm } from "@/components/forms/CreateOrderForm";
 import { StatCard } from "@/components/common/StatCard";
@@ -150,7 +154,7 @@ const OrdersTable = () => {
 };
 
 const RealTimeTicker = () => (
-    <AdminCard className="p-0 overflow-hidden">
+    <AdminCard className="p-0 overflow-hidden flex-1 flex flex-col">
         <CardHeader className="py-1 flex flex-row items-center justify-between bg-green-500">
             <CardTitle className="text-sm font-bold flex items-center gap-2 justify-center text-white">
                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
@@ -158,7 +162,7 @@ const RealTimeTicker = () => (
             </CardTitle>
             <Button variant="ghost" size="icon" className="h-6 w-6"><ChevronRight className="h-4 w-4" /></Button>
         </CardHeader>
-        <CardContent className="px-0">
+        <CardContent className="px-0 flex-1 overflow-auto">
             <div className="space-y-1">
                 {[
                     { user: "Ram", action: "purchased Airpods", time: "2m ago" },
@@ -180,7 +184,14 @@ const RealTimeTicker = () => (
 
 const SalesByChannel = () => {
     return (
-        <ChartWrapper label="Sales by Channel" >
+        <ChartWrapper
+            label="Sales by Channel"
+            menuItems={[
+                { label: "View Details", accessorKey: "viewDetails" },
+                { label: "Export Data", accessorKey: "exportData" },
+            ]}
+            onMenuSelect={(key) => console.log('Sales by Channel action:', key)}
+        >
             <CardContent className="flex items-center">
                 <div className="h-30 w-30">
                     <ResponsiveContainer width="100%" height="100%">
@@ -218,15 +229,16 @@ const SalesByChannel = () => {
 
 
 export default function SalesPage() {
+    const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
+        from: new Date(new Date().getFullYear(), 0, 1),
+        to: addDays(new Date(new Date().getFullYear(), 0, 1), 30),
+    });
+
     return (
-        <div className="p-8 max-w-400 mx-auto space-y-8">
+        <div className="p-8 max-w-400 mx-auto space-y-8 " >
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="font-bold border-gray-200">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Last 30 Days
-                    </Button>
                     <FormPopup
                         title="Create New Order"
                         description="Manually create a new order."
@@ -262,17 +274,26 @@ export default function SalesPage() {
                 ))}
             </div>
 
+
+
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Sales Trend Chart */}
-                <ChartWrapper className="lg:col-span-2 " label="Revenue Insights" topComponent={
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
-                            <Button variant="ghost" size="sm" className="h-7 px-3 font-bold text-[10px] uppercase bg-white shadow-sm">Revenue</Button>
-                            <Button variant="ghost" size="sm" className="h-7 px-3 font-bold text-[10px] uppercase text-gray-500">Volume</Button>
+                <ChartWrapper
+                    className="lg:col-span-2 "
+                    label="Revenue Insights"
+                    topComponent={
+                        <div className="flex items-center justify-between">
+                            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
                         </div>
-                    </div>
-                }>
+                    }
+                    menuItems={[
+                        { label: "Today", accessorKey: "today" },
+                        { label: "This week", accessorKey: "thisWeek" },
+                        { label: "This Month", accessorKey: "thisMonth" },
+                    ]}
+                    onMenuSelect={(key) => console.log('Revenue Insights action:', key)}
+                >
                     <CardContent className="h-87.5">
 
                         <ResponsiveContainer width="100%" height="100%">
@@ -314,12 +335,11 @@ export default function SalesPage() {
                 </ChartWrapper>
 
                 {/* Right Sidebar Widgets */}
-                <div className="space-y-6">
-                    <RealTimeTicker />
+                <div className="flex flex-col gap-6">
                     <SalesByChannel />
+                    <RealTimeTicker />
                 </div>
             </div>
-
             {/* Bottom Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Orders Table */}
@@ -334,7 +354,15 @@ export default function SalesPage() {
                 {/* Secondary Charts */}
                 <div>
                     {/* Top Products */}
-                    <ChartWrapper label="Top Selling Products">
+                    <ChartWrapper
+                        label="Top Selling Products"
+                        className="mb-6"
+                        menuItems={[
+                            { label: "View All Products", accessorKey: "viewAll" },
+                            { label: "Export List", accessorKey: "exportList" },
+                        ]}
+                        onMenuSelect={(key) => console.log('Top Products action:', key)}
+                    >
                         <CardContent className="h-auto px-6 flex flex-col justify-between">
                             <ResponsiveContainer width="100%" height={180}>
                                 <BarChart
