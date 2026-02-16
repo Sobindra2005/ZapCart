@@ -21,7 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@repo/ui/ui/select"
-import { User, Package, CreditCard, MapPin, Search, Plus, Minus, X, Info } from "lucide-react"
+import { User, Package, CreditCard, MapPin, Search, Plus, Minus, X, Info, ChevronDown } from "lucide-react"
 
 const orderSchema = z.object({
     customerName: z.string().min(2, "Customer name is required"),
@@ -46,6 +46,7 @@ interface CreateOrderFormProps {
 
 export function CreateOrderForm({ onCancel, onSubmit }: CreateOrderFormProps) {
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [summaryOpen, setSummaryOpen] = React.useState(true)
 
     const form = useForm<OrderFormValues>({
         resolver: zodResolver(orderSchema),
@@ -58,7 +59,7 @@ export function CreateOrderForm({ onCancel, onSubmit }: CreateOrderFormProps) {
         },
     })
 
-    const { fields, append, remove, update } = useFieldArray({
+    const { fields, append, remove, update } = useFieldArray({ 
         control: form.control,
         name: "items",
     })
@@ -115,8 +116,8 @@ export function CreateOrderForm({ onCancel, onSubmit }: CreateOrderFormProps) {
 
     return (
         <Form {...form} >
-            <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8 py-4 max-h-[80vh] overflow-y-auto px-1">
-                {/* Customer Information */}
+            <form onSubmit={form.handleSubmit(onFormSubmit)} className="flex flex-col max-h-[80vh]">
+                <div className="flex-1 overflow-y-auto px-1 space-y-8 py-4">{/* Customer Information */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
                         <User className="h-4 w-4 text-primary" />
@@ -291,39 +292,56 @@ export function CreateOrderForm({ onCancel, onSubmit }: CreateOrderFormProps) {
                 </div>
 
                 {/* Order Summary */}
-                <div className="bg-gray-900 rounded-2xl p-6 text-white overflow-hidden relative group">
+                <div className="bg-gray-900 rounded-2xl text-white overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-8 text-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500">
                         <CreditCard className="h-32 w-32 rotate-12" />
                     </div>
-                    <div className="relative space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/20">
-                                <Info className="h-4 w-4 text-primary" />
+                    <button
+                        type="button"
+                        onClick={() => setSummaryOpen(!summaryOpen)}
+                        className="w-full p-6 relative"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/20">
+                                    <Info className="h-4 w-4 text-primary" />
+                                </div>
+                                <h3 className="text-sm font-bold uppercase tracking-wider">Order Summary</h3>
                             </div>
-                            <h3 className="text-sm font-bold uppercase tracking-wider">Order Summary</h3>
-                        </div>
-                        <div className="space-y-2 border-y border-white/10 py-4">
-                            <div className="flex justify-between text-xs text-white/60">
-                                <span>Subtotal</span>
-                                <span className="font-bold text-white">${subtotal.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-xs text-white/60">
-                                <span>Estimaxed Tax (10%)</span>
-                                <span className="font-bold text-white">${tax.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-xs text-white/60">
-                                <span>Shipping Fee</span>
-                                <span className="font-bold text-white">${shipping.toFixed(2)}</span>
+                            <div className="flex items-center gap-4">
+                                <span className="text-xl font-black text-primary">${total.toFixed(2)}</span>
+                                <ChevronDown 
+                                    className={`h-5 w-5 transition-transform duration-200 ${summaryOpen ? 'rotate-180' : ''}`} 
+                                />
                             </div>
                         </div>
-                        <div className="flex justify-between items-center pt-2">
-                            <span className="text-xs font-bold uppercase tracking-wider text-white/60">Total Amount</span>
-                            <span className="text-2xl font-black text-primary">${total.toFixed(2)}</span>
+                    </button>
+                    {summaryOpen && (
+                        <div className="relative px-6 pb-6 space-y-4">
+                            <div className="space-y-2 border-y border-white/10 py-4">
+                                <div className="flex justify-between text-xs text-white/60">
+                                    <span>Subtotal</span>
+                                    <span className="font-bold text-white">${subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-white/60">
+                                    <span>Estimated Tax (10%)</span>
+                                    <span className="font-bold text-white">${tax.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-white/60">
+                                    <span>Shipping Fee</span>
+                                    <span className="font-bold text-white">${shipping.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center pt-2">
+                                <span className="text-xs font-bold uppercase tracking-wider text-white/60">Total Amount</span>
+                                <span className="text-2xl font-black text-primary">${total.toFixed(2)}</span>
+                            </div>
                         </div>
-                    </div>
+                    )}
+                </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+                <div className="flex justify-end gap-3 px-1 py-4 border-t border-gray-100 bg-white">{/* Fixed button container */}
                     <Button variant="outline" type="button" onClick={onCancel} className="font-bold border-gray-200">
                         Discard
                     </Button>

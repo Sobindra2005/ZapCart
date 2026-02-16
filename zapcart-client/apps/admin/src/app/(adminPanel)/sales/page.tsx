@@ -261,6 +261,7 @@ export default function SalesPage() {
                     <FormPopup
                         title="Create New Order"
                         description="Manually create a new order."
+                        className="max-w-4xl"
                         trigger={
                             <Button className="font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                                 Create Order
