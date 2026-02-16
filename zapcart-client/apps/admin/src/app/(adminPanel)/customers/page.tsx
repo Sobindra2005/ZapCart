@@ -293,13 +293,14 @@ export default function CustomerListingPage() {
                 isLoading={isLoading}
                 error={Boolean(error)}
                 onRetry={refetch}
+                fileName={"customers.csv"}
                 emptyTitle="No customers found"
                 emptyMessage="Try adjusting your search or filters"
             />
             <BulkActionBar
                 selectedCount={selectedCustomers.length}
                 onDeselectAll={() => setSelectedCustomers([])}
-                label="Categories Selected"
+                label="Customers Selected"
                 actions={bulkActions}
             />
         </div>

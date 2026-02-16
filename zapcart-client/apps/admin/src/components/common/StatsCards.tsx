@@ -1,9 +1,10 @@
 import React from "react";
-import { MoreHorizontal, TrendingUp, TrendingDown } from "lucide-react";
-import { AdminCard } from "../AdminCard";
 import { cn } from "@repo/lib/utils";
+import { StatCard} from "./StatCard";
 
-
+/**
+ * @deprecated Use StatCardProps instead
+ */
 export interface Stat {
     label: string;
     value: string | number;
@@ -13,39 +14,59 @@ export interface Stat {
 }
 
 interface StatsCardsProps {
+    /**
+     * Array of stat objects to render as cards
+     */
     stats: Stat[];
+    
+    /**
+     * Optional CSS classes for the grid container
+     * @default "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+     */
     className?: string;
+    
+    /**
+     * Callback when a stat card's more button is clicked
+     */
+    onStatMoreClick?: (stat: Stat, index: number) => void;
 }
 
-export const StatsCards: React.FC<StatsCardsProps> = ({ stats ,className }) => {
+/**
+ * StatsCards - Convenience wrapper that renders multiple StatCard components in a grid
+ * 
+ * This is a convenience component for rendering multiple KPI cards at once.
+ * For more control, you can map over your stats array and render StatCard components directly.
+ * 
+ * @example
+ * ```tsx
+ * // Using the wrapper
+ * <StatsCards stats={stats} />
+ * 
+ * // Or render individually for more control
+ * <div className="grid grid-cols-4 gap-6">
+ *   {stats.map((stat) => (
+ *     <StatCard key={stat.label} {...stat} />
+ *   ))}
+ * </div>
+ * ```
+ */
+export const StatsCards: React.FC<StatsCardsProps> = ({ 
+    stats, 
+    className,
+    onStatMoreClick 
+}) => {
     return (
         <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6", className)}>
             {stats.map((stat, i) => (
-                <AdminCard key={i} hoverable className="group">
-                    <div className="flex justify-between items-start mb-4">
-                        <span className="text-sm font-medium text-gray-500">{stat.label}</span>
-                        <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                            <MoreHorizontal className="h-5 w-5" />
-                        </button>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">{stat.value}</h3>
-                    <div className="flex items-center gap-2">
-                        <div
-                            className={cn(
-                                "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold font-sans",
-                                stat.trendDir === "up" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
-                            )}
-                        >
-                            {stat.trendDir === "up" ? (
-                                <TrendingUp className="h-3 w-3" />
-                            ) : (
-                                <TrendingDown className="h-3 w-3" />
-                            )}
-                            {stat.trend}
-                        </div>
-                        <span className="text-xs font-medium text-gray-400">{stat.vs}</span>
-                    </div>
-                </AdminCard>
+                <StatCard
+                    key={`stat-${i}-${stat.label}`}
+                    label={stat.label}
+                    value={stat.value}
+                    trend={stat.trend}
+                    trendDir={stat.trendDir}
+                    vs={stat.vs}
+                    onMoreClick={() => onStatMoreClick?.(stat, i)}
+                />
             ))}
         </div>
     );

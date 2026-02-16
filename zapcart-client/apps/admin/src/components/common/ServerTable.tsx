@@ -2,6 +2,8 @@
 
 import React, { ReactNode } from "react";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { DocumentDownload } from "iconsax-react";
+import { CSVLink } from "react-csv";
 import { cn } from "@/lib/utils";
 import { Input } from "@repo/ui/ui/input";
 import {
@@ -88,6 +90,8 @@ interface ServerTableProps<T> {
 
     toolbarContent?: ReactNode;
 
+    fileName?: string;
+
     isLoading?: boolean;
     error?: boolean;
     onRetry?: () => void;
@@ -132,6 +136,7 @@ export function ServerTable<T>({
     onRowSelect,
     onSelectAll,
     toolbarContent,
+    fileName,
     isLoading = false,
     error = false,
     onRetry,
@@ -147,6 +152,22 @@ export function ServerTable<T>({
         const nextValues = { ...filterValues, [key]: value };
         onFilterChange?.(nextValues);
     };
+
+    // Prepare CSV data
+    const csvHeaders = columns.map((col) => ({
+        label: typeof col.header === "string" ? col.header : String(col.accessorKey),
+        key: String(col.accessorKey),
+    }));
+
+    const csvData = data.map((row) => {
+        const csvRow: Record<string, unknown> = {};
+        columns.forEach((col) => {
+            const key = String(col.accessorKey);
+            const value = (row as Record<string, unknown>)[key];
+            csvRow[key] = value;
+        });
+        return csvRow;
+    });
 
     return (
         <div
@@ -202,7 +223,20 @@ export function ServerTable<T>({
                             )}
                     </div>
 
-                    {toolbarContent && <div className="flex items-center gap-4">{toolbarContent}</div>}
+                    <div className="flex items-center gap-4">
+                        {fileName && (
+                            <CSVLink
+                                data={csvData}
+                                headers={csvHeaders}
+                                filename={`${fileName}.csv`}
+                                className="inline-flex items-center justify-center w-9 h-9 rounded-md text-gray-500 hover:text-gray-700  transition-colors"
+                                title="Export to CSV"
+                            >
+                                <DocumentDownload size={29} color="currentColor" />
+                            </CSVLink>
+                        )}
+                        {toolbarContent}
+                    </div>
                 </div>
             )}
 
