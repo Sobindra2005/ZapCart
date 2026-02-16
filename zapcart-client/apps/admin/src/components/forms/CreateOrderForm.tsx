@@ -114,7 +114,7 @@ export function CreateOrderForm({ onCancel, onSubmit }: CreateOrderFormProps) {
     const total = subtotal + tax + shipping
 
     return (
-        <Form {...form}>
+        <Form {...form} >
             <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-8 py-4 max-h-[80vh] overflow-y-auto px-1">
                 {/* Customer Information */}
                 <div className="space-y-4">

@@ -38,6 +38,7 @@ import { ChartWrapper } from "@/components/wrapper";
 import { LabelFormatter } from "recharts/types/component/Label";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateOrderForm } from "@/components/forms/CreateOrderForm";
+import { StatCard } from "@/components/common/StatCard";
 
 const stats: Stat[] = [
     { label: "Total Sales", value: "$124,592.00", trend: "+12.5%", trendDir: "up", vs: "vs last month" },
@@ -241,7 +242,25 @@ export default function SalesPage() {
             </div>
 
             {/* KPI Row */}
-            <StatsCards stats={stats} />
+            <div className={"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"}>
+                {stats.map((stat, i) => (
+                    <StatCard
+                        key={`stat-${i}-${stat.label}`}
+                        label={stat.label}
+                        value={stat.value}
+                        trend={stat.trend}
+                        trendDir={stat.trendDir}
+                        vs={stat.vs}
+                        menuItems={[
+                            { label: "Today", accessorKey: "today" },
+                            { label: "This Week", accessorKey: "thisWeek" },
+                            { label: "This Month", accessorKey: "thisMonth" },
+                            { label: "This Year", accessorKey: "thisYear" },
+                        ]}
+
+                    />
+                ))}
+            </div>
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
