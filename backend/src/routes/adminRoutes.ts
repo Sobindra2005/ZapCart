@@ -1,6 +1,6 @@
 import express from 'express';
 import { getUsersList } from '@/controllers/admin.controller';
-import { getOrderAnalytics } from '@/controllers/analytics.controller';
+import { getOrderAnalytics, getTopProducts, getChartData } from '@/controllers/analytics.controller';
 import { protect, restrictTo } from '@/middlewares/authMiddleware';
 
 const router = express.Router();
@@ -30,5 +30,25 @@ router.get('/users', getUsersList);
  * @query   refundRange - Time range for refund rate (optional: today, week, month, year; default: week)
  */
 router.get('/analytics/orders', getOrderAnalytics);
+
+/**
+ * @route   GET /api/admin/analytics/top-products
+ * @desc    Get top 5 best-selling products
+ * @access  Private/Admin
+ * @query   productsRange - Time range for top products (optional: today, week, month, year; default: week)
+ * @query   startDate - Custom start date in ISO format (optional)
+ * @query   endDate - Custom end date in ISO format (optional)
+ */
+router.get('/analytics/top-products', getTopProducts);
+
+/**
+ * @route   GET /api/admin/analytics/chart-data
+ * @desc    Get chart data for Orders vs Revenue
+ * @access  Private/Admin
+ * @query   chartRange - Time range for chart data (optional: today, week, month, year; default: week)
+ * @query   startDate - Custom start date in ISO format (optional)
+ * @query   endDate - Custom end date in ISO format (optional)
+ */
+router.get('/analytics/chart-data', getChartData);
 
 export default router;

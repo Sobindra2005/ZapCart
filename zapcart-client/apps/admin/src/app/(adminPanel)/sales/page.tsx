@@ -285,9 +285,9 @@ export default function SalesPage() {
                         vs={stat.vs}
                         menuItems={[
                             { label: "Today", accessorKey: "today" },
-                            { label: "This Week", accessorKey: "thisWeek" },
-                            { label: "This Month", accessorKey: "thisMonth" },
-                            { label: "This Year", accessorKey: "thisYear" },
+                            { label: "This Week", accessorKey: "week" },
+                            { label: "This Month", accessorKey: "month" },
+                            { label: "This Year", accessorKey: "year" },
                         ]}
 
                     />
@@ -309,8 +309,10 @@ export default function SalesPage() {
                     }
                     menuItems={[
                         { label: "Today", accessorKey: "today" },
-                        { label: "This week", accessorKey: "thisWeek" },
-                        { label: "This Month", accessorKey: "thisMonth" },
+                        { label: "This week", accessorKey: "week" },
+                        { label: "This Month", accessorKey: "month" },
+                        { label: "This Year", accessorKey: "year" },
+
                     ]}
                     onMenuSelect={(key) => console.log('Revenue Insights action:', key)}
                 >

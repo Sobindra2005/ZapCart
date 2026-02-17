@@ -79,8 +79,6 @@ export interface OrderAnalytics {
     averageOrderValue: KPIWithGrowthAndRange;
     refundRate: KPIWithGrowthAndRange;
   };
-  topProducts: TopProduct[];
-  chartData: ChartData;
 }
 
 /**
@@ -434,7 +432,7 @@ export class AnalyticsService {
   /**
    * Generate chart data for orders and revenue
    */
-  private static async generateChartData(
+  static async generateChartData(
     chartRange?: string,
     startDate?: string,
     endDate?: string
@@ -581,7 +579,7 @@ export class AnalyticsService {
   /**
    * Get top 5 best-selling products
    */
-  private static async getTopProducts(
+  static async getTopProducts(
     productsRange?: string,
     startDate?: string,
     endDate?: string
@@ -661,13 +659,11 @@ export class AnalyticsService {
     const refundRange = this.validateTimeRange(kpiRanges.refundRange || 'week');
 
     // Calculate each KPI independently with its own range, plus top products and chart data
-    const [totalSales, totalOrders, averageOrderValue, refundRate, topProducts, chartData] = await Promise.all([
+    const [totalSales, totalOrders, averageOrderValue, refundRate] = await Promise.all([
       this.calculateSingleKPI(salesRange, 'sales'),
       this.calculateSingleKPI(ordersRange, 'orders'),
       this.calculateSingleKPI(aovRange, 'aov'),
       this.calculateSingleKPI(refundRange, 'refund'),
-      this.getTopProducts(kpiRanges.productsRange, kpiRanges.startDate, kpiRanges.endDate),
-      this.generateChartData(kpiRanges.chartRange, kpiRanges.startDate, kpiRanges.endDate),
     ]);
 
     return {
@@ -677,8 +673,6 @@ export class AnalyticsService {
         averageOrderValue,
         refundRate,
       },
-      topProducts,
-      chartData,
     };
   }
 }
