@@ -39,7 +39,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     if (isAuthRoute) {
         return (
             <div className="flex min-h-screen bg-background text-foreground">
-                <main className="flex-1">
+                <main className="flex-1 ">
                     {children}
                 </main>
             </div>
@@ -56,7 +56,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
                 )}
             >
                 <Header title={title} />
-                <main className="flex-1">
+                <main className="flex-1 p-8">
                     {children}
                 </main>
             </div>

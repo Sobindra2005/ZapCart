@@ -113,9 +113,9 @@ export const authApi = {
 };
 
 export const customersApi = {
-    getCustomers: (params?: { 
-        page?: number; 
-        limit?: number; 
+    getCustomers: (params?: {
+        page?: number;
+        limit?: number;
         sortBy?: string;
         sortOrder?: 'asc' | 'desc';
         search?: string;
@@ -123,3 +123,38 @@ export const customersApi = {
         return axiosInstance.get('/admin/users', { params });
     }
 };
+
+
+export const salesApi = {
+    getOrderAnalytics: (params?: {
+        salesRange?: string;
+        ordersRange?: string;
+        aovRange?: string;
+        refundRange?: string;
+    }) => {
+        console.log("Fetching order analytics with params:", params);
+        return axiosInstance.get('/admin/analytics/orders', { params });
+    },
+    getTopProducts: (params?: {
+        productsRange?: string;
+        startDate?: string;
+        endDate?: string;
+    }) => {
+        return axiosInstance.get('/admin/analytics/top-products', { params });
+    },
+    getChartData: (params?: {
+        chartRange?: string;
+        startDate?: string;
+        endDate?: string;
+    }) => {
+        return axiosInstance.get('/admin/analytics/chart-data', { params });
+    },
+    getRecentLogisticsOrders: (
+        params?: {
+            start?: number;
+            limit?: number;
+        }
+    ) => {
+        return axiosInstance.get('/admin/orders/logistics/recent', { params });
+    }
+}

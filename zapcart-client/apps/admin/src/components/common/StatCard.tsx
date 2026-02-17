@@ -58,11 +58,6 @@ export interface StatCardProps {
      */
     className?: string;
 
-    /**
-     * Whether to show the more options button
-     * @default true
-     */
-    showMoreButton?: boolean;
 
     /**
      * Menu items to display in the dropdown
@@ -123,7 +118,6 @@ export const StatCard = React.memo<StatCardProps>(({
     trendDir,
     vs,
     className,
-    showMoreButton = true,
     menuItems,
     onMenuSelect,
 }) => {
@@ -185,6 +179,23 @@ export const StatCard = React.memo<StatCardProps>(({
         </AdminCard>
     );
 });
+export const StatCardSkeleton = React.memo(() => (
+    <AdminCard>
+        <div className="space-y-4">
+            <div className="flex justify-between items-start">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+            <div className="flex items-center gap-2">
+                <div className="h-5 w-16 bg-green-100 rounded animate-pulse" />
+                <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+            </div>
+        </div>
+    </AdminCard>
+));
+
+StatCardSkeleton.displayName = "StatCardSkeleton";
 
 
 

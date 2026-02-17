@@ -2,19 +2,12 @@
 
 import * as React from "react";
 import {
-    Search,
-    Filter,
-    Download,
-    MoreHorizontal,
-    Calendar,
     ChevronRight,
 } from "lucide-react";
 import { addDays } from "date-fns";
 import { type DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/common/Date-Picker-Range";
-import { SectionDivider } from "@/components/common/SectionDivider";
 import { cn } from "@/lib/utils";
-import { Input } from "@repo/ui/ui/input";
 import { Button } from "@repo/ui/ui/button";
 import { Badge } from "@repo/ui/ui/badge";
 import {
@@ -42,8 +35,10 @@ import { Stat } from "@/components/common/StatsCards";
 import { ChartWrapper } from "@/components/wrapper";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateOrderForm } from "@/components/forms/CreateOrderForm";
-import { StatCard } from "@/components/common/StatCard";
+import { StatCard, StatCardSkeleton } from "@/components/common/StatCard";
 import { ServerTable, ServerTableColumn } from "@/components/common/ServerTable";
+import { useQuery } from "@tanstack/react-query";
+import { salesApi } from "@/utils/api";
 
 const stats: Stat[] = [
     { label: "Total Sales", value: "$124,592.00", trend: "+12.5%", trendDir: "up", vs: "vs last month" },
@@ -96,204 +91,77 @@ const recentOrders: Order[] = [
     { id: "ORD-7388", customer: "Pooja Rai", date: "2024-03-21", amount: "$56.00", status: "Paid", items: 1 },
 ];
 
-
-const OrdersTable = () => {
-    const [page, setPage] = React.useState(1);
-    const [searchValue, setSearchValue] = React.useState("");
-    
-    const getStatusColor = (status: OrderStatus) => {
-        switch (status) {
-            case "Paid": return "bg-green-50 text-green-700 border-green-200";
-            case "Pending": return "bg-orange-50 text-orange-700 border-orange-200";
-            case "Refunded": return "bg-red-50 text-red-700 border-red-200";
-            default: return "bg-gray-50 text-gray-700 border-gray-200";
-        }
-    };
-
-    const columns: ServerTableColumn<Order>[] = [
-        {
-            header: "Order ID",
-            accessorKey: "id",
-            cell: (row) => <span className="font-bold text-primary">#{row.id}</span>,
-            sortable: true,
-        },
-        {
-            header: "Customer",
-            accessorKey: "customer",
-            cell: (row) => <span className="font-semibold text-gray-900">{row.customer}</span>,
-            sortable: true,
-        },
-        {
-            header: "Date",
-            accessorKey: "date",
-            cell: (row) => <span className="text-gray-500">{row.date}</span>,
-            sortable: true,
-        },
-        {
-            header: "Items",
-            accessorKey: "items",
-            cell: (row) => <span className="text-gray-600 font-bold">{row.items}</span>,
-            align: "center",
-            sortable: true,
-        },
-        {
-            header: "Amount",
-            accessorKey: "amount",
-            cell: (row) => <span className="font-bold text-gray-900">{row.amount}</span>,
-            sortable: true,
-        },
-        {
-            header: "Status",
-            accessorKey: "status",
-            cell: (row) => (
-                <Badge variant="outline" className={cn("px-2 py-0.5 font-bold", getStatusColor(row.status))}>
-                    {row.status}
-                </Badge>
-            ),
-        }
-    ];
-
-    return (
-        <ServerTable
-            columns={columns}
-            data={recentOrders}
-            getRowId={(row) => row.id}
-            page={page}
-            limit={5}
-            total={recentOrders.length}
-            onPageChange={setPage}
-            enableSearch
-            searchValue={searchValue}
-            searchPlaceholder="Search orders..."
-            onSearchChange={setSearchValue}
-            fileName="orders"
-            containerClassName="shadow-none"
-        />
-    );
-};
-
-const RealTimeTicker = () => (
-    <AdminCard className="p-0 overflow-hidden flex-1 flex flex-col">
-        <CardHeader className="py-1 flex flex-row items-center justify-between bg-green-500">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 justify-center text-white">
-                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                Live Sales Activity
-            </CardTitle>
-            <Button variant="ghost" size="icon" className="h-6 w-6"><ChevronRight className="h-4 w-4" /></Button>
-        </CardHeader>
-        <CardContent className="px-0 flex-1 overflow-auto">
-            <div className="space-y-1">
-                {[
-                    { user: "Ram", action: "purchased Airpods", time: "2m ago" },
-                    { user: "Gita", action: "ordered iPhone 15", time: "5m ago" },
-                    { user: "Shyam", action: "canceled a return", time: "12m ago" }
-                ].map((item, i) => (
-                    <div key={i} className="px-6 py-2 hover:bg-gray-50 transition-colors flex items-center justify-between text-xs">
-                        <span className="text-gray-600 font-medium">
-                            <b className="text-gray-900">{item.user}</b> {item.action}
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase">{item.time}</span>
-                    </div>
-                ))}
-            </div>
-        </CardContent>
-    </AdminCard>
-);
-
-
-const SalesByChannel = () => {
-    return (
-        <ChartWrapper
-            label="Sales by Channel"
-            menuItems={[
-                { label: "View Details", accessorKey: "viewDetails" },
-                { label: "Export Data", accessorKey: "exportData" },
-            ]}
-            onMenuSelect={(key) => console.log('Sales by Channel action:', key)}
-        >
-            <CardContent className="flex items-center">
-                <div className="h-30 w-30">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={channelData}
-                                innerRadius={30}
-                                outerRadius={50}
-                                paddingAngle={5}
-                                dataKey="value"
-                            >
-                                {channelData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Pie>
-                        </PieChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className="space-y-2 flex-1 ml-6">
-                    {channelData.map((item) => (
-                        <div key={item.name} className="flex items-center justify-between text-[10px] font-bold">
-                            <div className="flex items-center gap-2">
-                                <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                                <span className="text-gray-500 uppercase">{item.name}</span>
-                            </div>
-                            <span className="text-gray-900">{item.value}%</span>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </ChartWrapper>
-    )
+type kpiType = {
+    value: number;
+    growthRate: number;
+    comparisonRange: string;
+    range: string;
 }
 
-
-
 export default function SalesPage() {
+    const [kpiRange, setKpiRange] = React.useState({
+        totalSales: "week",
+        totalOrders: "week",
+        averageOrderValue: "week",
+        refundRate: "week"
+    });
+    const { data, isLoading } = useQuery({
+        queryKey: ["sales-stats", kpiRange],
+        queryFn: () => salesApi.getOrderAnalytics({
+            aovRange: kpiRange.averageOrderValue,
+            ordersRange: kpiRange.totalOrders,
+            salesRange: kpiRange.totalSales,
+            refundRange: kpiRange.refundRate
+        }).then(res => res.data)
+    })
+
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
         from: new Date(new Date().getFullYear(), 0, 1),
         to: addDays(new Date(new Date().getFullYear(), 0, 1), 30),
     });
 
+    const handleKpiMenuSelect = (kpiKey: string, rangeKey: string) => {
+        setKpiRange(prev => ({
+            ...prev,
+            [kpiKey]: rangeKey
+        }));
+
+        console.log(`Selected ${kpiKey} range: ${rangeKey}`,{
+            kpiRange
+        });
+    };
+
     return (
-        <div className="p-8 max-w-400 mx-auto space-y-8 " >
+        <div className=" max-w-400 mx-auto space-y-8 " >
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
-                <div className="flex items-center gap-3">
-                    <FormPopup
-                        title="Create New Order"
-                        description="Manually create a new order."
-                        className="max-w-4xl"
-                        trigger={
-                            <Button className="font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                                Create Order
-                            </Button>
-                        }
-                    >
-                        <CreateOrderForm onSubmit={(data) => console.log(data)} />
-                    </FormPopup>
-                </div>
-            </div>
+            <Header />
 
             {/* KPI Row */}
             <div className={"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"}>
-                {stats.map((stat, i) => (
-                    <StatCard
-                        key={`stat-${i}-${stat.label}`}
-                        label={stat.label}
-                        value={stat.value}
-                        trend={stat.trend}
-                        trendDir={stat.trendDir}
-                        vs={stat.vs}
-                        menuItems={[
-                            { label: "Today", accessorKey: "today" },
-                            { label: "This Week", accessorKey: "week" },
-                            { label: "This Month", accessorKey: "month" },
-                            { label: "This Year", accessorKey: "year" },
-                        ]}
-
-                    />
-                ))}
+                {data?.Kpis && !isLoading ? Object.entries(data.Kpis).map(([key, kpi]) => {
+                    const typedKpi = kpi as kpiType;
+                    return (
+                        <StatCard
+                            key={`stat-${key}`}
+                            label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                            value={`${typedKpi.value.toFixed(2)}`}
+                            trend={`${typedKpi.growthRate > 0 ? '+' : ''}${typedKpi.growthRate.toFixed(1)}%`}
+                            trendDir={typedKpi.growthRate > 0 ? "up" : "down"}
+                            vs={`vs ${typedKpi.comparisonRange.replace(/_/g, ' ')}`}
+                            onMenuSelect={(range) => handleKpiMenuSelect(key, range)}
+                            menuItems={[
+                                { label: "Today", accessorKey: "today" },
+                                { label: "This Week", accessorKey: "week" },
+                                { label: "This Month", accessorKey: "month" },
+                                { label: "This Year", accessorKey: "year" },
+                            ]}
+                        />
+                    );
+                })
+                    :
+                    [0, 1, 2, 3].map((i) => <StatCardSkeleton key={i} />)
+                }
             </div>
-
 
 
             {/* Main Content Grid */}
@@ -375,9 +243,9 @@ export default function SalesPage() {
 
                 {/* Secondary Charts */}
                 <div>
-                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                         Top Selling Products
-                       
+
                     </h3>
                     {/* Top Products */}
                     <ChartWrapper
@@ -443,3 +311,175 @@ export default function SalesPage() {
         </div >
     );
 }
+
+function Header() {
+    return (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
+            <div className="flex items-center gap-3">
+                <FormPopup
+                    title="Create New Order"
+                    description="Manually create a new order."
+                    className="max-w-4xl"
+                    trigger={
+                        <Button className="font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                            Create Order
+                        </Button>
+                    }
+                >
+                    <CreateOrderForm onSubmit={(data) => console.log(data)} />
+                </FormPopup>
+            </div>
+        </div>
+    )
+}
+
+function OrdersTable() {
+    const [page, setPage] = React.useState(1);
+    const [searchValue, setSearchValue] = React.useState("");
+
+    const getStatusColor = (status: OrderStatus) => {
+        switch (status) {
+            case "Paid": return "bg-green-50 text-green-700 border-green-200";
+            case "Pending": return "bg-orange-50 text-orange-700 border-orange-200";
+            case "Refunded": return "bg-red-50 text-red-700 border-red-200";
+            default: return "bg-gray-50 text-gray-700 border-gray-200";
+        }
+    };
+
+    const columns: ServerTableColumn<Order>[] = [
+        {
+            header: "Order ID",
+            accessorKey: "id",
+            cell: (row) => <span className="font-bold text-primary">#{row.id}</span>,
+            sortable: true,
+        },
+        {
+            header: "Customer",
+            accessorKey: "customer",
+            cell: (row) => <span className="font-semibold text-gray-900">{row.customer}</span>,
+            sortable: true,
+        },
+        {
+            header: "Date",
+            accessorKey: "date",
+            cell: (row) => <span className="text-gray-500">{row.date}</span>,
+            sortable: true,
+        },
+        {
+            header: "Items",
+            accessorKey: "items",
+            cell: (row) => <span className="text-gray-600 font-bold">{row.items}</span>,
+            align: "center",
+            sortable: true,
+        },
+        {
+            header: "Amount",
+            accessorKey: "amount",
+            cell: (row) => <span className="font-bold text-gray-900">{row.amount}</span>,
+            sortable: true,
+        },
+        {
+            header: "Status",
+            accessorKey: "status",
+            cell: (row) => (
+                <Badge variant="outline" className={cn("px-2 py-0.5 font-bold", getStatusColor(row.status))}>
+                    {row.status}
+                </Badge>
+            ),
+        }
+    ];
+
+    return (
+        <ServerTable
+            columns={columns}
+            data={recentOrders}
+            getRowId={(row) => row.id}
+            page={page}
+            limit={5}
+            total={recentOrders.length}
+            onPageChange={setPage}
+            enableSearch
+            searchValue={searchValue}
+            searchPlaceholder="Search orders..."
+            onSearchChange={setSearchValue}
+            fileName="orders"
+            containerClassName="shadow-none"
+        />
+    );
+};
+
+function RealTimeTicker() {
+    return (
+        <AdminCard className="p-0 overflow-hidden flex-1 flex flex-col">
+            <CardHeader className="py-1 flex flex-row items-center justify-between bg-green-500">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 justify-center text-white">
+                    <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    Live Sales Activity
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-6 w-6"><ChevronRight className="h-4 w-4" /></Button>
+            </CardHeader>
+            <CardContent className="px-0 flex-1 overflow-auto">
+                <div className="space-y-1">
+                    {[
+                        { user: "Ram", action: "purchased Airpods", time: "2m ago" },
+                        { user: "Gita", action: "ordered iPhone 15", time: "5m ago" },
+                        { user: "Shyam", action: "canceled a return", time: "12m ago" }
+                    ].map((item, i) => (
+                        <div key={i} className="px-6 py-2 hover:bg-gray-50 transition-colors flex items-center justify-between text-xs">
+                            <span className="text-gray-600 font-medium">
+                                <b className="text-gray-900">{item.user}</b> {item.action}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase">{item.time}</span>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </AdminCard>
+    )
+};
+
+
+function SalesByChannel() {
+    return (
+        <ChartWrapper
+            label="Sales by Channel"
+            menuItems={[
+                { label: "View Details", accessorKey: "viewDetails" },
+                { label: "Export Data", accessorKey: "exportData" },
+            ]}
+            onMenuSelect={(key) => console.log('Sales by Channel action:', key)}
+        >
+            <CardContent className="flex items-center">
+                <div className="h-30 w-30">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={channelData}
+                                innerRadius={30}
+                                outerRadius={50}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                {channelData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                            </Pie>
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="space-y-2 flex-1 ml-6">
+                    {channelData.map((item) => (
+                        <div key={item.name} className="flex items-center justify-between text-[10px] font-bold">
+                            <div className="flex items-center gap-2">
+                                <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                <span className="text-gray-500 uppercase">{item.name}</span>
+                            </div>
+                            <span className="text-gray-900">{item.value}%</span>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </ChartWrapper>
+    )
+}
+
