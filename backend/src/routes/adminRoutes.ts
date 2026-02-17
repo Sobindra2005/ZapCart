@@ -1,5 +1,6 @@
 import express from 'express';
 import { getUsersList } from '@/controllers/admin.controller';
+import { getOrderAnalytics } from '@/controllers/analytics.controller';
 import { protect, restrictTo } from '@/middlewares/authMiddleware';
 
 const router = express.Router();
@@ -18,5 +19,16 @@ router.use(protect, restrictTo('ADMIN', 'SUPERADMIN'));
  * @query   sortBy - Sort order: 'newest' or 'name' (default: 'newest')
  */
 router.get('/users', getUsersList);
+
+/**
+ * @route   GET /api/admin/analytics/orders
+ * @desc    Get order analytics with individual KPI time ranges and growth rates
+ * @access  Private/Admin
+ * @query   salesRange - Time range for total sales (optional: today, week, month, year; default: week)
+ * @query   ordersRange - Time range for total orders (optional: today, week, month, year; default: week)
+ * @query   aovRange - Time range for average order value (optional: today, week, month, year; default: week)
+ * @query   refundRange - Time range for refund rate (optional: today, week, month, year; default: week)
+ */
+router.get('/analytics/orders', getOrderAnalytics);
 
 export default router;
