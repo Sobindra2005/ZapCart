@@ -1,6 +1,7 @@
 import express from 'express';
 import { getUsersList } from '@/controllers/admin.controller';
 import { getOrderAnalytics, getTopProducts, getChartData } from '@/controllers/analytics.controller';
+import { getRecentLogisticsOrders } from '@/controllers/order.controller';
 import { protect, restrictTo } from '@/middlewares/authMiddleware';
 
 const router = express.Router();
@@ -50,5 +51,14 @@ router.get('/analytics/top-products', getTopProducts);
  * @query   endDate - Custom end date in ISO format (optional)
  */
 router.get('/analytics/chart-data', getChartData);
+
+/**
+ * @route   GET /api/admin/orders/logistics/recent
+ * @desc    Get recent logistics orders from the last 24 hours
+ * @access  Private/Admin
+ * @query   start - Starting index (default: 0)
+ * @query   limit - Number of records to fetch (default: 5, max: 100)
+ */
+router.get('/orders/logistics/recent', getRecentLogisticsOrders);
 
 export default router;
