@@ -51,6 +51,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
         tax,
         discount,
         paymentMethod,
+        channel
     } = req.body;
     const userId = req.user!.id;
 
@@ -82,6 +83,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
             unitPrice: item.unitPrice,
             totalPrice: itemTotal,
             discount: item.discount || 0,
+            channel: channel || 'WEBSITE', // Default to WEBSITE if not provided
         };
     });
 
