@@ -134,6 +134,10 @@ export class AnalyticsService {
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         startDate.setDate(now.getDate() + diffToMonday);
         startDate.setHours(0, 0, 0, 0);
+        
+        // End of current week (Sunday)
+        const diffToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+        endDate.setDate(now.getDate() + diffToSunday);
         endDate.setHours(23, 59, 59, 999);
         break;
 
@@ -146,6 +150,9 @@ export class AnalyticsService {
       case 'year':
         startDate.setMonth(0, 1);
         startDate.setHours(0, 0, 0, 0);
+        
+        // End of current year (Dec 31)
+        endDate.setMonth(11, 31);
         endDate.setHours(23, 59, 59, 999);
         break;
     }
@@ -371,7 +378,8 @@ export class AnalyticsService {
   private static generateChartLabels(
     startDate: Date,
     endDate: Date,
-    intervalType: 'hourly' | 'daily' | 'monthly'
+    intervalType: 'hourly' | 'daily' | 'monthly',
+    rangeType?: TimeRange
   ): string[] {
     const labels: string[] = [];
     
@@ -382,30 +390,50 @@ export class AnalyticsService {
         labels.push(`${hourStr}:00`);
       }
     } else if (intervalType === 'daily') {
-      // Generate daily labels
-      const current = new Date(startDate);
-      current.setHours(0, 0, 0, 0);
-      
-      while (current <= endDate) {
-        const month = (current.getMonth() + 1).toString().padStart(2, '0');
-        const day = current.getDate().toString().padStart(2, '0');
-        labels.push(`${month}-${day}`);
-        current.setDate(current.getDate() + 1);
+      // For 'week' range, always generate all 7 days
+      if (rangeType === 'week') {
+        const current = new Date(startDate);
+        current.setHours(0, 0, 0, 0);
+        
+        // Generate exactly 7 days (Mon-Sun)
+        for (let i = 0; i < 7; i++) {
+          const month = (current.getMonth() + 1).toString().padStart(2, '0');
+          const day = current.getDate().toString().padStart(2, '0');
+          labels.push(`${month}-${day}`);
+          current.setDate(current.getDate() + 1);
+        }
+      } else {
+        // Generate daily labels for custom range
+        const current = new Date(startDate);
+        current.setHours(0, 0, 0, 0);
+        
+        while (current <= endDate) {
+          const month = (current.getMonth() + 1).toString().padStart(2, '0');
+          const day = current.getDate().toString().padStart(2, '0');
+          labels.push(`${month}-${day}`);
+          current.setDate(current.getDate() + 1);
+        }
       }
     } else {
-      // Generate monthly labels
-      const current = new Date(startDate);
-      current.setDate(1);
-      current.setHours(0, 0, 0, 0);
-      
-      const endMonth = new Date(endDate);
-      endMonth.setDate(1);
-      endMonth.setHours(0, 0, 0, 0);
-      
-      while (current <= endMonth) {
+      // For 'year' range, always generate all 12 months
+      if (rangeType === 'year') {
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        labels.push(monthNames[current.getMonth()]);
-        current.setMonth(current.getMonth() + 1);
+        labels.push(...monthNames);
+      } else {
+        // Generate monthly labels for custom range
+        const current = new Date(startDate);
+        current.setDate(1);
+        current.setHours(0, 0, 0, 0);
+        
+        const endMonth = new Date(endDate);
+        endMonth.setDate(1);
+        endMonth.setHours(0, 0, 0, 0);
+        
+        while (current <= endMonth) {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          labels.push(monthNames[current.getMonth()]);
+          current.setMonth(current.getMonth() + 1);
+        }
       }
     }
     
@@ -440,6 +468,7 @@ export class AnalyticsService {
     // Get date range
     let dateRange: DateRange;
     let intervalType: 'hourly' | 'daily' | 'monthly';
+    let rangeType: TimeRange | undefined;
     
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -458,8 +487,10 @@ export class AnalyticsService {
       
       dateRange = { startDate: start, endDate: end };
       intervalType = this.determineIntervalType(start, end);
+      rangeType = undefined; // Custom range
     } else {
       const range = this.validateTimeRange(chartRange || 'week');
+      rangeType = range;
       dateRange = this.getCurrentPeriod(range);
       
       // Determine interval based on range
@@ -473,7 +504,7 @@ export class AnalyticsService {
     }
     
     // Generate labels
-    const labels = this.generateChartLabels(dateRange.startDate, dateRange.endDate, intervalType);
+    const labels = this.generateChartLabels(dateRange.startDate, dateRange.endDate, intervalType, rangeType);
     
     // Exclude CANCELLED orders
     const validStatuses = [
