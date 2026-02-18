@@ -115,9 +115,63 @@ export default function SalesPage() {
         }).then(res => res.data)
     })
 
-    const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
+    // Isolated date ranges
+    const [revenueDateRange, setRevenueDateRange] = React.useState<DateRange | undefined>({
         from: new Date(new Date().getFullYear(), 0, 1),
         to: addDays(new Date(new Date().getFullYear(), 0, 1), 30),
+    });
+
+    const [topProductsDateRange, setTopProductsDateRange] = React.useState<DateRange | undefined>({
+        from: new Date(new Date().getFullYear(), 0, 1),
+        to: addDays(new Date(new Date().getFullYear(), 0, 1), 30),
+    });
+
+    const [chartRange, setChartRange] = React.useState("week");
+    const [topProductsRange, setTopProductsRange] = React.useState("week");
+    const [logisticsPage, setLogisticsPage] = React.useState(1);
+    const logisticsLimit = 5;
+
+    // Track which filter was last set (range or date picker)
+    const [chartFilterType, setChartFilterType] = React.useState<'range' | 'date'>('range');
+    const [topProductsFilterType, setTopProductsFilterType] = React.useState<'range' | 'date'>('range');
+
+    // Fetch chart data
+    const { data: chartDataResponse, isLoading: isChartLoading } = useQuery({
+        queryKey: ["chart-data", chartRange, revenueDateRange, chartFilterType],
+        queryFn: () => {
+            const params: any = {};
+            if (chartFilterType === 'range') {
+                params.chartRange = chartRange;
+            } else {
+                params.startDate = revenueDateRange?.from?.toISOString();
+                params.endDate = revenueDateRange?.to?.toISOString();
+            }
+            return salesApi.getChartData(params).then(res => res.data);
+        }
+    });
+
+    // Fetch top products
+    const { data: topProductsResponse, isLoading: isTopProductsLoading } = useQuery({
+        queryKey: ["top-products", topProductsRange, topProductsDateRange, topProductsFilterType],
+        queryFn: () => {
+            const params: any = {};
+            if (topProductsFilterType === 'range') {
+                params.productsRange = topProductsRange;
+            } else {
+                params.startDate = topProductsDateRange?.from?.toISOString();
+                params.endDate = topProductsDateRange?.to?.toISOString();
+            }
+            return salesApi.getTopProducts(params).then(res => res.data);
+        }
+    });
+
+    // Fetch recent logistics
+    const { data: recentLogisticsResponse, isLoading: isLogisticsLoading } = useQuery({
+        queryKey: ["recent-logistics", logisticsPage, logisticsLimit],
+        queryFn: () => salesApi.getRecentLogisticsOrders({
+            start: (logisticsPage - 1) * logisticsLimit,
+            limit: logisticsLimit
+        }).then(res => res.data)
     });
 
     const handleKpiMenuSelect = (kpiKey: string, rangeKey: string) => {
@@ -130,6 +184,72 @@ export default function SalesPage() {
             kpiRange
         });
     };
+
+    const handleChartMenuSelect = (key: string) => {
+        setChartRange(key);
+        setChartFilterType('range');
+        console.log('Revenue Insights action:', key);
+    };
+
+    const handleTopProductsMenuSelect = (key: string) => {
+        if (key === 'viewAll' || key === 'exportList') {
+            console.log('Top Products action:', key);
+        } else {
+            setTopProductsRange(key);
+            setTopProductsFilterType('range');
+        }
+    };
+
+    const handleRevenueDateChange = (range: DateRange | undefined) => {
+        setRevenueDateRange(range);
+        setChartFilterType('date');
+    };
+
+    const handleTopProductsDateChange = (range: DateRange | undefined) => {
+        setTopProductsDateRange(range);
+        setTopProductsFilterType('date');
+    };
+
+    // Transform chart data for recharts
+    const transformedChartData = React.useMemo(() => {
+        if (chartDataResponse?.data?.chartData) {
+            const { labels, revenueData } = chartDataResponse.data.chartData;
+            return labels.map((label: string, index: number) => ({
+                name: label,
+                sales: revenueData[index]
+            }));
+        }
+        return salesTrendData;
+    }, [chartDataResponse]);
+
+    // Transform top products data for recharts
+    const transformedTopProducts = React.useMemo(() => {
+        if (topProductsResponse?.data?.topProducts) {
+            return topProductsResponse.data.topProducts.map((product: any) => ({
+                name: product.name,
+                sales: product.totalQuantitySold,
+                id: product.id
+            }));
+        }
+        console.log("Top products response:", topProductsResponse);
+        return topProductsData;
+    }, [topProductsResponse]);
+
+    // Transform logistics orders
+    const transformedLogisticsOrders = React.useMemo(() => {
+        if (recentLogisticsResponse?.data?.orders) {
+            return recentLogisticsResponse.data.orders.map((order: any) => ({
+                id: order.orderNumber,
+                customer: order.userName,
+                date: new Date(order.createdAt).toISOString().split('T')[0],
+                amount: `$${order.totalAmount.toFixed(2)}`,
+                status: order.status === 'COMPLETED' ? 'Paid' : order.status === 'PENDING' ? 'Pending' : 'Refunded',
+                items: order.items.reduce((sum: number, item: any) => sum + item.quantity, 0)
+            }));
+        }
+        console.log("Recent logistics response:", recentLogisticsResponse);
+        return recentOrders;
+    }, [recentLogisticsResponse]);
 
     return (
         <div className=" max-w-400 mx-auto space-y-8 " >
@@ -172,7 +292,7 @@ export default function SalesPage() {
                     label="Revenue Insights"
                     topComponent={
                         <div className="flex items-center justify-between">
-                            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+                            <DatePickerWithRange date={revenueDateRange} setDate={handleRevenueDateChange} />
                         </div>
                     }
                     menuItems={[
@@ -182,12 +302,12 @@ export default function SalesPage() {
                         { label: "This Year", accessorKey: "year" },
 
                     ]}
-                    onMenuSelect={(key) => console.log('Revenue Insights action:', key)}
+                    onMenuSelect={handleChartMenuSelect}
                 >
                     <CardContent className="h-87.5">
 
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={salesTrendData}>
+                            <AreaChart data={transformedChartData}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
@@ -236,9 +356,16 @@ export default function SalesPage() {
                 <div className="lg:col-span-2">
                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                         Recent Logistics
-                        <Badge variant="secondary" className="bg-gray-100 text-gray-600 font-bold">128 Pending</Badge>
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-600 font-bold">
+                            {recentLogisticsResponse?.data?.pendingOrdersCount || 0} Pending
+                        </Badge>
                     </h3>
-                    <OrdersTable />
+                    <OrdersTable 
+                        data={transformedLogisticsOrders}
+                        page={logisticsPage}
+                        onPageChange={setLogisticsPage}
+                        total={recentLogisticsResponse?.pagination?.total || recentOrders.length}
+                    />
                 </div>
 
                 {/* Secondary Charts */}
@@ -251,19 +378,21 @@ export default function SalesPage() {
                     <ChartWrapper
                         topComponent={
                             <div className="flex items-center justify-between">
-                                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+                                <DatePickerWithRange date={topProductsDateRange} setDate={handleTopProductsDateChange} />
                             </div>
                         }
                         menuItems={[
-                            { label: "View All Products", accessorKey: "viewAll" },
-                            { label: "Export List", accessorKey: "exportList" },
+                            { label: "Today", accessorKey: "today" },
+                            { label: "This Week", accessorKey: "week" },
+                            { label: "This Month", accessorKey: "month" },
+                            { label: "This Year", accessorKey: "year" },
                         ]}
-                        onMenuSelect={(key) => console.log('Top Products action:', key)}
+                        onMenuSelect={handleTopProductsMenuSelect}
                     >
                         <CardContent className="h-auto px-6 flex flex-col justify-between">
                             <ResponsiveContainer width="100%" height={180}>
                                 <BarChart
-                                    data={topProductsData}
+                                    data={transformedTopProducts}
                                     layout="vertical"
                                     margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
                                     barCategoryGap={16}
@@ -288,7 +417,7 @@ export default function SalesPage() {
                                         }}
                                     />
                                     <Bar dataKey="sales" radius={[0, 12, 12, 0]} barSize={18} fill="#3b82f6">
-                                        {topProductsData.map((entry, idx) => (
+                                        {transformedTopProducts.map((entry: { name: string; sales: number; id?: string }, idx:number) => (
                                             <Cell
                                                 key={`cell-${idx}`}
                                                 fill={["#3b82f6", "#6366f1", "#06b6d4", "#f59e42", "#10b981"][idx % 5]}
@@ -333,8 +462,17 @@ function Header() {
     )
 }
 
-function OrdersTable() {
-    const [page, setPage] = React.useState(1);
+function OrdersTable({ 
+    data, 
+    page, 
+    onPageChange,
+    total
+}: { 
+    data: Order[]; 
+    page: number; 
+    onPageChange: (page: number) => void;
+    total: number;
+}) {
     const [searchValue, setSearchValue] = React.useState("");
 
     const getStatusColor = (status: OrderStatus) => {
@@ -392,12 +530,12 @@ function OrdersTable() {
     return (
         <ServerTable
             columns={columns}
-            data={recentOrders}
+            data={data}
             getRowId={(row) => row.id}
             page={page}
             limit={5}
-            total={recentOrders.length}
-            onPageChange={setPage}
+            total={total}
+            onPageChange={onPageChange}
             enableSearch
             searchValue={searchValue}
             searchPlaceholder="Search orders..."

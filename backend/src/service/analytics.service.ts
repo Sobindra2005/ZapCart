@@ -56,7 +56,6 @@ export interface TopProduct {
  */
 export interface ChartDataPoint {
   label: string;
-  orders: number;
   revenue: number;
 }
 
@@ -65,7 +64,6 @@ export interface ChartDataPoint {
  */
 export interface ChartData {
   labels: string[];
-  ordersData: number[];
   revenueData: number[];
 }
 
@@ -537,11 +535,11 @@ export class AnalyticsService {
     });
     
     // Aggregate data by interval
-    const dataMap = new Map<string, { orders: number; revenue: number }>();
+    const dataMap = new Map<string, number>();
     
     // Initialize all labels with zero
     labels.forEach(label => {
-      dataMap.set(label, { orders: 0, revenue: 0 });
+      dataMap.set(label, 0);
     });
     
     // Fill in actual data
@@ -549,26 +547,22 @@ export class AnalyticsService {
       const key = this.getChartDataKey(order.createdAt, intervalType);
       const existing = dataMap.get(key);
       
-      if (existing) {
-        existing.orders += 1;
+      if (existing !== undefined) {
         // Revenue = subtotal - discount (excluding tax and shipping)
-        existing.revenue += Number(order.subtotal) - Number(order.discount);
+        dataMap.set(key, existing + Number(order.subtotal) - Number(order.discount));
       }
     });
     
-    // Convert map to arrays
-    const ordersData: number[] = [];
+    // Convert map to array
     const revenueData: number[] = [];
     
     labels.forEach(label => {
-      const data = dataMap.get(label) || { orders: 0, revenue: 0 };
-      ordersData.push(data.orders);
-      revenueData.push(Number(data.revenue.toFixed(2)));
+      const revenue = dataMap.get(label) || 0;
+      revenueData.push(Number(revenue.toFixed(2)));
     });
     
     return {
       labels,
-      ordersData,
       revenueData,
     };
   }

@@ -140,7 +140,9 @@ export const salesApi = {
         startDate?: string;
         endDate?: string;
     }) => {
-        return axiosInstance.get('/admin/analytics/top-products', { params });
+        const response = axiosInstance.get('/admin/analytics/top-products', { params });
+        console.log("Fetching top products with params:", {params, response});
+        return response;
     },
     getChartData: (params?: {
         chartRange?: string;
