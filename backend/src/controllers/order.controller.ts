@@ -51,6 +51,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
         tax,
         discount,
         paymentMethod,
+        channel
     } = req.body;
     const userId = req.user!.id;
 
@@ -82,6 +83,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
             unitPrice: item.unitPrice,
             totalPrice: itemTotal,
             discount: item.discount || 0,
+            channel: channel || 'WEBSITE', // Default to WEBSITE if not provided
         };
     });
 
@@ -299,6 +301,121 @@ export const updateOrder = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json({
         status: 'success',
         data: { order: updatedOrder },
+    });
+});
+
+/**
+ * Get recent logistics orders from the last 24 hours
+ * GET /api/admin/orders/logistics/recent
+ * @access Private/Admin
+ * @queryParams {number} start - Starting index (default: 0)
+ * @queryParams {number} limit - Number of records to fetch (default: 5, max: 100)
+ * 
+ * @description
+ * Returns paginated orders from the last 24 hours with:
+ * - Order details: totalAmount, orderNumber, status, userName
+ * - Item details: itemName, quantity for each order item
+ * - Total count of pending orders from the last 24 hours
+ */
+export const getRecentLogisticsOrders = asyncHandler(async (req: Request, res: Response) => {
+    const start = parseInt(req.query.start as string) || 0;
+    const limit = Math.min(parseInt(req.query.limit as string) || 5, 100);
+
+    // Calculate 24 hours ago timestamp
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    // Fetch orders from last 24 hours with pagination
+    const [orders, totalCount, pendingCount] = await Promise.all([
+        prisma.order.findMany({
+            where: {
+                createdAt: {
+                    gte: twentyFourHoursAgo,
+                },
+            },
+            include: {
+                user: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                    },
+                },
+                orderItems: {
+                    select: {
+                        productId: true,
+                        quantity: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+            skip: start,
+            take: limit,
+        }),
+        // Total count of all orders from last 24 hours
+        prisma.order.count({
+            where: {
+                createdAt: {
+                    gte: twentyFourHoursAgo,
+                },
+            },
+        }),
+        // Count of pending orders from last 24 hours
+        prisma.order.count({
+            where: {
+                createdAt: {
+                    gte: twentyFourHoursAgo,
+                },
+                status: OrderStatus.PENDING,
+            },
+        }),
+    ]);
+
+    // Extract unique product IDs
+    const productIds = [...new Set(
+        orders.flatMap(order => 
+            order.orderItems.map(item => item.productId)
+        )
+    )];
+
+    // Fetch product details from MongoDB
+    const products = await Product.find(
+        { _id: { $in: productIds } },
+        { _id: 1, name: 1 }
+    ).lean();
+
+    // Create product lookup map
+    const productMap = new Map(
+        products.map(product => [product._id.toString(), product.name])
+    );
+
+    // Transform orders to include required fields
+    const transformedOrders = orders.map(order => ({
+        totalAmount: Number(order.totalAmount),
+        orderNumber: order.orderNumber,
+        status: order.status,
+        userName: `${order.user.firstName} ${order.user.lastName}`,
+        items: order.orderItems.map(item => ({
+            itemName: productMap.get(item.productId) || 'Unknown Product',
+            quantity: item.quantity,
+        })),
+        createdAt: order.createdAt,
+    }));
+
+    res.status(200).json({
+        status: 'success',
+        results: transformedOrders.length,
+        pagination: {
+            start,
+            limit,
+            total: totalCount,
+            hasMore: start + limit < totalCount,
+        },
+        data: {
+            orders: transformedOrders,
+            pendingOrdersCount: pendingCount,
+        },
     });
 });
 

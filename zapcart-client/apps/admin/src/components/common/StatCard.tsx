@@ -1,5 +1,5 @@
 import React from "react";
-import { MoreHorizontal, TrendingUp, TrendingDown } from "lucide-react";
+import { MoreHorizontal, TrendingUp, TrendingDown, TrendingUpDown } from "lucide-react";
 import { AdminCard } from "../AdminCard";
 import { cn } from "@repo/lib/utils";
 import {
@@ -46,7 +46,7 @@ export interface StatCardProps {
     /**
      * Direction of the trend for visual styling
      */
-    trendDir: "up" | "down";
+    trendDir: "up" | "down" | "neutral";
 
     /**
      * Comparison context (e.g., "VS last week", "VS last month")
@@ -58,11 +58,6 @@ export interface StatCardProps {
      */
     className?: string;
 
-    /**
-     * Whether to show the more options button
-     * @default true
-     */
-    showMoreButton?: boolean;
 
     /**
      * Menu items to display in the dropdown
@@ -123,7 +118,6 @@ export const StatCard = React.memo<StatCardProps>(({
     trendDir,
     vs,
     className,
-    showMoreButton = true,
     menuItems,
     onMenuSelect,
 }) => {
@@ -170,13 +164,17 @@ export const StatCard = React.memo<StatCardProps>(({
                         "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold font-sans",
                         trendDir === "up"
                             ? "bg-green-50 text-green-600"
-                            : "bg-red-50 text-red-600"
+                            : trendDir === "down"
+                            ? "bg-red-50 text-red-600"
+                            : "bg-gray-100 text-gray-500"
                     )}
                 >
                     {trendDir === "up" ? (
                         <TrendingUp className="h-3 w-3" />
-                    ) : (
+                    ) : trendDir === "down" ? (
                         <TrendingDown className="h-3 w-3" />
+                    ) : (
+                         <TrendingUpDown className="h-3 w-3" />
                     )}
                     {trend}
                 </div>
@@ -185,5 +183,24 @@ export const StatCard = React.memo<StatCardProps>(({
         </AdminCard>
     );
 });
+export const StatCardSkeleton = React.memo(() => (
+    <AdminCard>
+        <div className="space-y-4">
+            <div className="flex justify-between items-start">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+            <div className="flex items-center gap-2">
+                <div className="h-5 w-16 bg-green-100 rounded animate-pulse" />
+                <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
+            </div>
+        </div>
+    </AdminCard>
+));
+
+StatCardSkeleton.displayName = "StatCardSkeleton";
+
+
 
 StatCard.displayName = "StatCard";

@@ -230,7 +230,7 @@ export default function CustomerListingPage() {
         {
             header: "Total Orders",
             accessorKey: "orders.length",
-            cell: (customer) => customer.orders.length ,
+            cell: (customer) => customer.orders.length,
             cellClassName: "text-sm text-gray-600 font-medium",
         },
         {
@@ -272,7 +272,7 @@ export default function CustomerListingPage() {
     ], [getCustomerName, getCustomerStatus, getCustomerStatusColor]);
 
     return (
-        <div className="p-8">
+        <>
             <ServerTable
                 columns={columns}
                 data={customers}
@@ -303,6 +303,6 @@ export default function CustomerListingPage() {
                 label="Customers Selected"
                 actions={bulkActions}
             />
-        </div>
+        </>
     );
 }
