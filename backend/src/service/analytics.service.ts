@@ -355,6 +355,19 @@ export class AnalyticsService {
   }
 
   /**
+   * Get ordinal suffix for day of month (st, nd, rd, th)
+   */
+  private static getDaySuffix(day: number): string {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  }
+
+  /**
    * Determine interval type based on date range
    */
   private static determineIntervalType(startDate: Date, endDate: Date): 'hourly' | 'daily' | 'monthly' {
@@ -395,10 +408,12 @@ export class AnalyticsService {
         
         // Generate exactly 7 days (Mon-Sun)
         for (let i = 0; i < 7; i++) {
-          const month = (current.getMonth() + 1).toString().padStart(2, '0');
-          const day = current.getDate().toString().padStart(2, '0');
-          labels.push(`${month}-${day}`);
-          current.setDate(current.getDate() + 1);
+            const dayOfMonth = current.getDate();
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthName = monthNames[current.getMonth()];
+            const suffix = this.getDaySuffix(dayOfMonth);
+            labels.push(`${dayOfMonth}${suffix} ${monthName}`);
+            current.setDate(current.getDate() + 1);
         }
       } else {
         // Generate daily labels for custom range
