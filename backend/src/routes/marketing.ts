@@ -5,12 +5,14 @@ import { Router } from "express";
 
 const router = Router();
 
-router.get('/',getHeroCarousel);
-router.get('/:id',getHeroCarouselById);
+router.get('/carousel',getHeroCarousel);
+router.get('/carousel/:id',getHeroCarouselById);
 
 router.use(restrictTo("admin","super admin"));
 router
-    .post("/",upload.single("image") ,createHeroCarousel)
+    .post("/carousel/",upload.single("image") ,createHeroCarousel)
 router
-    .put("/:id",upload.single("image") ,updateHeroCarousel)
-router.delete("/:id", deleteHeroCarousel)
+    .put("/carousel/:id",upload.single("image") ,updateHeroCarousel)
+router.delete("/carousel/:id", deleteHeroCarousel)
+
+export default router;
