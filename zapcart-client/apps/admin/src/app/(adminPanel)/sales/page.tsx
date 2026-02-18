@@ -31,7 +31,6 @@ import {
     LabelList
 } from "recharts";
 import { AdminCard } from "@/components/AdminCard";
-import { Stat } from "@/components/common/StatsCards";
 import { ChartWrapper } from "@/components/wrapper";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateOrderForm } from "@/components/forms/CreateOrderForm";
@@ -40,29 +39,23 @@ import { ServerTable, ServerTableColumn } from "@/components/common/ServerTable"
 import { useQuery } from "@tanstack/react-query";
 import { salesApi } from "@/utils/api";
 
-const stats: Stat[] = [
-    { label: "Total Sales", value: "$124,592.00", trend: "+12.5%", trendDir: "up", vs: "vs last month" },
-    { label: "Total Orders", value: "1,284", trend: "+8.2%", trendDir: "up", vs: "vs last month" },
-    { label: "Avg. Order Value", value: "$97.03", trend: "-2.4%", trendDir: "down", vs: "vs last month" },
-    { label: "Refund Rate", value: "1.2%", trend: "-0.5%", trendDir: "down", vs: "vs last month" },
+
+const RevenueTrendDefaultData = [
+    { name: "Mon", sales: 0 },
+    { name: "Tue", sales: 0 },
+    { name: "Wed", sales: 0 },
+    { name: "Thu", sales: 0 },
+    { name: "Fri", sales: 0 },
+    { name: "Sat", sales: 0 },
+    { name: "Sun", sales: 0 },
 ];
 
-const salesTrendData = [
-    { name: "Mon", sales: 4000 },
-    { name: "Tue", sales: 3000 },
-    { name: "Wed", sales: 5000 },
-    { name: "Thu", sales: 2780 },
-    { name: "Fri", sales: 1890 },
-    { name: "Sat", sales: 2390 },
-    { name: "Sun", sales: 3490 },
-];
-
-const topProductsData = [
-    { name: "iPhone 15 Pro", sales: 420 },
-    { name: "MacBook Air", sales: 380 },
-    { name: "AirPods Max", sales: 310 },
-    { name: "iPad Pro", sales: 290 },
-    { name: "Apple Watch", sales: 250 },
+const topProductsDefaultData = [
+    { name: "A", sales: 0 },
+    { name: "B", sales: 0 },
+    { name: "C", sales: 0 },
+    { name: "D", sales: 0 },
+    { name: "E", sales: 0 },
 ];
 
 const channelData = [
@@ -82,14 +75,6 @@ interface Order {
     status: OrderStatus;
     items: number;
 }
-
-const recentOrders: Order[] = [
-    { id: "ORD-7392", customer: "Amrita Shrestha", date: "2024-03-23", amount: "$129.00", status: "Paid", items: 2 },
-    { id: "ORD-7391", customer: "Bibek Poudel", date: "2024-03-23", amount: "$45.50", status: "Pending", items: 1 },
-    { id: "ORD-7390", customer: "Sita Thapa", date: "2024-03-22", amount: "$899.00", status: "Paid", items: 3 },
-    { id: "ORD-7389", customer: "Rahul Gupta", date: "2024-03-22", amount: "$210.00", status: "Refunded", items: 2 },
-    { id: "ORD-7388", customer: "Pooja Rai", date: "2024-03-21", amount: "$56.00", status: "Paid", items: 1 },
-];
 
 type kpiType = {
     value: number;
@@ -219,19 +204,19 @@ export default function SalesPage() {
                 sales: revenueData[index]
             }));
         }
-        return salesTrendData;
+        return RevenueTrendDefaultData;
     }, [chartDataResponse]);
 
     // Transform top products data for recharts
     const transformedTopProducts = React.useMemo(() => {
-        if (topProductsResponse?.data?.topProducts) {
+        if (topProductsResponse?.data?.topProducts && Array.isArray(topProductsResponse.data.topProducts)) {
             return topProductsResponse.data.topProducts.map((product: any) => ({
                 name: product.name,
                 sales: product.totalQuantitySold,
                 id: product.id
             }));
         }
-        return topProductsData;
+        return topProductsDefaultData;
     }, [topProductsResponse]);
 
     // Transform logistics orders
@@ -362,7 +347,7 @@ export default function SalesPage() {
                         data={transformedLogisticsOrders}
                         page={logisticsPage}
                         onPageChange={setLogisticsPage}
-                        total={recentLogisticsResponse?.pagination?.total || recentOrders.length}
+                        total={recentLogisticsResponse?.pagination?.total || 0}
                     />
                 </div>
 
