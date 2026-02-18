@@ -231,7 +231,6 @@ export default function SalesPage() {
                 id: product.id
             }));
         }
-        console.log("Top products response:", topProductsResponse);
         return topProductsData;
     }, [topProductsResponse]);
 
@@ -247,8 +246,7 @@ export default function SalesPage() {
                 items: order.items.reduce((sum: number, item: any) => sum + item.quantity, 0)
             }));
         }
-        console.log("Recent logistics response:", recentLogisticsResponse);
-        return recentOrders;
+        return [];
     }, [recentLogisticsResponse]);
 
     return (
