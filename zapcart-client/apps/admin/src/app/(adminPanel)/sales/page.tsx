@@ -42,17 +42,12 @@ import {
     KpiData,
     RevenueTrendDataPoint,
     TopProduct,
-    ChannelData,
     REVENUE_TREND_DEFAULT,
     TOP_PRODUCTS_DEFAULT,
     CHANNEL_DATA_MOCK, // Using mock for now since channel API doesn't exist
     LIVE_ACTIVITY_MOCK,
     TIME_RANGE_MENU_ITEMS,
 } from "@/data/sales.mock";
-
-// ============================================
-// Types
-// ============================================
 
 type FilterType = 'range' | 'date';
 
@@ -62,10 +57,6 @@ interface KpiRanges {
     averageOrderValue: string;
     refundRate: string;
 }
-
-// ============================================
-// Main Component
-// ============================================
 
 export default function SalesPage() {
     // KPI State
@@ -97,25 +88,86 @@ export default function SalesPage() {
     const [chartFilterType, setChartFilterType] = React.useState<FilterType>('range');
     const [topProductsFilterType, setTopProductsFilterType] = React.useState<FilterType>('range');
 
-    // ============================================
-    // Data Queries
-    // ============================================
-
-    // KPI Data
+    // Total Sales KPI
     const {
-        data: kpiData,
-        isLoading: isKpiLoading,
-        isError: isKpiError,
-        refetch: refetchKpi,
+        data: totalSalesData,
+        isLoading: isTotalSalesLoading,
+        isError: isTotalSalesError,
+        refetch: refetchTotalSales,
     } = useQuery({
-        queryKey: ["sales-stats", kpiRange],
+        queryKey: ["kpi-total-sales", kpiRange.totalSales],
+        queryFn: () => salesApi.getOrderAnalytics({
+            salesRange: kpiRange.totalSales,
+        }).then(res => res.data?.Kpis?.totalSales)
+    });
+
+    // Total Orders KPI
+    const {
+        data: totalOrdersData,
+        isLoading: isTotalOrdersLoading,
+        isError: isTotalOrdersError,
+        refetch: refetchTotalOrders,
+    } = useQuery({
+        queryKey: ["kpi-total-orders", kpiRange.totalOrders],
+        queryFn: () => salesApi.getOrderAnalytics({
+            ordersRange: kpiRange.totalOrders,
+        }).then(res => res.data?.Kpis?.totalOrders)
+    });
+
+    // Average Order Value KPI
+    const {
+        data: averageOrderValueData,
+        isLoading: isAverageOrderValueLoading,
+        isError: isAverageOrderValueError,
+        refetch: refetchAverageOrderValue,
+    } = useQuery({
+        queryKey: ["kpi-average-order-value", kpiRange.averageOrderValue],
         queryFn: () => salesApi.getOrderAnalytics({
             aovRange: kpiRange.averageOrderValue,
-            ordersRange: kpiRange.totalOrders,
-            salesRange: kpiRange.totalSales,
-            refundRange: kpiRange.refundRate
-        }).then(res => res.data)
+        }).then(res => res.data?.Kpis?.averageOrderValue)
     });
+
+    // Refund Rate KPI
+    const {
+        data: refundRateData,
+        isLoading: isRefundRateLoading,
+        isError: isRefundRateError,
+        refetch: refetchRefundRate,
+    } = useQuery({
+        queryKey: ["kpi-refund-rate", kpiRange.refundRate],
+        queryFn: () => salesApi.getOrderAnalytics({
+            refundRange: kpiRange.refundRate,
+        }).then(res => res.data?.Kpis?.refundRate)
+    });
+
+    // Aggregate KPI data and loading states
+    const kpiDataMap = React.useMemo(() => ({
+        totalSales: totalSalesData,
+        totalOrders: totalOrdersData,
+        averageOrderValue: averageOrderValueData,
+        refundRate: refundRateData,
+    }), [totalSalesData, totalOrdersData, averageOrderValueData, refundRateData]);
+
+    const kpiLoadingMap = React.useMemo(() => ({
+        totalSales: isTotalSalesLoading,
+        totalOrders: isTotalOrdersLoading,
+        averageOrderValue: isAverageOrderValueLoading,
+        refundRate: isRefundRateLoading,
+    }), [isTotalSalesLoading, isTotalOrdersLoading, isAverageOrderValueLoading, isRefundRateLoading]);
+
+    const kpiErrorMap = React.useMemo(() => ({
+        totalSales: isTotalSalesError,
+        totalOrders: isTotalOrdersError,
+        averageOrderValue: isAverageOrderValueError,
+        refundRate: isRefundRateError,
+    }), [isTotalSalesError, isTotalOrdersError, isAverageOrderValueError, isRefundRateError]);
+
+    const kpiRefetchMap = React.useMemo(() => ({
+        totalSales: refetchTotalSales,
+        totalOrders: refetchTotalOrders,
+        averageOrderValue: refetchAverageOrderValue,
+        refundRate: refetchRefundRate,
+    }), [refetchTotalSales, refetchTotalOrders, refetchAverageOrderValue, refetchRefundRate]);
 
     // Chart Data
     const {
@@ -171,10 +223,6 @@ export default function SalesPage() {
         }).then(res => res.data)
     });
 
-    // ============================================
-    // Event Handlers
-    // ============================================
-
     const handleKpiMenuSelect = (kpiKey: string, rangeKey: string) => {
         setKpiRange(prev => ({ ...prev, [kpiKey]: rangeKey }));
     };
@@ -202,10 +250,6 @@ export default function SalesPage() {
         setTopProductsDateRange(range);
         setTopProductsFilterType('date');
     };
-
-    // ============================================
-    // Data Transformations
-    // ============================================
 
     const transformedChartData = React.useMemo<RevenueTrendDataPoint[]>(() => {
         if (chartDataResponse?.data?.chartData) {
@@ -243,21 +287,18 @@ export default function SalesPage() {
         return [];
     }, [recentLogisticsResponse]);
 
-    // ============================================
-    // Render
-    // ============================================
-
     return (
         <div className="max-w-400 mx-auto space-y-8">
             {/* Header */}
             <Header />
 
-            {/* KPI Row */}
+            {/* KPI Row with Individual Loading States */}
             <KpiSection
-                data={kpiData?.Kpis}
-                isLoading={isKpiLoading}
+                dataMap={kpiDataMap}
+                loadingMap={kpiLoadingMap}
+                errorMap={kpiErrorMap}
+                refetchMap={kpiRefetchMap}
                 onMenuSelect={handleKpiMenuSelect}
-                onRetry={() => refetchKpi()}
             />
 
             {/* Main Content Grid */}
@@ -343,10 +384,6 @@ export default function SalesPage() {
     );
 }
 
-// ============================================
-// Sub-Components
-// ============================================
-
 function Header() {
     return (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
@@ -369,43 +406,46 @@ function Header() {
 }
 
 interface KpiSectionProps {
-    data: Record<string, KpiData> | undefined;
-    isLoading: boolean;
+    dataMap: Record<string, KpiData | undefined>;
+    loadingMap: Record<string, boolean>;
+    errorMap: Record<string, boolean>;
+    refetchMap: Record<string, () => void>;
     onMenuSelect: (kpiKey: string, rangeKey: string) => void;
-    onRetry: () => void;
 }
 
-function KpiSection({ data, isLoading, onMenuSelect, onRetry }: KpiSectionProps) {
-    if (isLoading) {
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[0, 1, 2, 3].map((i) => <StatCardSkeleton key={i} />)}
-            </div>
-        );
-    }
-
-    if (!data) {
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[0, 1, 2, 3].map((i) => <StatCardSkeleton key={i} />)}
-            </div>
-        );
-    }
+function KpiSection({ dataMap, loadingMap, refetchMap, onMenuSelect }: KpiSectionProps) {
+    const kpiKeys = ['totalSales', 'totalOrders', 'averageOrderValue', 'refundRate'] as const;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.entries(data).map(([key, kpi]) => (
-                <StatCard
-                    key={`stat-${key}`}
-                    label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                    value={`${kpi.value.toFixed(2)}`}
-                    trend={`${kpi.growthRate > 0 ? '+' : ''}${kpi.growthRate.toFixed(1)}%`}
-                    trendDir={kpi.growthRate > 0 ? "up" : "down"}
-                    vs={`vs ${kpi.comparisonRange.replace(/_/g, ' ')}`}
-                    onMenuSelect={(range) => onMenuSelect(key, range)}
-                    menuItems={[...TIME_RANGE_MENU_ITEMS]}
-                />
-            ))}
+            {kpiKeys.map((key) => {
+                const kpi = dataMap[key];
+                const isLoading = loadingMap[key];
+
+                // Show skeleton while loading
+                if (isLoading) {
+                    return <StatCardSkeleton key={`stat-${key}`} />;
+                }
+
+                // Show skeleton if no data
+                if (!kpi) {
+                    return <StatCardSkeleton key={`stat-${key}`} />;
+                }
+
+                // Render the stat card
+                return (
+                    <StatCard
+                        key={`stat-${key}`}
+                        label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        value={`${kpi.value.toFixed(2)}`}
+                        trend={`${kpi.growthRate > 0 ? '+' : ''}${kpi.growthRate.toFixed(1)}%`}
+                        trendDir={kpi.growthRate === 0 ? "neutral" : kpi.growthRate > 0 ? "up" : "down"}
+                        vs={`vs ${kpi.comparisonRange.replace(/_/g, ' ')}`}
+                        onMenuSelect={(range) => onMenuSelect(key, range)}
+                        menuItems={[...TIME_RANGE_MENU_ITEMS]}
+                    />
+                );
+            })}
         </div>
     );
 }

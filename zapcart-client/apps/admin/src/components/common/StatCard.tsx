@@ -1,5 +1,5 @@
 import React from "react";
-import { MoreHorizontal, TrendingUp, TrendingDown } from "lucide-react";
+import { MoreHorizontal, TrendingUp, TrendingDown, TrendingUpDown } from "lucide-react";
 import { AdminCard } from "../AdminCard";
 import { cn } from "@repo/lib/utils";
 import {
@@ -46,7 +46,7 @@ export interface StatCardProps {
     /**
      * Direction of the trend for visual styling
      */
-    trendDir: "up" | "down";
+    trendDir: "up" | "down" | "neutral";
 
     /**
      * Comparison context (e.g., "VS last week", "VS last month")
@@ -164,13 +164,17 @@ export const StatCard = React.memo<StatCardProps>(({
                         "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold font-sans",
                         trendDir === "up"
                             ? "bg-green-50 text-green-600"
-                            : "bg-red-50 text-red-600"
+                            : trendDir === "down"
+                            ? "bg-red-50 text-red-600"
+                            : "bg-gray-100 text-gray-500"
                     )}
                 >
                     {trendDir === "up" ? (
                         <TrendingUp className="h-3 w-3" />
-                    ) : (
+                    ) : trendDir === "down" ? (
                         <TrendingDown className="h-3 w-3" />
+                    ) : (
+                         <TrendingUpDown className="h-3 w-3" />
                     )}
                     {trend}
                 </div>
