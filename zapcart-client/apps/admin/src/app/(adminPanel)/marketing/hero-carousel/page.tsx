@@ -4,10 +4,10 @@ import {
     Plus,
     GripVertical,
     ExternalLink,
-    Eye,
     Edit,
     Trash2,
     Save,
+    Wallpaper,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -22,13 +22,15 @@ import { AdminCard } from "@/components/AdminCard";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { AddNewSlideForm } from "@/components/forms/AddNewSlideForm";
 import { useRef, useState } from "react";
-import { Camera, Check } from "iconsax-react";
+import { Camera, Check, Eye } from "iconsax-react";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSortable } from '@dnd-kit/react/sortable';
 import { move } from '@dnd-kit/helpers';
 import { DragDropProvider } from '@dnd-kit/react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Slider } from "@/components/ui/slider";
 
 interface CarouselSlide {
     id: string;
@@ -77,10 +79,18 @@ const mockSlides: CarouselSlide[] = [
 export default function HeroCarouselPage() {
     const [slides, setSlides] = useState<CarouselSlide[]>(mockSlides);
     const [slidesImages, setSlidesImages] = useState<{ [key: string]: string }>({});
+    // State for settings
+    const [autoplayDuration, setAutoplayDuration] = useState(5000);
+    const [transitionEffect, setTransitionEffect] = useState("fade");
+    const transitionOptions = [
+        { label: "Fade In", value: "fade" },
+        { label: "Slide", value: "slide" },
+        { label: "Zoom", value: "zoom" },
+    ];
+
     return (
         <div className="p-8">
             <div className="flex items-center justify-end mb-8">
-
                 <div className="flex items-center gap-3">
                     <FormPopup
                         title="Add New Slide"
@@ -116,60 +126,97 @@ export default function HeroCarouselPage() {
                             <SlideCard key={slide.id} slide={slide} setSlides={setSlides} setSlidesImages={setSlidesImages} slidesImages={slidesImages} index={index} />
                         ))
                             :
-                            [0, 1, 2 , 4].map(i => <SlideSkeleton key={i} />)
+                            [0, 1, 2, 4].map(i => <SlideSkeleton key={i} />)
                         }
                     </ul>
                 </DragDropProvider>
 
                 {/* Live Preview / Tools */}
                 <div className="space-y-6">
-                    <AdminCard className="px-0 sticky top-8">
-                        <CardHeader className="pb-4 border-b border-gray-100">
-                            <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                <Eye className="h-4 w-4" />
-                                Mobile Preview
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <div className="aspect-9/16 bg-gray-900 rounded-4xl border-[6px] border-gray-800 relative overflow-hidden shadow-2xl mx-auto max-w-60">
-                                {/* Screen Content */}
-                                <div className="absolute inset-0 bg-white">
-                                    <div className="h-32 relative">
-                                        <Image src={slides[0].image} alt="preview" fill className="object-cover" />
-                                        <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-4">
-                                            <h4 className="text-white text-xs font-black">{slides[0].title}</h4>
-                                            <p className="text-white/80 text-[8px] mt-1">{slides[0].subtitle}</p>
-                                        </div>
-                                    </div>
-                                    <div className="p-4 space-y-3">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="h-2 w-full bg-gray-100 rounded-full" />
-                                        ))}
-                                    </div>
-                                </div>
-                                {/* Header bar */}
-                                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-gray-800 rounded-full" />
-                            </div>
-                            <p className="text-center text-[10px] font-bold text-gray-400 mt-4 uppercase tracking-widest">Real-time simulator</p>
-                        </CardContent>
+                    <AdminCard className="px-0 sticky top-8 z-10">
+                        <Accordion
+                            type="single"
+                            collapsible
+                            className="border-0"
+                        >
+                            <AccordionItem value="preview">
+                                <AccordionTrigger className="p-0 pr-5">
+                                    <CardHeader className="border-b border-gray-100">
+                                        <CardTitle className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                            <Eye size="20" color="#99a1af" variant="Bold" />
+                                            Preview
+                                        </CardTitle>
+                                    </CardHeader>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <CardContent className="pt-6">
+                                        {slides.length > 0 ? (
+                                            <div className="aspect-9/16 bg-gray-900 rounded-4xl border-[6px] border-gray-800 relative overflow-hidden mx-auto max-w-60">
+                                                {/* Screen Content */}
+                                                <div className="absolute inset-0 bg-white">
+                                                    <div className="h-32 relative">
+                                                        <Image src={slides[0].image} alt="preview" fill className="object-cover" />
+                                                        <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-4">
+                                                            <h4 className="text-white text-xs font-black">{slides[0].title}</h4>
+                                                            <p className="text-white/80 text-[8px] mt-1">{slides[0].subtitle}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4 space-y-3">
+                                                        {[1, 2, 3].map(i => (
+                                                            <div key={i} className="h-2 w-full bg-gray-100 rounded-full" />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                {/* Header bar */}
+                                                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-gray-800 rounded-full" />
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-60 text-gray-400">
+                                                <Wallpaper size="32"/>
+                                                <p className="text-sm font-semibold">No slides to preview</p>
+                                                <p className="text-xs">Add a new slide to see the preview here.</p>
+                                            </div>
+                                        )}
+                                      
+                                    </CardContent>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </AdminCard>
 
-                    <AdminCard className="px-0">
+                    <AdminCard className="px-0 z-0">
                         <CardHeader className="pb-4">
                             <CardTitle className="text-sm font-bold text-gray-900">Slide Settings</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            {/* Autoplay Duration Slider */}
                             <div className="flex items-center justify-between text-xs font-bold text-gray-600">
                                 <span>Autoplay Duration</span>
-                                <span className="text-primary">5,000ms</span>
+                                <span className="text-primary">{autoplayDuration}ms</span>
                             </div>
-                            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-primary rounded-full w-[60%]" />
+                            <div className="px-1">
+                                <Slider
+                                    min={1000}
+                                    max={10000}
+                                    step={100}
+                                    value={[autoplayDuration]}
+                                    onValueChange={([val]) => setAutoplayDuration(val)}
+                                />
                             </div>
 
+                            {/* Transition Effect Select */}
                             <div className="flex items-center justify-between text-xs font-bold text-gray-600 pt-2">
                                 <span>Transition Effect</span>
-                                <span className="text-gray-900">Fade In</span>
+                                <Select value={transitionEffect} onValueChange={setTransitionEffect}>
+                                    <SelectTrigger className="w-32">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {transitionOptions.map(opt => (
+                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <Button className="w-full mt-4 gap-2 font-bold shadow-sm">
@@ -184,8 +231,6 @@ export default function HeroCarouselPage() {
     );
 }
 
-
-// Skeleton loading version of the AdminCard for a slide
 function SlideSkeleton() {
     return (
         <AdminCard className="p-0 overflow-hidden group animate-pulse">
