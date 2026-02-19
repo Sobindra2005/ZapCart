@@ -20,8 +20,8 @@ import { Upload } from "lucide-react"
 const slideSchema = z.object({
     title: z.string().min(2, "Slide title must be at least 2 characters"),
     subtitle: z.string().optional(),
-    linkUrl: z.string().min(1, "Link URL is required"), // Simplified for now to avoid complexity
-    isActive: z.boolean().default(true),
+    linkUrl: z.string().min(1, "Link URL is required"), 
+    isActive: z.boolean(),
 })
 
 type SlideFormValues = z.infer<typeof slideSchema>

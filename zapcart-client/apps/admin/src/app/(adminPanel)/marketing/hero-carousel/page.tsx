@@ -31,7 +31,6 @@ interface CarouselSlide {
     buttonLink: string;
     image: string;
     status: "Published" | "Draft" | "Scheduled";
-    order: number;
 }
 
 const mockSlides: CarouselSlide[] = [
@@ -43,7 +42,6 @@ const mockSlides: CarouselSlide[] = [
         buttonLink: "/collections/summer",
         image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800&h=400",
         status: "Published",
-        order: 1
     },
     {
         id: "2",
@@ -53,7 +51,6 @@ const mockSlides: CarouselSlide[] = [
         buttonLink: "/categories/electronics",
         image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800&h=400",
         status: "Published",
-        order: 2
     },
     {
         id: "3",
@@ -63,7 +60,6 @@ const mockSlides: CarouselSlide[] = [
         buttonLink: "/blogs/sustainability",
         image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=800&h=400",
         status: "Draft",
-        order: 3
     }
 ];
 
@@ -82,6 +78,7 @@ export default function HeroCarouselPage() {
                     <FormPopup
                         title="Add New Slide"
                         description="Add a new slide to the hero carousel."
+                         className="max-w-4xl"
                         trigger={
                             <Button className="gap-2 font-bold bg-primary hover:bg-primary/90">
                                 <Plus className="h-4 w-4" />
@@ -97,6 +94,7 @@ export default function HeroCarouselPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 {/* List View */}
                 <div className="xl:col-span-2 space-y-6">
+                    {/* < SlideSkeleton/> */}
                     {slides.map((slide) => (
                         <AdminCard key={slide.id} className="p-0 overflow-hidden group">
                             <div className="flex flex-col md:flex-row h-full">
@@ -132,7 +130,6 @@ export default function HeroCarouselPage() {
                                                 <ExternalLink className="h-3 w-3" />
                                                 {slide.buttonText} → {slide.buttonLink}
                                             </div>
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order: {slide.order}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -201,5 +198,36 @@ export default function HeroCarouselPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+
+// Skeleton loading version of the AdminCard for a slide
+function SlideSkeleton() {
+    return (
+        <AdminCard className="p-0 overflow-hidden group animate-pulse">
+            <div className="flex flex-col md:flex-row h-full">
+                <div className="md:w-64 h-40 md:h-auto relative shrink-0 bg-gray-200">
+                    <div className="absolute top-2 left-2">
+                        <div className="h-6 w-20 rounded-full bg-gray-300" />
+                    </div>
+                </div>
+                <div className="flex-1 p-6 relative">
+                    <div className="absolute top-6 right-6 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="h-8 w-8 rounded-full bg-gray-200" />
+                        <div className="h-8 w-8 rounded-full bg-gray-200" />
+                        <div className="h-4 w-px bg-gray-200 mx-2" />
+                        <div className="h-4 w-4 rounded bg-gray-200" />
+                    </div>
+                    <div className="pr-16">
+                        <div className="h-6 w-40 bg-gray-300 rounded mb-2" />
+                        <div className="h-4 w-64 bg-gray-200 rounded mb-4" />
+                        <div className="flex flex-wrap items-center gap-4">
+                            <div className="h-6 w-32 bg-gray-200 rounded-lg" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AdminCard>
     );
 }
