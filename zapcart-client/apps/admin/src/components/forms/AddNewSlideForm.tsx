@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@repo/ui/ui/button"
 import { Input } from "@repo/ui/ui/input"
+import { Textarea } from "@repo/ui/ui/textarea"
 import {
     Form,
     FormControl,
@@ -15,13 +16,22 @@ import {
     FormMessage,
 } from "@repo/ui/ui/form"
 import { Switch } from "@repo/ui/ui/switch"
-import { Upload } from "lucide-react"
+import {
+    Select,
+    SelectTrigger,
+    SelectContent,
+    SelectItem,
+    SelectValue
+} from "../ui/select"
+import { ExternalLink, Upload } from "lucide-react"
+import DropZone from "../common/dropZone"
 
 const slideSchema = z.object({
     title: z.string().min(2, "Slide title must be at least 2 characters"),
     subtitle: z.string().optional(),
-    linkUrl: z.string().min(1, "Link URL is required"), 
-    isActive: z.boolean(),
+    buttonLabel: z.string().min(1, "Button label is required"),
+    buttonUrl: z.string().min(1, "Button link is required"),
+    status: z.enum(["published", "draft"]),
 })
 
 type SlideFormValues = z.infer<typeof slideSchema>
@@ -31,20 +41,26 @@ interface AddNewSlideFormProps {
     onSubmit?: (data: any) => void
 }
 
+
 export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
     const form = useForm<SlideFormValues>({
         resolver: zodResolver(slideSchema),
         defaultValues: {
             title: "",
             subtitle: "",
-            linkUrl: "",
-            isActive: true,
+            buttonLabel: "Shop Now",
+            buttonUrl: "",
+            status: "draft",
         },
     })
 
+    const [imageFile, setImageFile] = React.useState<File | null>(null);
+
+
     const onFormSubmit = (data: SlideFormValues) => {
         console.log("Slide Data:", data)
-        onSubmit?.(data)
+        // You may want to include imageFile in the payload
+        onSubmit?.({ ...data, imageFile })
     }
 
     return (
@@ -69,23 +85,9 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
                     name="subtitle"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Subtitle/Description</FormLabel>
+                            <FormLabel>Description</FormLabel>
                             <FormControl>
-                                <Input {...field} placeholder="e.g. Shop the latest trends now" />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="linkUrl"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Link URL</FormLabel>
-                            <FormControl>
-                                <Input {...field} placeholder="/products/new-collection" />
+                                <Textarea {...field} placeholder="e.g. Shop the latest trends now" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -93,36 +95,98 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
                 />
 
                 <div className="grid gap-2">
-                    <FormLabel>Slide Image</FormLabel>
-                    <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center gap-2 hover:bg-gray-50/50 transition-colors cursor-pointer h-32">
-                        <Upload className="h-6 w-6 text-gray-400" />
-                        <span className="text-sm text-gray-500">Upload Banner Image (1920x600)</span>
+                    <div className="flex gap-4">
+                        <FormField
+                            control={form.control}
+                            name="buttonLabel"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel>Button Label</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} placeholder="e.g. Shop Now" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="buttonUrl"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                    <FormLabel>Button Link</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} placeholder="e.g. /collections/summer" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    {/* Preview Button UI */}
+                    <div className="mt-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            className="rounded-full px-4 py-2 flex items-center gap-2 text-base font-normal"
+                            onClick={() => {
+                                const url = form.getValues("buttonUrl");
+                                if (url) {
+                                    const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
+                                    window.open(fullUrl, "_blank");
+                                }
+                            }}
+                        >
+                          <ExternalLink size={18} />
+                            {form.watch("buttonLabel") || "Shop Now"} <span className="mx-1">→</span> <span className="text-muted-foreground">{form.watch("buttonUrl") || '/'}</span>
+                        </Button>
                     </div>
                 </div>
 
-                <FormField
-                    control={form.control}
-                    name="isActive"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormControl>
-                                <Switch
-                                    id="active-status"
-                                    label="Active Status"
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                    className="py-2 bg-transparent px-0"
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                <div className="grid gap-2">
+                    <FormLabel>Slide Image</FormLabel>
+                    <DropZone
+                        accept={{ "image/*": [] }}
+                        multiple={false}
+                        maxSize={5 * 1024 * 1024}
+                        onDrop={(files) => {
+                            if (files && files[0]) {
+                                setImageFile(files[0]);
+                            }
+                        }}
+                        preview
+                        className="h-32 w-full"
+                    />
+                    <span className="text-xs text-gray-500">Upload Banner Image (1920x600)</span>
+                </div>
 
-                <div className="flex justify-end gap-2 mt-4">
+                <div className="flex justify-end gap-2 items-center mt-4">
                     <Button variant="outline" type="button" onClick={onCancel}>
                         Cancel
                     </Button>
+                    <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                            <FormItem className="mb-0">
+                                <FormControl>
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    >
+                                        <SelectTrigger className="w-40">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="published">Published</SelectItem>
+                                            <SelectItem value="draft">Draft</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <Button type="submit">Add Slide</Button>
                 </div>
             </form>
