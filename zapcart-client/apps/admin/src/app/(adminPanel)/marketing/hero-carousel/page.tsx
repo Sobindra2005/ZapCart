@@ -99,6 +99,7 @@ export default function HeroCarouselPage() {
         onSuccess: (data) => {
             toast.success("Slide created successfully");
             setIsSubmitting(false);
+            setOpen(false);
         },
         onError: (error: Error) => {
             toast.error(`Failed to Create Slide`, {
@@ -119,6 +120,7 @@ export default function HeroCarouselPage() {
         if ((data as any).imageFile) {
             formData.append("image", (data as any).imageFile);
         }
+
         createCarouselMutation.mutate(formData);
 
     }

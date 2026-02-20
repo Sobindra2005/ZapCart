@@ -90,7 +90,7 @@ export const deleteHeroCarousel = asyncHandler(async (_req, res) => {
 
     await HeroCarousel.findByIdAndDelete(id);
 
-    res.status(204).json({
+    res.status(200).json({
         message: "Hero Carousel deleted successfully"
     });
 })

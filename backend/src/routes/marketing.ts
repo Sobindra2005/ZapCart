@@ -14,7 +14,7 @@ router.use(restrictTo("admin"));
 router
     .post("/carousel/",upload.single("image") ,createHeroCarousel)
 router
-    .put("/carousel/:id",upload.single("image") ,updateHeroCarousel)
+    .patch("/carousel/:id",upload.single("image") ,updateHeroCarousel)
 router.delete("/carousel/:id", deleteHeroCarousel)
 
 export default router;

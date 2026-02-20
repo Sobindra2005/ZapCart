@@ -15,7 +15,6 @@ import {
     FormLabel,
     FormMessage,
 } from "@repo/ui/ui/form"
-import { Switch } from "@repo/ui/ui/switch"
 import {
     Select,
     SelectTrigger,
@@ -23,16 +22,17 @@ import {
     SelectItem,
     SelectValue
 } from "../ui/select"
-import { ExternalLink, Loader, Upload } from "lucide-react"
+import { ExternalLink, Loader } from "lucide-react"
 import DropZone from "../common/dropZone"
 import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
 
 const slideSchema = z.object({
     title: z.string().optional(),
     subtitle: z.string().optional(),
-    buttonLabel: z.string().optional(),
-    buttonUrl: z.string().min(1, "Button link is required"),
+    buttonText: z.string().optional(),
+    buttonLink: z.string().min(1, "Button link is required"),
     status: z.enum(["published", "draft"]),
+    image: z.instanceof(File, { message: "Slide image is required" }),
 })
 
 type SlideFormValues = z.infer<typeof slideSchema>
@@ -49,118 +49,125 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
         defaultValues: {
             title: "",
             subtitle: "",
-            buttonLabel: "",
-            buttonUrl: "",
+            buttonText: "",
+            buttonLink: "",
             status: "draft",
         },
     })
 
-
-    const [imageFile, setImageFile] = React.useState<File | null>(null);
-
-
     const onFormSubmit = async (data: SlideFormValues) => {
-        await onSubmit?.({ ...data, imageFile })
+        await onSubmit?.({ ...data, imageFile: data.image })
     }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onFormSubmit)} className="grid gap-4 py-4">
-                <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Slide Title</FormLabel>
-                            <FormControl>
-                                <Input {...field} placeholder="e.g. New Collection Arrival" />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="subtitle"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                                <Textarea {...field} placeholder="e.g. Shop the latest trends now" />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <div className="grid gap-2">
-                    <div className="flex gap-4">
-                        <FormField
-                            control={form.control}
-                            name="buttonLabel"
-                            render={({ field }) => (
-                                <FormItem className="flex-1">
-                                    <FormLabel>Button Label</FormLabel>
-                                    <FormControl>
-                                        <Input {...field} placeholder="e.g. Shop Now" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="buttonUrl"
-                            render={({ field }) => (
-                                <FormItem className="flex-1">
-                                    <FormLabel>Button Link</FormLabel>
-                                    <FormControl>
-                                        <Input {...field} placeholder="e.g. /collections/summer" />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    {/* Preview Button UI */}
-                    <div className="mt-2">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            className="rounded-full px-4 py-2 flex items-center gap-2 text-base font-normal"
-                            onClick={() => {
-                                const url = form.getValues("buttonUrl");
-                                if (url) {
-                                    const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
-                                    window.open(fullUrl, "_blank");
-                                }
-                            }}
-                        >
-                            <ExternalLink size={18} />
-                            {form.watch("buttonLabel") || "Shop Now"} <span className="mx-1">→</span> <span className="text-muted-foreground">{form.watch("buttonUrl") || '/'}</span>
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="grid gap-2">
-                    <FormLabel>Slide Image</FormLabel>
-                    <DropZone
-                        accept={{ "image/*": [] }}
-                        multiple={false}
-                        maxSize={5 * 1024 * 1024}
-                        onDrop={(files) => {
-                            if (files && files[0]) {
-                                setImageFile(files[0]);
-                            }
-                        }}
-                        preview
-                        className="h-32 w-full"
+            <form onSubmit={form.handleSubmit(onFormSubmit)} className="flex max-h-[70vh]  flex-col">
+                <div className="min-h-0 flex-1 space-y-4 overflow-auto py-4 px-1 ">
+                    <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Slide Title</FormLabel>
+                                <FormControl>
+                                    <Input {...field} placeholder="e.g. New Collection Arrival" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                    <span className="text-xs text-gray-500">Upload Banner Image (1920x600)</span>
+
+                    <FormField
+                        control={form.control}
+                        name="subtitle"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                    <Textarea {...field} placeholder="e.g. Shop the latest trends now" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="grid gap-2">
+                        <div className="flex gap-4">
+                            <FormField
+                                control={form.control}
+                                name="buttonText"
+                                render={({ field }) => (
+                                    <FormItem className="flex-1">
+                                        <FormLabel>Button Label</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="e.g. Shop Now" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="buttonLink"
+                                render={({ field }) => (
+                                    <FormItem className="flex-1">
+                                        <FormLabel>Button Link</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="e.g. /collections/summer" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        {/* Preview Button UI */}
+                        <div className="mt-2">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className="rounded-full px-4 py-2 flex items-center gap-2 text-base font-normal"
+                                onClick={() => {
+                                    const url = form.getValues("buttonLink");
+                                    if (url) {
+                                        const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
+                                        window.open(fullUrl, "_blank");
+                                    }
+                                }}
+                            >
+                                <ExternalLink size={18} />
+                                {form.watch("buttonText") || "Shop Now"} <span className="mx-1">→</span> <span className="text-muted-foreground">{form.watch("buttonLink") || '/'}</span>
+                            </Button>
+                        </div>
+                    </div>
+
+                    <FormField
+                        control={form.control}
+                        name="image"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Slide Image</FormLabel>
+                                <FormControl>
+                                    <DropZone
+                                        accept={{ "image/*": [] }}
+                                        multiple={false}
+                                        maxSize={5 * 1024 * 1024}
+                                        onDrop={(files) => {
+                                            field.onChange(files?.[0])
+                                            form.trigger("image")
+                                        }}
+                                        preview
+                                        className="h-32 w-full"
+                                    />
+                                </FormControl>
+                                <span className="text-xs text-gray-500">Upload Banner Image (1920x600)</span>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                 </div>
 
-                <div className="flex justify-end gap-2 items-center mt-4">
+                <div className="sticky bottom-0 z-10 mt-4 flex shrink-0 items-center justify-end gap-2 border-t bg-background pt-4">
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline">Cancel</Button>
@@ -190,7 +197,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                             )}
                         />
                         <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? <><Loader className="animate-spin mr-2" size={18} /> Adding Slide</>  : "Add Slide"}
+                            {isSubmitting ? <><Loader className="animate-spin mr-2" size={18} /> Adding Slide</> : "Add Slide"}
                         </Button>
                     </DialogFooter>
                 </div>
