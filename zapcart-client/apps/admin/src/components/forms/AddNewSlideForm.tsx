@@ -28,9 +28,9 @@ import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
 
 const slideSchema = z.object({
     title: z.string().optional(),
-    subtitle: z.string().optional(),
-    buttonText: z.string().optional(),
-    buttonLink: z.string().min(1, "Button link is required"),
+    description: z.string().optional(),
+    buttonLabel: z.string().optional(),
+    link: z.string().min(1, "Link is required"),
     status: z.enum(["published", "draft"]),
     image: z.instanceof(File, { message: "Slide image is required" }),
 })
@@ -48,9 +48,9 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
         resolver: zodResolver(slideSchema),
         defaultValues: {
             title: "",
-            subtitle: "",
-            buttonText: "",
-            buttonLink: "",
+            description: "",
+            buttonLabel: "",
+            link: "",
             status: "draft",
         },
     })
@@ -79,7 +79,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
 
                     <FormField
                         control={form.control}
-                        name="subtitle"
+                        name="description"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Description</FormLabel>
@@ -95,7 +95,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                         <div className="flex gap-4">
                             <FormField
                                 control={form.control}
-                                name="buttonText"
+                                name="buttonLabel"
                                 render={({ field }) => (
                                     <FormItem className="flex-1">
                                         <FormLabel>Button Label</FormLabel>
@@ -108,7 +108,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                             />
                             <FormField
                                 control={form.control}
-                                name="buttonLink"
+                                name="link"
                                 render={({ field }) => (
                                     <FormItem className="flex-1">
                                         <FormLabel>Button Link</FormLabel>
@@ -127,7 +127,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                 variant="secondary"
                                 className="rounded-full px-4 py-2 flex items-center gap-2 text-base font-normal"
                                 onClick={() => {
-                                    const url = form.getValues("buttonLink");
+                                    const url = form.getValues("link");
                                     if (url) {
                                         const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
                                         window.open(fullUrl, "_blank");
@@ -135,7 +135,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                 }}
                             >
                                 <ExternalLink size={18} />
-                                {form.watch("buttonText") || "Shop Now"} <span className="mx-1">→</span> <span className="text-muted-foreground">{form.watch("buttonLink") || '/'}</span>
+                                {form.watch("buttonLabel") || "Shop Now"} <span className="mx-1">→</span> <span className="text-muted-foreground">{form.watch("link") || '/'}</span>
                             </Button>
                         </div>
                     </div>

@@ -36,51 +36,23 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Slider } from "@/components/ui/slider";
 
 interface CarouselSlide {
-    id: string;
-    order: number;
-    title: string;
-    subtitle: string;
-    buttonText: string;
-    buttonLink: string;
+    _id: string;
+    title: string | null;
+    description: string | null;
     image: string;
-    status: "Published" | "Draft";
+    buttonLabel: string | null;
+    link: string;
+    status: "draft" | "published";
+    createdBy: number;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
 }
 
-const mockSlides: CarouselSlide[] = [
-    {
-        id: "1",
-        order: 1,
-        title: "Summer Collection 2024",
-        subtitle: "Up to 50% Off on all summer essentials",
-        buttonText: "Shop Now",
-        buttonLink: "/collections/summer",
-        image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800&h=400",
-        status: "Published",
-    },
-    {
-        id: "2",
-        order: 2,
-        title: "New Tech Arrivals",
-        subtitle: "Experience the future of electronics today",
-        buttonText: "Explore More",
-        buttonLink: "/categories/electronics",
-        image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=800&h=400",
-        status: "Published",
-    },
-    {
-        id: "3",
-        order: 3,
-        title: "Sustainable Living",
-        subtitle: "Eco-friendly products for a better tomorrow",
-        buttonText: "Read Story",
-        buttonLink: "/blogs/sustainability",
-        image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=800&h=400",
-        status: "Draft",
-    }
-];
 
 export default function HeroCarouselPage() {
-    const [slides, setSlides] = useState<CarouselSlide[]>(mockSlides);
+    const [slides, setSlides] = useState<CarouselSlide[]>([]);
     const [slidesImages, setSlidesImages] = useState<{ [key: string]: string }>({});
     const [open, setOpen] = useState(false);
     const [isSubmitting,setIsSubmitting] = useState(false);
@@ -112,17 +84,15 @@ export default function HeroCarouselPage() {
     const handleSlideForm = (data: Omit<CarouselSlide, "id" | "order">) => {
         setIsSubmitting(true);
         const formData = new FormData();
-        formData.append("title", data.title);
-        formData.append("description", data.subtitle);
-        formData.append("link", data.buttonLink);
-        formData.append("status", data.status);
-        formData.append("buttonLabel", data.buttonText);
+        formData.append("title", data.title ?? "");
+        formData.append("description", data.description ?? "");
+        formData.append("link", data.link ?? "");
+        formData.append("status", data.status ?? "");
+        formData.append("buttonLabel", data.buttonLabel ?? "");
         if ((data as any).imageFile) {
             formData.append("image", (data as any).imageFile);
         }
-
         createCarouselMutation.mutate(formData);
-
     }
 
     return (
@@ -151,18 +121,24 @@ export default function HeroCarouselPage() {
                 {/* List View */}
                 <DragDropProvider
                     onDragEnd={(event) => {
-                        setSlides((prevSlides) =>
-                            move(prevSlides, event).map((slide, index) => ({
-                                ...slide,
-                                order: index + 1,
-                            }))
-                        );
+                        setSlides((prevSlides) => {
+                            // Get array of slide IDs
+                            const slideIds = prevSlides.map(slide => slide._id);
+                            // Move IDs based on event
+                            const newOrderIds = move(slideIds, event);
+                            // Reorder slides based on newOrderIds
+                            const reorderedSlides = newOrderIds.map((id, index) => {
+                                const slide = prevSlides.find(s => s._id === id)!;
+                                return { ...slide, order: index + 1 };
+                            });
+                            return reorderedSlides;
+                        });
                     }}
                 >
                     <ul className="xl:col-span-2 space-y-6">
                         {/* < SlideSkeleton/> */}
-                        {slides && Array.isArray(slides) ? slides.map((slide, index) => (
-                            <SlideCard key={slide.id} slide={slide} setSlides={setSlides} setSlidesImages={setSlidesImages} slidesImages={slidesImages} index={index} />
+                        {slides && slides.length > 0 && Array.isArray(slides) ? slides.map((slide, index) => (
+                            <SlideCard key={slide._id} slide={slide} setSlides={setSlides} setSlidesImages={setSlidesImages} slidesImages={slidesImages} index={index} />
                         ))
                             :
                             <EmptySlidesList />
@@ -197,7 +173,7 @@ export default function HeroCarouselPage() {
                                                         <Image src={slides[0].image} alt="preview" fill className="object-cover" />
                                                         <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-4">
                                                             <h4 className="text-white text-xs font-black">{slides[0].title}</h4>
-                                                            <p className="text-white/80 text-[8px] mt-1">{slides[0].subtitle}</p>
+                                                            <p className="text-white/80 text-[8px] mt-1">{slides[0].description}</p>
                                                         </div>
                                                     </div>
                                                     <div className="p-4 space-y-3">
@@ -346,7 +322,7 @@ function SlideCard({
 }) {
     const [element, setElement] = useState<Element | null>(null);
     const handleRef = useRef<HTMLButtonElement | null>(null);
-    const { isDragging } = useSortable({ id: slide.id, index, element, handle: handleRef });
+    const { isDragging } = useSortable({ id: slide._id, index, element, handle: handleRef });
 
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState<CarouselSlide>(slide);
@@ -384,12 +360,12 @@ function SlideCard({
     };
 
     const handleSave = () => {
-        setSlides((prev) => prev.map((s) => (s.id === slide.id ? { ...draft, image: previewUrl || draft.image } : s)));
+        setSlides((prev) => prev.map((s) => (s._id === slide._id ? { ...draft, image: previewUrl || draft.image } : s)));
         setIsEditing(false);
     };
 
     const handleDelete = () => {
-        setSlides((prev) => prev.filter((s) => s.id !== slide.id));
+        setSlides((prev) => prev.filter((s) => s._id !== slide._id));
         toast.success("Slide deleted successfully")
     };
 
@@ -419,9 +395,9 @@ function SlideCard({
 
     const fields = [
         { label: "Title", field: "title" as const, type: "input" },
-        { label: "Subtitle", field: "subtitle" as const, type: "input" },
-        { label: "Button Text", field: "buttonText" as const, type: "input" },
-        { label: "Button Link", field: "buttonLink" as const, type: "input" },
+        { label: "Description", field: "description" as const, type: "input" },
+        { label: "Button Text", field: "buttonLabel" as const, type: "input" },
+        { label: "Button Link", field: "link" as const, type: "input" },
         { label: "Image URL", field: "image" as const, type: "input" },
         { label: "Status", field: "status" as const, type: "select" },
     ];
@@ -450,7 +426,7 @@ function SlideCard({
                             <div className="md:w-64 h-44 md:h-auto relative shrink-0">
                                 <Image
                                     src={previewUrl || draft.image || slide.image}
-                                    alt={draft.title}
+                                    alt={draft.title || "Slide Image"}
                                     fill
                                     className="object-cover transition-all duration-500"
                                 />
@@ -484,7 +460,7 @@ function SlideCard({
                                                 initial="initial"
                                                 animate="animate"
                                                 className={cn(
-                                                    f.field === "title" || f.field === "subtitle"
+                                                    f.field === "title" || f.field === "description"
                                                         ? "sm:col-span-2"
                                                         : ""
                                                 )}
@@ -494,20 +470,20 @@ function SlideCard({
                                                 </label>
                                                 {f.type === "select" ? (
                                                     <Select
-                                                        value={draft[f.field]}
+                                                        value={draft[f.field] ?? undefined}
                                                         onValueChange={(value) => handleChange(f.field, value)}
                                                     >
                                                         <SelectTrigger className="w-40">
                                                             <SelectValue placeholder="Select status" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="Published">Published</SelectItem>
-                                                            <SelectItem value="Draft">Draft</SelectItem>
+                                                            <SelectItem value="published">Published</SelectItem>
+                                                            <SelectItem value="draft">Draft</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 ) : (
                                                     <input
-                                                        value={draft[f.field]}
+                                                        value={draft[f.field] ?? ""}
                                                         onChange={(e) => handleChange(f.field, e.target.value)}
                                                         className={cn(
                                                             "w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 text-gray-800",
@@ -550,12 +526,12 @@ function SlideCard({
                             className="flex flex-col md:flex-row h-full"
                         >
                             <div className="md:w-64 h-40 md:h-auto relative shrink-0">
-                                <Image src={slide.image} alt={slide.title} fill className="object-cover" />
+                                <Image src={slide.image} alt={slide.title ?? "Slide Image"} fill className="object-cover" />
                                 <div className="absolute top-2 left-2">
                                     <Badge
                                         className={cn(
                                             "font-bold",
-                                            slide.status === "Published" ? "bg-green-500" : "bg-gray-400"
+                                            slide.status === "published" ? "bg-green-500" : "bg-gray-400"
                                         )}
                                     >
                                         {slide.status}
@@ -587,11 +563,11 @@ function SlideCard({
 
                                 <div className="pr-16">
                                     <h3 className="text-lg font-bold text-gray-900 mb-1">{slide.title}</h3>
-                                    <p className="text-sm text-gray-500 mb-4 font-medium">{slide.subtitle}</p>
+                                    <p className="text-sm text-gray-500 mb-4 font-medium">{slide.description}</p>
                                     <div className="flex flex-wrap items-center gap-4">
                                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-600">
                                             <ExternalLink className="h-3 w-3" />
-                                            {slide.buttonText} → {slide.buttonLink}
+                                            {slide.buttonLabel} → {slide.link}
                                         </div>
                                     </div>
                                 </div>
