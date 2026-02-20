@@ -8,6 +8,7 @@ import {
     Trash2,
     Save,
     Wallpaper,
+    Images,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -126,7 +127,7 @@ export default function HeroCarouselPage() {
                             <SlideCard key={slide.id} slide={slide} setSlides={setSlides} setSlidesImages={setSlidesImages} slidesImages={slidesImages} index={index} />
                         ))
                             :
-                            [0, 1, 2, 4].map(i => <SlideSkeleton key={i} />)
+                            <EmptySlidesList />
                         }
                     </ul>
                 </DragDropProvider>
@@ -172,12 +173,12 @@ export default function HeroCarouselPage() {
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center h-60 text-gray-400">
-                                                <Wallpaper size="32"/>
+                                                <Wallpaper size="32" />
                                                 <p className="text-sm font-semibold">No slides to preview</p>
                                                 <p className="text-xs">Add a new slide to see the preview here.</p>
                                             </div>
                                         )}
-                                      
+
                                     </CardContent>
                                 </AccordionContent>
                             </AccordionItem>
@@ -259,6 +260,18 @@ function SlideSkeleton() {
         </AdminCard>
     );
 }
+
+function EmptySlidesList() {
+    // For when the slides array is empty
+    return (
+        <div className="flex flex-col items-center justify-center min-h-90 rounded-3xl border-2 border-gray-100  text-gray-400">
+            <Images size="40" />
+            <p className="text-base font-semibold mt-2">No slides found</p>
+            <p className="text-xs">Add a new slide to get started.</p>
+        </div>
+    );
+}
+
 
 const cardVariants: Variants = {
     initial: { opacity: 0, y: 12, scale: 0.98 },
