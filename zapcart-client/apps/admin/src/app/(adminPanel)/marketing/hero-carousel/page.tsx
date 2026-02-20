@@ -83,6 +83,7 @@ export default function HeroCarouselPage() {
     const [slides, setSlides] = useState<CarouselSlide[]>(mockSlides);
     const [slidesImages, setSlidesImages] = useState<{ [key: string]: string }>({});
     const [open, setOpen] = useState(false);
+    const [isSubmitting,setIsSubmitting] = useState(false);
     // State for settings
     const [autoplayDuration, setAutoplayDuration] = useState(5000);
     const [transitionEffect, setTransitionEffect] = useState("fade");
@@ -97,15 +98,18 @@ export default function HeroCarouselPage() {
         mutationFn: (formData: FormData) => marketingApi.createHeroCarousel(formData),
         onSuccess: (data) => {
             toast.success("Slide created successfully");
+            setIsSubmitting(false);
         },
         onError: (error: Error) => {
             toast.error(`Failed to Create Slide`, {
                 description: error.message || "An error occurred while creating the slide. Please try again.",
             });
+            setIsSubmitting(false);
         }
     });
 
     const handleSlideForm = (data: Omit<CarouselSlide, "id" | "order">) => {
+        setIsSubmitting(true);
         const formData = new FormData();
         formData.append("title", data.title);
         formData.append("description", data.subtitle);
@@ -116,6 +120,7 @@ export default function HeroCarouselPage() {
             formData.append("image", (data as any).imageFile);
         }
         createCarouselMutation.mutate(formData);
+
     }
 
     return (
@@ -135,7 +140,7 @@ export default function HeroCarouselPage() {
                             </Button>
                         }
                     >
-                        <AddNewSlideForm onSubmit={handleSlideForm} />
+                        <AddNewSlideForm isSubmitting={isSubmitting} onSubmit={handleSlideForm} />
                     </FormPopup>
                 </div>
             </div>

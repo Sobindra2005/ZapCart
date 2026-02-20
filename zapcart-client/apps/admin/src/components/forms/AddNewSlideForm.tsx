@@ -23,7 +23,7 @@ import {
     SelectItem,
     SelectValue
 } from "../ui/select"
-import { ExternalLink, Upload } from "lucide-react"
+import { ExternalLink, Loader, Upload } from "lucide-react"
 import DropZone from "../common/dropZone"
 import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
 
@@ -38,12 +38,12 @@ const slideSchema = z.object({
 type SlideFormValues = z.infer<typeof slideSchema>
 
 interface AddNewSlideFormProps {
-    onCancel?: () => void
+    isSubmitting: boolean;
     onSubmit?: (data: any) => void
 }
 
 
-export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
+export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps) {
     const form = useForm<SlideFormValues>({
         resolver: zodResolver(slideSchema),
         defaultValues: {
@@ -55,12 +55,12 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
         },
     })
 
+
     const [imageFile, setImageFile] = React.useState<File | null>(null);
 
 
     const onFormSubmit = async (data: SlideFormValues) => {
-        onSubmit?.({ ...data, imageFile })
-
+        await onSubmit?.({ ...data, imageFile })
     }
 
     return (
@@ -189,7 +189,9 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
                                 </FormItem>
                             )}
                         />
-                        <Button type="submit">Add Slide</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <><Loader className="animate-spin mr-2" size={18} /> Adding Slide</>  : "Add Slide"}
+                        </Button>
                     </DialogFooter>
                 </div>
             </form>
