@@ -75,7 +75,7 @@ export function RevenueInsightsSkeleton({ className }: { className?: string }) {
 export function TopProductsSkeleton({ className }: { className?: string }) {
     return (
         <CardContent className={cn("h-auto px-6 flex flex-col justify-between", className)}>
-            <div className="h-[180px] flex flex-col justify-between py-2">
+            <div className="h-45 flex flex-col justify-between py-2">
                 {[...Array(5)].map((_, i) => (
                     <div key={i} className="flex items-center gap-3">
                         {/* Product name */}

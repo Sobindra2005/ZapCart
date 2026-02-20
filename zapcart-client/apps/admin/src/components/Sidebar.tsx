@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSidebar } from "@/lib/SidebarContext";
 
 const sidebarItems = [
@@ -113,25 +114,34 @@ export function Sidebar() {
                                             </div>
                                             {!isCollapsed && (isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)}
                                         </button>
-                                        {isOpen && !isCollapsed && (
-                                            <div className="mt-1 ml-4 space-y-1">
-                                                {item.subItems.map((sub) => {
-                                                    const isSubActive = pathname === sub.href;
-                                                    return (
-                                                        <Link
-                                                            key={sub.name}
-                                                            href={sub.href}
-                                                            className={cn(
-                                                                "block rounded-lg px-9 py-2 text-sm font-medium transition-all duration-200",
-                                                                isSubActive ? "text-primary bg-primary/5 font-bold" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                                                            )}
-                                                        >
-                                                            {sub.name}
-                                                        </Link>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
+                                        <AnimatePresence initial={false}>
+                                            {isOpen && !isCollapsed && (
+                                                <motion.div
+                                                    key="submenu"
+                                                    initial={{ opacity: 0, y: -8, height: 0 }}
+                                                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                                                    exit={{ opacity: 0, y: -8, height: 0 }}
+                                                    transition={{ duration: 0.22, ease: 'easeInOut' }}
+                                                    className="mt-1 ml-4 space-y-1 overflow-hidden"
+                                                >
+                                                    {item.subItems.map((sub) => {
+                                                        const isSubActive = pathname === sub.href;
+                                                        return (
+                                                            <Link
+                                                                key={sub.name}
+                                                                href={sub.href}
+                                                                className={cn(
+                                                                    "block rounded-lg px-9 py-2 text-sm font-medium transition-all duration-200",
+                                                                    isSubActive ? "text-primary bg-primary/5 font-bold" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                                                )}
+                                                            >
+                                                                {sub.name}
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </>
                                 ) : (
                                     <Link

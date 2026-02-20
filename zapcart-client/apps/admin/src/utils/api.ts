@@ -132,7 +132,6 @@ export const salesApi = {
         aovRange?: string;
         refundRange?: string;
     }) => {
-        console.log("Fetching order analytics with params:", params);
         return axiosInstance.get('/admin/analytics/orders', { params });
     },
     getTopProducts: (params?: {
@@ -141,7 +140,7 @@ export const salesApi = {
         endDate?: string;
     }) => {
         const response = axiosInstance.get('/admin/analytics/top-products', { params });
-        console.log("Fetching top products with params:", {params, response});
+        console.log("Fetching top products with params:", { params, response });
         return response;
     },
     getChartData: (params?: {
@@ -158,5 +157,33 @@ export const salesApi = {
         }
     ) => {
         return axiosInstance.get('/admin/orders/logistics/recent', { params });
+    }
+}
+
+export const marketingApi = {
+    getHeroCarousel: () => {
+        return axiosInstance.get('/marketing/carousel');
+    },
+    getHeroCarouselById: (id: string) => {
+        return axiosInstance.get(`/marketing/carousel/${id}`);
+    },
+    createHeroCarousel: (data: FormData | { title: string; description: string; link: string; status?: string }) => {
+        const config = data instanceof FormData ? {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        } : {};
+        return axiosInstance.post('/marketing/carousel', data, config);
+    },
+    updateHeroCarousel: (id: string, data: FormData ) => {
+        const config = data instanceof FormData ? {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        } : {};
+        return axiosInstance.patch(`/marketing/carousel/${id}`, data, config);
+    },
+    deleteHeroCarousel: (id: string) => {
+        return axiosInstance.delete(`/marketing/carousel/${id}`);
     }
 }
