@@ -25,11 +25,12 @@ import {
 } from "../ui/select"
 import { ExternalLink, Upload } from "lucide-react"
 import DropZone from "../common/dropZone"
+import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
 
 const slideSchema = z.object({
-    title: z.string().min(2, "Slide title must be at least 2 characters"),
+    title: z.string().optional(),
     subtitle: z.string().optional(),
-    buttonLabel: z.string().min(1, "Button label is required"),
+    buttonLabel: z.string().optional(),
     buttonUrl: z.string().min(1, "Button link is required"),
     status: z.enum(["published", "draft"]),
 })
@@ -48,7 +49,7 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
         defaultValues: {
             title: "",
             subtitle: "",
-            buttonLabel: "Shop Now",
+            buttonLabel: "",
             buttonUrl: "",
             status: "draft",
         },
@@ -57,10 +58,9 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
     const [imageFile, setImageFile] = React.useState<File | null>(null);
 
 
-    const onFormSubmit = (data: SlideFormValues) => {
-        console.log("Slide Data:", data)
-        // You may want to include imageFile in the payload
+    const onFormSubmit = async (data: SlideFormValues) => {
         onSubmit?.({ ...data, imageFile })
+
     }
 
     return (
@@ -137,7 +137,7 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
                                 }
                             }}
                         >
-                          <ExternalLink size={18} />
+                            <ExternalLink size={18} />
                             {form.watch("buttonLabel") || "Shop Now"} <span className="mx-1">→</span> <span className="text-muted-foreground">{form.watch("buttonUrl") || '/'}</span>
                         </Button>
                     </div>
@@ -161,33 +161,36 @@ export function AddNewSlideForm({ onCancel, onSubmit }: AddNewSlideFormProps) {
                 </div>
 
                 <div className="flex justify-end gap-2 items-center mt-4">
-                    <Button variant="outline" type="button" onClick={onCancel}>
-                        Cancel
-                    </Button>
-                    <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                            <FormItem className="mb-0">
-                                <FormControl>
-                                    <Select
-                                        value={field.value}
-                                        onValueChange={field.onChange}
-                                    >
-                                        <SelectTrigger className="w-40">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="published">Published</SelectItem>
-                                            <SelectItem value="draft">Draft</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <Button type="submit">Add Slide</Button>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+
+                        <FormField
+                            control={form.control}
+                            name="status"
+                            render={({ field }) => (
+                                <FormItem className="mb-0">
+                                    <FormControl>
+                                        <Select
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <SelectTrigger className="w-40">
+                                                <SelectValue placeholder="Select status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="published">Published</SelectItem>
+                                                <SelectItem value="draft">Draft</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit">Add Slide</Button>
+                    </DialogFooter>
                 </div>
             </form>
         </Form>

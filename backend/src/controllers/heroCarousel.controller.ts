@@ -2,10 +2,10 @@ import HeroCarousel from "@/models/HeroCarousel";
 import AppError from "@/utils/AppError";
 import asyncHandler from "@/utils/asyncHandler";
 
-export const createHeroCarousel = asyncHandler(async (_req, res) => {
-    const userId = _req.user?.id;
-    const { title, description, link, status, buttonLabel } = _req.body;
-    const image = _req.file?.path;
+export const createHeroCarousel = asyncHandler(async (req, res) => {
+    const userId = req.user?.id;
+    const { title, description, link, status, buttonLabel } = req.body;
+    const image = req.file?.path;
 
     if (!image) {
         throw new AppError("Image is required", 400);

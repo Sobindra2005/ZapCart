@@ -1,6 +1,6 @@
 import { upload } from "@/config/multer";
 import { createHeroCarousel, deleteHeroCarousel, getHeroCarousel, getHeroCarouselById, updateHeroCarousel } from "@/controllers/heroCarousel.controller";
-import { restrictTo } from "@/middlewares/authMiddleware";
+import { protect, restrictTo } from "@/middlewares/authMiddleware";
 import { Router } from "express";
 
 const router = Router();
@@ -8,7 +8,9 @@ const router = Router();
 router.get('/carousel',getHeroCarousel);
 router.get('/carousel/:id',getHeroCarouselById);
 
-router.use(restrictTo("admin","super admin"));
+router.use(protect);
+router.use(restrictTo("admin"));
+
 router
     .post("/carousel/",upload.single("image") ,createHeroCarousel)
 router

@@ -39,6 +39,8 @@ export function FormPopup({
                 </DialogHeader>
                 {children}
             </DialogContent>
+
         </Dialog>
     )
 }
+

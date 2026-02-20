@@ -23,6 +23,8 @@ import { AdminCard } from "@/components/AdminCard";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { AddNewSlideForm } from "@/components/forms/AddNewSlideForm";
 import { useRef, useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { marketingApi } from "@/utils/api";
 import { Camera, Check, Eye } from "iconsax-react";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { toast } from "sonner";
@@ -80,6 +82,7 @@ const mockSlides: CarouselSlide[] = [
 export default function HeroCarouselPage() {
     const [slides, setSlides] = useState<CarouselSlide[]>(mockSlides);
     const [slidesImages, setSlidesImages] = useState<{ [key: string]: string }>({});
+    const [open, setOpen] = useState(false);
     // State for settings
     const [autoplayDuration, setAutoplayDuration] = useState(5000);
     const [transitionEffect, setTransitionEffect] = useState("fade");
@@ -88,6 +91,19 @@ export default function HeroCarouselPage() {
         { label: "Slide", value: "slide" },
         { label: "Zoom", value: "zoom" },
     ];
+
+    // React Query mutation for creating hero carousel
+    const createCarouselMutation = useMutation({
+        mutationFn: (formData: FormData) => marketingApi.createHeroCarousel(formData),
+        onSuccess: (data) => {
+            toast.success("Slide created successfully");
+        },
+        onError: (error: Error) => {
+            toast.error(`Failed to Create Slide`, {
+                description: error.message || "An error occurred while creating the slide. Please try again.",
+            });
+        }
+    });
 
     const handleSlideForm = (data: Omit<CarouselSlide, "id" | "order">) => {
         const formData = new FormData();
@@ -99,9 +115,7 @@ export default function HeroCarouselPage() {
         if ((data as any).imageFile) {
             formData.append("image", (data as any).imageFile);
         }
-
-    
-
+        createCarouselMutation.mutate(formData);
     }
 
     return (
@@ -109,6 +123,8 @@ export default function HeroCarouselPage() {
             <div className="flex items-center justify-end mb-8">
                 <div className="flex items-center gap-3">
                     <FormPopup
+                        open={open}
+                        onOpenChange={setOpen}
                         title="Add New Slide"
                         description="Add a new slide to the hero carousel."
                         className="max-w-4xl"

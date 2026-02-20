@@ -5,7 +5,7 @@ export interface IHeroCarousel {
     title?: string;
     description?: string;
     image: string;
-    link?: string;
+    link: string;
     buttonLabel?: string;
     status: 'archived' | 'published' | 'draft';
     order?: number;
@@ -18,13 +18,14 @@ const HeroCarouselSchema = new Schema<IHeroCarousel>(
     {
         title: {
             type: String,
-            required: [true, 'Title is required'],
             trim: true,
-            maxlength: [200, 'Title cannot exceed 200 characters']
+            maxlength: [200, 'Title cannot exceed 200 characters'],
+            default: null
         },
         description: {
             type: String,
-            maxlength: [1000, 'Description cannot exceed 1000 characters']
+            maxlength: [1000, 'Description cannot exceed 1000 characters'],
+            default: null
         },
         image: {
             type: String,
@@ -34,11 +35,13 @@ const HeroCarouselSchema = new Schema<IHeroCarousel>(
         buttonLabel:{
             type: String,
             trim: true,
-            maxlength: [50, 'Button label cannot exceed 50 characters']
+            maxlength: [50, 'Button label cannot exceed 50 characters'],
+            default: null
         },
         link: {
             type: String,
-            trim: true
+            trim: true,
+            required: [true, 'Link URL is required'],
         },
         status: {
             type: String,

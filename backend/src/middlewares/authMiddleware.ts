@@ -92,7 +92,20 @@ export const restrictTo = (...roles: string[]) => {
             throw new AppError('You must be logged in to access this resource.', 401);
         }
 
-        if (!roles.includes(req.user.role)) {
+        // Normalize user's role: lowercase + remove spaces
+        const normalizedUserRole = req.user.role.replace(/\s+/g, '').toLowerCase();
+
+        // Normalize allowed roles in the same way
+        const normalizedRoles = roles.map(role => role.replace(/\s+/g, '').toLowerCase());
+
+        console.log('Checking user role for access control:', {
+            user: req.user,
+            requiredRoles: roles,
+            userRole: normalizedUserRole,
+            normalizedRoles,
+        });
+
+        if (!normalizedRoles.includes(normalizedUserRole)) {
             throw new AppError('You do not have permission to perform this action.', 403);
         }
 
