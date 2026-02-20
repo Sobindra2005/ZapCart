@@ -89,6 +89,21 @@ export default function HeroCarouselPage() {
         { label: "Zoom", value: "zoom" },
     ];
 
+    const handleSlideForm = (data: Omit<CarouselSlide, "id" | "order">) => {
+        const formData = new FormData();
+        formData.append("title", data.title);
+        formData.append("description", data.subtitle);
+        formData.append("link", data.buttonLink);
+        formData.append("status", data.status);
+        formData.append("buttonLabel", data.buttonText);
+        if ((data as any).imageFile) {
+            formData.append("image", (data as any).imageFile);
+        }
+
+    
+
+    }
+
     return (
         <div className="p-8">
             <div className="flex items-center justify-end mb-8">
@@ -104,7 +119,7 @@ export default function HeroCarouselPage() {
                             </Button>
                         }
                     >
-                        <AddNewSlideForm onSubmit={(data) => console.log(data)} />
+                        <AddNewSlideForm onSubmit={handleSlideForm} />
                     </FormPopup>
                 </div>
             </div>

@@ -2,12 +2,13 @@ import mongoose, { Schema } from "mongoose";
 
 
 export interface IHeroCarousel {
-    title: string;
+    title?: string;
     description?: string;
     image: string;
     link?: string;
+    buttonLabel?: string;
     status: 'archived' | 'published' | 'draft';
-    order: number;
+    order?: number;
     createdBy?: number;
     createdAt: Date;
     updatedAt: Date;
@@ -29,6 +30,11 @@ const HeroCarouselSchema = new Schema<IHeroCarousel>(
             type: String,
             required: [true, 'Image URL is required'],
             trim: true
+        },
+        buttonLabel:{
+            type: String,
+            trim: true,
+            maxlength: [50, 'Button label cannot exceed 50 characters']
         },
         link: {
             type: String,

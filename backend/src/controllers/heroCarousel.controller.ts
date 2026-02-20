@@ -4,7 +4,7 @@ import asyncHandler from "@/utils/asyncHandler";
 
 export const createHeroCarousel = asyncHandler(async (_req, res) => {
     const userId = _req.user?.id;
-    const { title, description, link, status } = _req.body;
+    const { title, description, link, status, buttonLabel } = _req.body;
     const image = _req.file?.path;
 
     if (!image) {
@@ -17,6 +17,7 @@ export const createHeroCarousel = asyncHandler(async (_req, res) => {
         link,
         status,
         image,
+        buttonLabel,
         createdBy: userId,
     });
 
