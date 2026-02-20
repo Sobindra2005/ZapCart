@@ -22,7 +22,7 @@ import {
 import { AdminCard } from "@/components/AdminCard";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { AddNewSlideForm } from "@/components/forms/AddNewSlideForm";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Camera, Check, Eye } from "iconsax-react";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { toast } from "sonner";
@@ -313,6 +313,28 @@ function SlideCard({
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState<CarouselSlide>(slide);
 
+    // Image upload state
+    const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Clean up Blob URL when component unmounts or when a new file is selected
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
+
+    // When editing is toggled off, reset image state
+    useEffect(() => {
+        if (!isEditing) {
+            setSelectedImageFile(null);
+            setPreviewUrl(null);
+        }
+    }, [isEditing]);
+
     const handleEditToggle = () => {
         setDraft(slide);
         setIsEditing(true);
@@ -324,7 +346,7 @@ function SlideCard({
     };
 
     const handleSave = () => {
-        setSlides((prev) => prev.map((s) => (s.id === slide.id ? { ...draft } : s)));
+        setSlides((prev) => prev.map((s) => (s.id === slide.id ? { ...draft, image: previewUrl || draft.image } : s)));
         setIsEditing(false);
     };
 
@@ -335,6 +357,26 @@ function SlideCard({
 
     const handleChange = (field: keyof CarouselSlide, value: string) => {
         setDraft((prev) => ({ ...prev, [field]: value }));
+    };
+
+    // Handle camera icon click
+    const handleCameraClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    // Handle file input change
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+            setSelectedImageFile(file);
+            // Optionally update draft.image for immediate preview
+            setDraft((prev) => ({ ...prev, image: url }));
+        }
     };
 
     const fields = [
@@ -369,14 +411,26 @@ function SlideCard({
                             {/* Image preview with overlay input */}
                             <div className="md:w-64 h-44 md:h-auto relative shrink-0">
                                 <Image
-                                    src={draft.image || slide.image}
+                                    src={previewUrl || draft.image || slide.image}
                                     alt={draft.title}
                                     fill
                                     className="object-cover transition-all duration-500"
                                 />
 
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex flex-col items-center justify-center px-4">
-                                    <span className="border border-white/25 p-2 rounded-full bg-white/15 cursor-pointer "><Camera color="#D4C8C5" size={28} /></span>
+                                    <span
+                                        className="border border-white/25 p-2 rounded-full bg-white/15 cursor-pointer "
+                                        onClick={handleCameraClick}
+                                    >
+                                        <Camera color="#D4C8C5" size={28} />
+                                    </span>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleFileChange}
+                                    />
                                 </div>
                             </div>
 
