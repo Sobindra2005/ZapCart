@@ -175,13 +175,13 @@ export const marketingApi = {
         } : {};
         return axiosInstance.post('/marketing/carousel', data, config);
     },
-    updateHeroCarousel: (id: string, data: FormData | { title?: string; description?: string; link?: string; status?: string }) => {
+    updateHeroCarousel: (id: string, data: FormData ) => {
         const config = data instanceof FormData ? {
             headers: {
                 'Content-Type': 'multipart/form-data',
             }
         } : {};
-        return axiosInstance.put(`/marketing/carousel/${id}`, data, config);
+        return axiosInstance.patch(`/marketing/carousel/${id}`, data, config);
     },
     deleteHeroCarousel: (id: string) => {
         return axiosInstance.delete(`/marketing/carousel/${id}`);

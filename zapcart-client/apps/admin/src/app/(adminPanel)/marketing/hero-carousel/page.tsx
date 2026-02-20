@@ -23,7 +23,7 @@ import { AdminCard } from "@/components/AdminCard";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { AddNewSlideForm } from "@/components/forms/AddNewSlideForm";
 import { useRef, useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { marketingApi } from "@/utils/api";
 import { Camera, Check, Eye } from "iconsax-react";
 import { AnimatePresence, motion, Variants } from "framer-motion";
@@ -34,6 +34,7 @@ import { move } from '@dnd-kit/helpers';
 import { DragDropProvider } from '@dnd-kit/react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Slider } from "@/components/ui/slider";
+import { getQueryClient } from "../../../../../../../packages/ui/src/get-query-client";
 
 interface CarouselSlide {
     _id: string;
@@ -48,14 +49,14 @@ interface CarouselSlide {
     createdAt: string;
     updatedAt: string;
     __v: number;
+    id?: string;
 }
-
 
 export default function HeroCarouselPage() {
     const [slides, setSlides] = useState<CarouselSlide[]>([]);
     const [slidesImages, setSlidesImages] = useState<{ [key: string]: string }>({});
     const [open, setOpen] = useState(false);
-    const [isSubmitting,setIsSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     // State for settings
     const [autoplayDuration, setAutoplayDuration] = useState(5000);
     const [transitionEffect, setTransitionEffect] = useState("fade");
@@ -65,6 +66,24 @@ export default function HeroCarouselPage() {
         { label: "Zoom", value: "zoom" },
     ];
 
+    const queryClient  = getQueryClient();
+
+    const {
+        data: carouselData,
+        isLoading: isCarouselLoading,
+        isError: isCarouselError,
+        error: carouselError
+    } = useQuery({
+        queryKey: ["hero-carousel"],
+        queryFn: () => marketingApi.getHeroCarousel(),
+    });
+
+    useEffect(() => {
+        if (carouselData && Array.isArray(carouselData.data.data)) {
+            setSlides(carouselData.data.data);
+        }
+    }, [carouselData]);
+
     // React Query mutation for creating hero carousel
     const createCarouselMutation = useMutation({
         mutationFn: (formData: FormData) => marketingApi.createHeroCarousel(formData),
@@ -72,6 +91,7 @@ export default function HeroCarouselPage() {
             toast.success("Slide created successfully");
             setIsSubmitting(false);
             setOpen(false);
+            queryClient.invalidateQueries({ queryKey: ["hero-carousel"] });
         },
         onError: (error: Error) => {
             toast.error(`Failed to Create Slide`, {
@@ -137,7 +157,7 @@ export default function HeroCarouselPage() {
                 >
                     <ul className="xl:col-span-2 space-y-6">
                         {/* < SlideSkeleton/> */}
-                        {slides && slides.length > 0 && Array.isArray(slides) ? slides.map((slide, index) => (
+                        {isCarouselLoading ? [0, 1, 2].map((_, index) => <SlideSkeleton key={index} />) : slides && slides.length > 0 && Array.isArray(slides) ? slides.map((slide, index) => (
                             <SlideCard key={slide._id} slide={slide} setSlides={setSlides} setSlidesImages={setSlidesImages} slidesImages={slidesImages} index={index} />
                         ))
                             :
@@ -320,9 +340,10 @@ function SlideCard({
     slidesImages: { [key: string]: string };
     index: number;
 }) {
+    const slideId = slide.id ?? slide._id;
     const [element, setElement] = useState<Element | null>(null);
     const handleRef = useRef<HTMLButtonElement | null>(null);
-    const { isDragging } = useSortable({ id: slide._id, index, element, handle: handleRef });
+    const { isDragging } = useSortable({ id: slideId, index, element, handle: handleRef });
 
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState<CarouselSlide>(slide);
@@ -331,6 +352,52 @@ function SlideCard({
     const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const queryClient = getQueryClient();
+
+    const deleteCarouselMutation = useMutation({
+        mutationFn: (id: string) => marketingApi.deleteHeroCarousel(id),
+        onSuccess: () => {
+            setSlides((prev) => prev.filter((s) => s._id !== slide._id));
+            queryClient.invalidateQueries({ queryKey: ["hero-carousel"] });
+            toast.success("Slide deleted successfully");
+        },
+        onError: (error: unknown) => {
+            toast.error("Failed to delete slide", {
+                description: error instanceof Error
+                    ? error.message
+                    : "An error occurred while deleting the slide. Please try again.",
+            });
+        },
+    });
+
+    const updateCarouselMutation = useMutation({
+        mutationFn: ({ id, formData }: { id: string; formData: FormData }) =>
+            marketingApi.updateHeroCarousel(id, formData),
+        onSuccess: () => {
+            setSlides((prev) =>
+                prev.map((s) =>
+                    s._id === slide._id
+                        ? {
+                            ...s,
+                            ...draft,
+                            image: previewUrl || s.image,
+                        }
+                        : s
+                )
+            );
+            setIsEditing(false);
+            queryClient.invalidateQueries({ queryKey: ["hero-carousel"] });
+            toast.success("Slide updated successfully");
+        },
+        onError: (error: unknown) => {
+            toast.error("Failed to update slide", {
+                description: error instanceof Error
+                    ? error.message
+                    : "An error occurred while updating the slide. Please try again.",
+            });
+        },
+    });
 
     // Clean up Blob URL when component unmounts or when a new file is selected
     useEffect(() => {
@@ -360,13 +427,21 @@ function SlideCard({
     };
 
     const handleSave = () => {
-        setSlides((prev) => prev.map((s) => (s._id === slide._id ? { ...draft, image: previewUrl || draft.image } : s)));
-        setIsEditing(false);
+        const formData = new FormData();
+        formData.append("title", draft.title ?? "");
+        formData.append("description", draft.description ?? "");
+        formData.append("link", draft.link ?? "");
+        formData.append("status", draft.status ?? "draft");
+        formData.append("buttonLabel", draft.buttonLabel ?? "");
+        if (selectedImageFile) {
+            formData.append("image", selectedImageFile);
+        }
+
+        updateCarouselMutation.mutate({ id: slideId, formData });
     };
 
     const handleDelete = () => {
-        setSlides((prev) => prev.filter((s) => s._id !== slide._id));
-        toast.success("Slide deleted successfully")
+        deleteCarouselMutation.mutate(slideId);
     };
 
     const handleChange = (field: keyof CarouselSlide, value: string) => {
@@ -392,6 +467,8 @@ function SlideCard({
             setDraft((prev) => ({ ...prev, image: url }));
         }
     };
+
+    
 
     const fields = [
         { label: "Title", field: "title" as const, type: "input" },
@@ -428,7 +505,7 @@ function SlideCard({
                                     src={previewUrl || draft.image || slide.image}
                                     alt={draft.title || "Slide Image"}
                                     fill
-                                    className="object-cover transition-all duration-500"
+                                    className="object-cover transition-all duration-500 " 
                                 />
 
                                 <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex flex-col items-center justify-center px-4">
@@ -508,6 +585,7 @@ function SlideCard({
                                     <Button
                                         size="sm"
                                         onClick={handleSave}
+                                        disabled={updateCarouselMutation.isPending}
                                         className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
                                     >
                                         <Check className="h-3.5 w-3.5" />
@@ -554,6 +632,7 @@ function SlideCard({
                                         size="icon"
                                         className="h-8 w-8"
                                         onClick={handleDelete}
+                                        disabled={deleteCarouselMutation.isPending}
                                     >
                                         <Trash2 className="h-4 w-4 text-red-400" />
                                     </Button>
@@ -562,16 +641,32 @@ function SlideCard({
                                 </div>
 
                                 <div className="pr-16">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-1">{slide.title}</h3>
-                                    <p className="text-sm text-gray-500 mb-4 font-medium">{slide.description}</p>
-                                    <div className="flex flex-wrap items-center gap-4">
-                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-600">
-                                            <ExternalLink className="h-3 w-3" />
-                                            {slide.buttonLabel} → {slide.link}
+                                    
+                                        {/* Title */}
+                                        {slide.title ? (
+                                            <h3 className="text-lg font-bold text-gray-900 mb-1">{slide.title}</h3>
+                                        ) : (
+                                            <div className="h-5 w-2/5 rounded-md bg-gray-100 mb-1" />
+                                        )}
+
+                                        {/* Description */}
+                                        {slide.description ? (
+                                            <p className="text-sm text-gray-500 mb-4 font-medium">{slide.description}</p>
+                                        ) : (
+                                            <div className="flex flex-col gap-1.5 mb-4">
+                                                <div className="h-3 w-4/5 rounded-md bg-gray-100" />
+                                                <div className="h-3 w-3/5 rounded-md bg-gray-100" />
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-wrap items-center gap-4">
+                                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 text-[10px] font-bold text-gray-600">
+                                                <ExternalLink className="h-3 w-3" />
+                                                {slide.buttonLabel} → {slide.link}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
