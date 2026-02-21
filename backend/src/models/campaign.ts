@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export interface ICampaign {
     name: string;
     description?: string;
-    products: mongoose.Types.ObjectId[];
+    products?: mongoose.Types.ObjectId[];
     status: 'upcoming' | 'active' | 'expired' | 'paused';
     discountType: 'percentage' | 'fixed' | 'buy-one-get-one';
     discountValue: number;

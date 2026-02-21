@@ -128,10 +128,10 @@ export default function FlashSalesPage() {
         <div className="p-8 space-y-8">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-end gap-4 mb-8">
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                    <Button variant="outline" className="flex-1 md:flex-none gap-2 font-bold border-gray-200 bg-white shadow-sm">
+                    {/* <Button variant="outline" className="flex-1 md:flex-none gap-2 font-bold border-gray-200 bg-white shadow-sm">
                         <BarChart3 className="h-4 w-4" />
                         Analytics
-                    </Button>
+                    </Button> */}
                     <FormPopup
                         title="Create New Campaign"
                         description="Set up a new flash sale campaign."
