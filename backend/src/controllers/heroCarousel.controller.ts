@@ -64,7 +64,7 @@ export const getHeroCarouselById = asyncHandler(async (_req, res) => {
 
 export const updateHeroCarousel = asyncHandler(async (_req, res) => {
     const { id } = _req.params;
-    const { title, description, link, status } = _req.body;
+    const { title, description, link, status , buttonLabel } = _req.body;
     const image = _req.file?.path;
     const heroCarousel = await HeroCarousel.findById(id);
 
@@ -77,6 +77,7 @@ export const updateHeroCarousel = asyncHandler(async (_req, res) => {
     if (link) heroCarousel.link = link;
     if (status) heroCarousel.status = status;
     if (image) heroCarousel.image = image;
+    if (buttonLabel) heroCarousel.buttonLabel = buttonLabel;
 
     await heroCarousel.save();
 
