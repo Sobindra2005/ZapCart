@@ -161,8 +161,10 @@ export const salesApi = {
 }
 
 export const marketingApi = {
-    getHeroCarousel: () => {
-        return axiosInstance.get('/marketing/carousel');
+    getHeroCarousel: (params?: {
+        status?: string;
+    }) => {
+        return axiosInstance.get('/marketing/carousel', { params });
     },
     getHeroCarouselById: (id: string) => {
         return axiosInstance.get(`/marketing/carousel/${id}`);
@@ -175,7 +177,7 @@ export const marketingApi = {
         } : {};
         return axiosInstance.post('/marketing/carousel', data, config);
     },
-    updateHeroCarousel: (id: string, data: FormData ) => {
+    updateHeroCarousel: (id: string, data: FormData) => {
         const config = data instanceof FormData ? {
             headers: {
                 'Content-Type': 'multipart/form-data',

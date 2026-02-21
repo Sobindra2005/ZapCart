@@ -135,6 +135,7 @@ export default function FlashSalesPage() {
                     <FormPopup
                         title="Create New Campaign"
                         description="Set up a new flash sale campaign."
+                        className="max-w-4xl"
                         trigger={
                             <Button className="flex-1 md:flex-none gap-2 font-bold bg-primary hover:bg-primary/90 shadow-md shadow-primary/20">
                                 <Plus className="h-4 w-4" strokeWidth={3} />

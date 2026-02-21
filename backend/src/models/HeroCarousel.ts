@@ -87,7 +87,8 @@ HeroCarouselSchema.post('save', async function (doc) {
             discountValue: 0,
             startDate: new Date(),
             endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            createdBy: doc.createdBy
+            createdBy: doc.createdBy,
+            image: doc.image
          };
          await Campaign.create(campaignData);
     }

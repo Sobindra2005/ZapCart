@@ -189,6 +189,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                             <SelectContent>
                                                 <SelectItem value="published">Published</SelectItem>
                                                 <SelectItem value="draft">Draft</SelectItem>
+                                                <SelectItem value="archived">Archived</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </FormControl>

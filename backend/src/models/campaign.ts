@@ -9,6 +9,7 @@ export interface ICampaign {
     discountValue: number;
     startDate: Date;
     endDate: Date;
+    image?: string;
     createdBy: number;
     createdAt?: Date;
     updatedAt?: Date;
@@ -56,6 +57,10 @@ const campaignSchema = new mongoose.Schema<ICampaign>({
     createdBy: {
         type: Number,
         required: true
+    },
+    image: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }

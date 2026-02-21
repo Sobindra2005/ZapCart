@@ -22,7 +22,7 @@ import {
 import { AdminCard } from "@/components/AdminCard";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { AddNewSlideForm } from "@/components/forms/AddNewSlideForm";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { marketingApi } from "@/utils/api";
 import { Camera, Check, Eye } from "iconsax-react";
@@ -34,6 +34,7 @@ import { move } from '@dnd-kit/helpers';
 import { DragDropProvider } from '@dnd-kit/react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getQueryClient } from "../../../../../../../packages/ui/src/get-query-client";
 
 interface CarouselSlide {
@@ -43,7 +44,7 @@ interface CarouselSlide {
     image: string;
     buttonLabel: string | null;
     link: string;
-    status: "draft" | "published";
+    status: "draft" | "published" | "archived";
     createdBy: number;
     order: number;
     createdAt: string;
@@ -54,6 +55,7 @@ interface CarouselSlide {
 
 export default function HeroCarouselPage() {
     const [slides, setSlides] = useState<CarouselSlide[]>([]);
+    const [activeStatusTab, setActiveStatusTab] = useState<"all" | "published" | "archived" | "draft">("all");
     const [slidesImages, setSlidesImages] = useState<{ [key: string]: string }>({});
     const [open, setOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,8 +73,6 @@ export default function HeroCarouselPage() {
     const {
         data: carouselData,
         isLoading: isCarouselLoading,
-        isError: isCarouselError,
-        error: carouselError
     } = useQuery({
         queryKey: ["hero-carousel"],
         queryFn: () => marketingApi.getHeroCarousel(),
@@ -83,6 +83,14 @@ export default function HeroCarouselPage() {
             setSlides(carouselData.data.data);
         }
     }, [carouselData]);
+
+    const filteredSlides = useMemo(() => {
+        if (activeStatusTab === "all") {
+            return slides;
+        }
+
+        return slides.filter((slide) => slide.status === activeStatusTab);
+    }, [activeStatusTab, slides]);
 
     // React Query mutation for creating hero carousel
     const createCarouselMutation = useMutation({
@@ -155,15 +163,26 @@ export default function HeroCarouselPage() {
                         });
                     }}
                 >
-                    <ul className="xl:col-span-2 space-y-6">
+                    <AdminCard className="xl:col-span-2 space-y-6">
+                        <Tabs value={activeStatusTab} onValueChange={(value) => setActiveStatusTab(value as typeof activeStatusTab)}>
+                            <TabsList className="bg-gray-100/80 p-1.5 rounded-xl">
+                                <TabsTrigger value="all" className="px-4">All</TabsTrigger>
+                                <TabsTrigger value="published" className="px-4">Published</TabsTrigger>
+                                <TabsTrigger value="archived" className="px-4">Archived</TabsTrigger>
+                                <TabsTrigger value="draft" className="px-4">Draft</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+
+                        <ul className="space-y-6">
                         {/* < SlideSkeleton/> */}
-                        {isCarouselLoading ? [0, 1, 2].map((_, index) => <SlideSkeleton key={index} />) : slides && slides.length > 0 && Array.isArray(slides) ? slides.map((slide, index) => (
+                        {isCarouselLoading ? [0, 1, 2].map((_, index) => <SlideSkeleton key={index} />) : filteredSlides.length > 0 ? filteredSlides.map((slide, index) => (
                             <SlideCard key={slide._id} slide={slide} setSlides={setSlides} setSlidesImages={setSlidesImages} slidesImages={slidesImages} index={index} />
                         ))
                             :
                             <EmptySlidesList />
                         }
-                    </ul>
+                        </ul>
+                    </AdminCard>
                 </DragDropProvider>
 
                 {/* Live Preview / Tools */}
@@ -481,9 +500,9 @@ function SlideCard({
 
     return (
         <motion.li ref={setElement} className="list-none" data-shadow={isDragging || undefined} layout transition={{ layout: { duration: 0.32, ease: [0.4, 0, 0.2, 1] } }}>
-            <AdminCard
+            <div
                 className={cn(
-                    "p-0 overflow-hidden group transition-shadow duration-300",
+                    "p-0 overflow-hidden group transition-shadow duration-300 rounded-2xl border border-gray-200",
                     isEditing && "ring-2 ring-blue-500 shadow-lg shadow-blue-100"
                 )}
             >
@@ -670,7 +689,7 @@ function SlideCard({
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </AdminCard>
+            </div>
         </motion.li>
     );
 }
