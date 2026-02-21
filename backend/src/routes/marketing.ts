@@ -27,8 +27,8 @@ router.get("/campaign/", getCampaigns);
 router.get("/campaign/:id", getCampaignById);
 
 // Protected routes for Campaign
-// router.use(protect);
-// router.use(restrictTo("admin"));
+router.use(protect);
+router.use(restrictTo("admin"));
 
 router.post("/campaign/", upload.single("image"), createCampaign);
 router.patch("/campaign/:id", upload.single("image"), updateCampaign);

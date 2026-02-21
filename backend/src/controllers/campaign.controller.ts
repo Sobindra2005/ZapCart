@@ -77,6 +77,8 @@ export const updateCampaign = asyncHandler(async (req, res) => {
         startDate,
         endDate
     } = req.body;
+    const image = req.file ? req.file.path : undefined;
+    
     const campaign = await Campaign.findById(id);
     if (!campaign) {
         throw new AppError("Campaign not found", 404);
@@ -89,7 +91,10 @@ export const updateCampaign = asyncHandler(async (req, res) => {
     if (discountValue !== undefined) campaign.discountValue = discountValue;
     if (startDate) campaign.startDate = startDate;
     if (endDate) campaign.endDate = endDate;
+    if (image) campaign.image = image;
+
     await campaign.save();
+    
     res.status(200).json({
         data: campaign
     });
