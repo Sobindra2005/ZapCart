@@ -100,7 +100,7 @@ export function AddProductForm({ onCancel, onSubmit }: AddProductFormProps) {
                                     <FormControl>
                                         <Input {...field} placeholder="e.g. Wireless Noise Cancelling Headphones" className="bg-gray-50/50" />
                                     </FormControl>
-                                    <FormMessage />
+                                    {/* <FormMessage /> */}
                                 </FormItem>
                             )}
                         />
@@ -113,7 +113,7 @@ export function AddProductForm({ onCancel, onSubmit }: AddProductFormProps) {
                                     <FormControl>
                                         <Textarea {...field} placeholder="Describe the product features and benefits..." className="h-32 bg-gray-50/50" />
                                     </FormControl>
-                                    <FormMessage />
+                                    {/* <FormMessage /> */}
                                 </FormItem>
                             )}
                         />
@@ -147,7 +147,7 @@ export function AddProductForm({ onCancel, onSubmit }: AddProductFormProps) {
                                                 <SelectItem value="toys">Toys</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
@@ -160,7 +160,7 @@ export function AddProductForm({ onCancel, onSubmit }: AddProductFormProps) {
                                         <FormControl>
                                             <Input {...field} placeholder="WH-1000XM5-B" className="bg-gray-50/50" />
                                         </FormControl>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
@@ -183,7 +183,7 @@ export function AddProductForm({ onCancel, onSubmit }: AddProductFormProps) {
                                             <FormControl>
                                                 <Input {...field} type="number" placeholder="0.00" className="bg-gray-50/50" />
                                             </FormControl>
-                                            <FormMessage />
+                                            {/* <FormMessage /> */}
                                         </FormItem>
                                     )}
                                 />
@@ -196,7 +196,7 @@ export function AddProductForm({ onCancel, onSubmit }: AddProductFormProps) {
                                             <FormControl>
                                                 <Input {...field} type="number" placeholder="0.00" className="bg-gray-50/50" />
                                             </FormControl>
-                                            <FormMessage />
+                                            {/* <FormMessage /> */}
                                         </FormItem>
                                     )}
                                 />
@@ -210,7 +210,7 @@ export function AddProductForm({ onCancel, onSubmit }: AddProductFormProps) {
                                         <FormControl>
                                             <Input {...field} type="number" placeholder="0" className="bg-gray-50/50" />
                                         </FormControl>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />

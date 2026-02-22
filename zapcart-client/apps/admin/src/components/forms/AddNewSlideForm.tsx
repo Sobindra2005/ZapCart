@@ -42,7 +42,6 @@ interface AddNewSlideFormProps {
     onSubmit?: (data: any) => void
 }
 
-
 export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps) {
     const form = useForm<SlideFormValues>({
         resolver: zodResolver(slideSchema),
@@ -72,7 +71,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                 <FormControl>
                                     <Input {...field} placeholder="e.g. New Collection Arrival" />
                                 </FormControl>
-                                <FormMessage />
+                                {/* <FormMessage /> */}
                             </FormItem>
                         )}
                     />
@@ -86,7 +85,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                 <FormControl>
                                     <Textarea {...field} placeholder="e.g. Shop the latest trends now" />
                                 </FormControl>
-                                <FormMessage />
+                                {/* <FormMessage /> */}
                             </FormItem>
                         )}
                     />
@@ -102,7 +101,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                         <FormControl>
                                             <Input {...field} placeholder="e.g. Shop Now" />
                                         </FormControl>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
@@ -115,7 +114,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                         <FormControl>
                                             <Input {...field} placeholder="e.g. /collections/summer" />
                                         </FormControl>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
@@ -160,7 +159,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                     />
                                 </FormControl>
                                 <span className="text-xs text-gray-500">Upload Banner Image (1920x600)</span>
-                                <FormMessage />
+                                {/* <FormMessage /> */}
                             </FormItem>
                         )}
                     />
@@ -193,7 +192,7 @@ export function AddNewSlideForm({ onSubmit, isSubmitting }: AddNewSlideFormProps
                                             </SelectContent>
                                         </Select>
                                     </FormControl>
-                                    <FormMessage />
+                                    {/* <FormMessage /> */}
                                 </FormItem>
                             )}
                         />

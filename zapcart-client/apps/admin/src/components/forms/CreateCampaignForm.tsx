@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@repo/ui/ui/button"
 import { Input } from "@repo/ui/ui/input"
+import { Textarea } from "@repo/ui/ui/textarea"
 import {
     Form,
     FormControl,
@@ -24,15 +25,35 @@ import {
 import { Calendar, Tag, Percent, Package, Search, X } from "lucide-react"
 import { Badge } from "@repo/ui/ui/badge"
 import { PlusIcon } from "@radix-ui/react-icons"
-import { Dialog } from "radix-ui"
 import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
+import DropZone from "../common/dropZone"
+
+const MAX_CAMPAIGN_FILE_SIZE = 5 * 1024 * 1024
+const CAMPAIGN_FILE_ACCEPT = {
+    "image/jpeg": [],
+    "image/png": [],
+    "image/webp": [],
+    "image/gif": [],
+    "application/pdf": [],
+} as const
+
+const allowedCampaignMimeTypes = Object.keys(CAMPAIGN_FILE_ACCEPT)
 
 const campaignSchema = z.object({
     name: z.string().min(2, "Campaign name must be at least 2 characters"),
+    description: z.string().optional(),
+    status: z.enum(['upcoming', 'active', 'expired', 'paused']).optional(),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
-    discountType: z.enum(["percentage", "fixed"]),
+    discountType: z.enum(["percentage", "fixed", "buy-one-get-one"]),
     discountValue: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Discount value must be positive"),
+    image: z.instanceof(File, { message: "Campaign file is required" })
+        .refine((file) => allowedCampaignMimeTypes.includes(file.type), "Only JPG, PNG, WEBP, GIF, or PDF files are allowed")
+        .refine((file) => file.size <= MAX_CAMPAIGN_FILE_SIZE, "File size must be 5MB or less"),
+    products: z.array(z.string()).min(1, "Select at least one product"),
+}).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
+    path: ["endDate"],
+    message: "End date must be after start date",
 })
 
 type CampaignFormValues = z.infer<typeof campaignSchema>
@@ -50,10 +71,13 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
         resolver: zodResolver(campaignSchema),
         defaultValues: {
             name: "",
+            description: "",
+            status: "upcoming",
             startDate: "",
             endDate: "",
             discountType: "percentage",
             discountValue: "",
+            products: [],
         },
     })
 
@@ -61,8 +85,8 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
         const formData = {
             ...data,
             discountValue: parseFloat(data.discountValue),
-            productIds: selectedProducts.map(p => p.id),
-            status: "scheduled"
+            productIds: data.products,
+            imageFile: data.image,
         }
         console.log("Campaign Data:", formData)
         onSubmit?.(formData)
@@ -82,12 +106,22 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
     )
 
     const addProduct = (product: any) => {
-        setSelectedProducts([...selectedProducts, product])
+        const nextProducts = [...selectedProducts, product]
+        setSelectedProducts(nextProducts)
+        form.setValue("products", nextProducts.map((p) => p.id), {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
         setSearchQuery("")
     }
 
     const removeProduct = (productId: string) => {
-        setSelectedProducts(selectedProducts.filter(p => p.id !== productId))
+        const nextProducts = selectedProducts.filter(p => p.id !== productId)
+        setSelectedProducts(nextProducts)
+        form.setValue("products", nextProducts.map((p) => p.id), {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
     }
 
     return (
@@ -109,7 +143,20 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                     <FormControl>
                                         <Input {...field} placeholder="e.g. Summer Flash Sale 2024" className="bg-gray-50/50" />
                                     </FormControl>
-                                    <FormMessage />
+                                    {/* <FormMessage /> */}
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold text-gray-700">Description</FormLabel>
+                                    <FormControl>
+                                        <Textarea {...field} placeholder="Describe this campaign" className="bg-gray-50/50" />
+                                    </FormControl>
+                                    {/* <FormMessage /> */}
                                 </FormItem>
                             )}
                         />
@@ -126,7 +173,7 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                                 <Input {...field} type="datetime-local" className="pl-9 bg-gray-50/50" />
                                             </FormControl>
                                         </div>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
@@ -142,7 +189,30 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                                 <Input {...field} type="datetime-local" className="pl-9 bg-gray-50/50" />
                                             </FormControl>
                                         </div>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="status"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold text-gray-700">Status</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="bg-gray-50/50">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="upcoming">Upcoming</SelectItem>
+                                                <SelectItem value="active">Active</SelectItem>
+                                                <SelectItem value="paused">Paused</SelectItem>
+                                                <SelectItem value="expired">Expired</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
@@ -171,9 +241,10 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                             <SelectContent>
                                                 <SelectItem value="percentage">Percentage (%)</SelectItem>
                                                 <SelectItem value="fixed">Fixed Amount ($)</SelectItem>
+                                                <SelectItem value="buy-one-get-one">Buy One Get One</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
@@ -186,11 +257,43 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                         <FormControl>
                                             <Input {...field} type="number" placeholder="0.00" className="bg-gray-50/50" />
                                         </FormControl>
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />
                         </div>
+                    </div>
+
+                    {/* Campaign Media */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                            <Tag className="h-4 w-4 text-primary" />
+                            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Campaign Media</h3>
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name="image"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold text-gray-700">Campaign File</FormLabel>
+                                    <FormControl>
+                                        <DropZone
+                                            accept={CAMPAIGN_FILE_ACCEPT}
+                                            multiple={false}
+                                            maxSize={MAX_CAMPAIGN_FILE_SIZE}
+                                            onDrop={(files) => {
+                                                field.onChange(files?.[0])
+                                                form.trigger("image")
+                                            }}
+                                            preview
+                                            className="h-32 w-full"
+                                        />
+                                    </FormControl>
+                                    <span className="text-xs text-gray-500">Accepted: JPG, PNG, WEBP, GIF, PDF (max 5MB)</span>
+                                    {/* <FormMessage /> */}
+                                </FormItem>
+                            )}
+                        />
                     </div>
 
                     {/* Product Selection */}
@@ -250,6 +353,15 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                     <div className="text-[10px] text-gray-400 italic">No products selected for this campaign.</div>
                                 )}
                             </div>
+                            <FormField
+                                control={form.control}
+                                name="products"
+                                render={() => (
+                                    <FormItem>
+                                        {/* <FormMessage /> */}
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                     </div>
                 </div>
