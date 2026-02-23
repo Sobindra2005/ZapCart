@@ -27,6 +27,7 @@ import { Badge } from "@repo/ui/ui/badge"
 import { PlusIcon } from "@radix-ui/react-icons"
 import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
 import DropZone from "../common/dropZone"
+import { DateTimePicker } from "../ui/DateTimePicker"
 
 const MAX_CAMPAIGN_FILE_SIZE = 5 * 1024 * 1024
 const CAMPAIGN_FILE_ACCEPT = {
@@ -167,13 +168,19 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold text-gray-700">Start Date</FormLabel>
-                                        <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                            <FormControl>
-                                                <Input {...field} type="datetime-local" className="pl-9 bg-gray-50/50" />
-                                            </FormControl>
-                                        </div>
-                                        {/* <FormMessage /> */}
+                                        <DateTimePicker
+                                            date={field.value ? new Date(field.value) : undefined}
+                                            setDate={(date) => field.onChange(date?.toISOString())}
+                                            time={field.value ? new Date(field.value).toLocaleTimeString("en-US", { hour12: false }) : ""}
+                                            setTime={(time) => {
+                                                const currentDate = field.value ? new Date(field.value) : new Date();
+                                                const [hours, minutes, seconds] = time.split(":");
+                                                currentDate.setHours(parseInt(hours));
+                                                currentDate.setMinutes(parseInt(minutes));
+                                                currentDate.setSeconds(parseInt(seconds));
+                                                field.onChange(currentDate.toISOString());
+                                            }}
+                                        />
                                     </FormItem>
                                 )}
                             />
@@ -183,13 +190,19 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold text-gray-700">End Date</FormLabel>
-                                        <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                            <FormControl>
-                                                <Input {...field} type="datetime-local" className="pl-9 bg-gray-50/50" />
-                                            </FormControl>
-                                        </div>
-                                        {/* <FormMessage /> */}
+                                        <DateTimePicker
+                                            date={field.value ? new Date(field.value) : undefined}
+                                            setDate={(date) => field.onChange(date?.toISOString())}
+                                            time={field.value ? new Date(field.value).toLocaleTimeString("en-US", { hour12: false }) : ""}
+                                            setTime={(time) => {
+                                                const currentDate = field.value ? new Date(field.value) : new Date();
+                                                const [hours, minutes, seconds] = time.split(":");
+                                                currentDate.setHours(parseInt(hours));
+                                                currentDate.setMinutes(parseInt(minutes));
+                                                currentDate.setSeconds(parseInt(seconds));
+                                                field.onChange(currentDate.toISOString());
+                                            }}
+                                        />
                                     </FormItem>
                                 )}
                             />
