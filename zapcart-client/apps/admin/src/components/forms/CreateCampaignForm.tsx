@@ -203,6 +203,7 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                                                 field.onChange(currentDate.toISOString());
                                             }}
                                         />
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                             />
