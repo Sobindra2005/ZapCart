@@ -161,8 +161,11 @@ export const salesApi = {
 }
 
 export const marketingApi = {
-    getHeroCarousel: () => {
-        return axiosInstance.get('/marketing/carousel');
+    // Hero Carousel Endpoints
+    getHeroCarousel: (params?: {
+        status?: string;
+    }) => {
+        return axiosInstance.get('/marketing/carousel', { params });
     },
     getHeroCarouselById: (id: string) => {
         return axiosInstance.get(`/marketing/carousel/${id}`);
@@ -175,7 +178,7 @@ export const marketingApi = {
         } : {};
         return axiosInstance.post('/marketing/carousel', data, config);
     },
-    updateHeroCarousel: (id: string, data: FormData ) => {
+    updateHeroCarousel: (id: string, data: FormData) => {
         const config = data instanceof FormData ? {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -185,5 +188,39 @@ export const marketingApi = {
     },
     deleteHeroCarousel: (id: string) => {
         return axiosInstance.delete(`/marketing/carousel/${id}`);
-    }
+    },
+
+    // Flash Sales Endpoints
+    getCampaigns: (params?: {
+        status?: string;
+        createdBy?: string;
+    }) => {
+        return axiosInstance.get('/marketing/campaign', { params });
+    },
+    getCampaignById: (id: string, params?: {
+        status?: string;
+        createdBy?: string;
+    }) => {
+        return axiosInstance.get(`/marketing/campaign/${id}`, { params });
+    },
+    createCampaign: (data: FormData | { name: string; description: string; products: string[]; status?: string; discountType?: string; discountValue?: number, startDate: Date, endDate: Date }) => {
+        const config = data instanceof FormData ? {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        } : {};
+        return axiosInstance.post('/marketing/campaign', data, config);
+    },
+    updateCampaign: (id: string, data: FormData) => {
+        const config = data instanceof FormData ? {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        } : {};
+        return axiosInstance.patch(`/marketing/campaign/${id}`, data, config);
+    },
+    deleteCampaign: (id: string) => {
+        return axiosInstance.delete(`/marketing/campaign/${id}`);
+    },
+
 }

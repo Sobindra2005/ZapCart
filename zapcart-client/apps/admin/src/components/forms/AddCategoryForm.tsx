@@ -94,7 +94,7 @@ export function AddCategoryForm({ onCancel, onSubmit }: AddCategoryFormProps) {
                                             className="bg-gray-50/50"
                                         />
                                     </FormControl>
-                                    <FormMessage />
+                                    {/* <FormMessage /> */}
                                 </FormItem>
                             )}
                         />
@@ -115,7 +115,7 @@ export function AddCategoryForm({ onCancel, onSubmit }: AddCategoryFormProps) {
                                         </FormControl>
                                     </div>
                                     <p className="text-[10px] text-gray-400 font-medium">The slug is used in the URL for the category page.</p>
-                                    <FormMessage />
+                                    {/* <FormMessage /> */}
                                 </FormItem>
                             )}
                         />
@@ -146,7 +146,7 @@ export function AddCategoryForm({ onCancel, onSubmit }: AddCategoryFormProps) {
                                         <SelectItem value="home">Home & Garden</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <FormMessage />
+                                {/* <FormMessage /> */}
                             </FormItem>
                         )}
                     />
@@ -161,7 +161,7 @@ export function AddCategoryForm({ onCancel, onSubmit }: AddCategoryFormProps) {
                             <FormControl>
                                 <Textarea {...field} placeholder="Short description for this category..." className="bg-gray-50/50 h-24" />
                             </FormControl>
-                            <FormMessage />
+                            {/* <FormMessage /> */}
                         </FormItem>
                     )}
                 />

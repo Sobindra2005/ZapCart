@@ -1,7 +1,8 @@
 import mongoose, { Schema } from "mongoose";
+import { Campaign, ICampaign } from "./campaign";
 
 
-export interface IHeroCarousel {
+export interface IHeroCarousel extends Document {
     title?: string;
     description?: string;
     image: string;
@@ -32,7 +33,7 @@ const HeroCarouselSchema = new Schema<IHeroCarousel>(
             required: [true, 'Image URL is required'],
             trim: true
         },
-        buttonLabel:{
+        buttonLabel: {
             type: String,
             trim: true,
             maxlength: [50, 'Button label cannot exceed 50 characters'],
@@ -51,7 +52,7 @@ const HeroCarouselSchema = new Schema<IHeroCarousel>(
         },
         createdBy: {
             type: Number,
-            ref: 'User'
+            required: true
         },
         order: {
             type: Number,
@@ -74,6 +75,25 @@ HeroCarouselSchema.pre('save', async function () {
         this.order = lastDoc && typeof lastDoc.order === 'number' ? lastDoc.order + 1 : 1;
     }
 });
+
+HeroCarouselSchema.post('save', async function (doc) {
+    if (this.isNew) {
+         const campaignData: Partial<ICampaign> = {
+            name: doc.title || 'Untitled Campaign',
+            description: doc.description || '',
+            products: [] as mongoose.Types.ObjectId[],
+            status: 'upcoming',
+            discountType: 'percentage',
+            discountValue: 0,
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            createdBy: doc.createdBy,
+            image: doc.image
+         };
+         await Campaign.create(campaignData);
+    }
+});
+
 
 const HeroCarousel = mongoose.model<IHeroCarousel>('HeroCarousel', HeroCarouselSchema);
 
