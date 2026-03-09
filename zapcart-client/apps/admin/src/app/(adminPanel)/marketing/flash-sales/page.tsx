@@ -623,6 +623,7 @@ export default function FlashSalesPage() {
                         }
                     >
                         <CreateCampaignForm
+                            isLoading={createCampaignMutation.isPending}
                             onSubmit={(data) => {
                                 createCampaignMutation.mutate({
                                     name: data.name,
