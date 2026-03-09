@@ -14,12 +14,27 @@ import {
     Loader2,
 } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@repo/ui/ui/button";
 import { Badge } from "@repo/ui/ui/badge";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@repo/ui/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@repo/ui/ui/select";
 import {
     Card,
     CardContent,
@@ -28,6 +43,7 @@ import { Stat, StatsCards } from "@/components/common/StatsCards";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateCampaignForm } from "@/components/forms/CreateCampaignForm";
 import { ServerTable, ServerTableColumn, SortConfig } from "@/components/common/ServerTable";
+import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { marketingApi } from "@/utils/api";
 
 interface FlashSale {
@@ -42,19 +58,26 @@ interface FlashSale {
     image: string;
 }
 
-interface ApiCampaign {
-    _id?: string;
-    id?: string;
-    name?: string;
-    title?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-    products?: unknown[];
+type CampaignStatus = "upcoming" | "active" | "expired" | "paused";
+type CampaignDiscountType = "percentage" | "fixed" | "buy-one-get-one";
+
+interface Campaign {
+    _id: string;
+    name: string;
+    description: string;
+    products: string[];
+    status: CampaignStatus;
+    discountType: CampaignDiscountType;
+    discountValue: number;
+    startDate: string;
+    endDate: string;
+    createdBy: number;
+    image: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
     totalRevenue?: number;
     conversions?: number;
-    image?: string;
-    bannerImage?: string;
 }
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=200&h=200";
@@ -80,11 +103,42 @@ const toApiStatus = (value: FlashSale["status"]): string => {
     return "expired";
 };
 
-const extractCampaignArray = (response: unknown): ApiCampaign[] => {
+const normalizeCampaign = (raw: Partial<Campaign> & { id?: string; title?: string; bannerImage?: string }): Campaign => {
+    const normalizedStatus: CampaignStatus =
+        raw.status === "active" || raw.status === "paused" || raw.status === "expired" || raw.status === "upcoming"
+            ? raw.status
+            : "upcoming";
+
+    const normalizedDiscountType: CampaignDiscountType =
+        raw.discountType === "fixed" || raw.discountType === "buy-one-get-one" || raw.discountType === "percentage"
+            ? raw.discountType
+            : "percentage";
+
+    return {
+        _id: raw._id ?? raw.id ?? "",
+        name: raw.name ?? raw.title ?? "Untitled Campaign",
+        description: raw.description ?? "",
+        products: Array.isArray(raw.products) ? raw.products.map((product) => String(product)) : [],
+        status: normalizedStatus,
+        discountType: normalizedDiscountType,
+        discountValue: Number(raw.discountValue ?? 0),
+        startDate: raw.startDate ?? new Date().toISOString(),
+        endDate: raw.endDate ?? new Date().toISOString(),
+        createdBy: Number(raw.createdBy ?? 0),
+        image: raw.image ?? raw.bannerImage ?? FALLBACK_IMAGE,
+        createdAt: raw.createdAt ?? new Date().toISOString(),
+        updatedAt: raw.updatedAt ?? new Date().toISOString(),
+        __v: Number(raw.__v ?? 0),
+        totalRevenue: Number(raw.totalRevenue ?? 0),
+        conversions: Number(raw.conversions ?? 0),
+    };
+};
+
+const extractCampaignArray = (response: unknown): Campaign[] => {
     const payload = (response as { data?: { data?: unknown } })?.data?.data;
 
     if (Array.isArray(payload)) {
-        return payload as ApiCampaign[];
+        return payload.map((item) => normalizeCampaign(item as Partial<Campaign> & { id?: string; title?: string; bannerImage?: string }));
     }
 
     if (
@@ -93,35 +147,36 @@ const extractCampaignArray = (response: unknown): ApiCampaign[] => {
         "campaigns" in payload &&
         Array.isArray((payload as { campaigns?: unknown }).campaigns)
     ) {
-        return (payload as { campaigns: ApiCampaign[] }).campaigns;
+        return (payload as { campaigns: Array<Partial<Campaign> & { id?: string; title?: string; bannerImage?: string }> }).campaigns
+            .map((item) => normalizeCampaign(item));
     }
 
     return [];
 };
 
-const extractCampaignDetail = (response: unknown): ApiCampaign | null => {
+const extractCampaignDetail = (response: unknown): Campaign | null => {
     const payload = (response as { data?: { data?: unknown } })?.data?.data;
     if (Array.isArray(payload)) {
-        return (payload[0] as ApiCampaign | undefined) ?? null;
+        const first = payload[0] as (Partial<Campaign> & { id?: string; title?: string; bannerImage?: string }) | undefined;
+        return first ? normalizeCampaign(first) : null;
     }
     if (payload && typeof payload === "object") {
-        return payload as ApiCampaign;
+        return normalizeCampaign(payload as Partial<Campaign> & { id?: string; title?: string; bannerImage?: string });
     }
     return null;
 };
 
-const mapCampaignToFlashSale = (campaign: ApiCampaign): FlashSale => {
-    const id = campaign._id ?? campaign.id ?? "";
+const mapCampaignToFlashSale = (campaign: Campaign): FlashSale => {
     return {
-        id,
-        title: campaign.name ?? campaign.title ?? "Untitled Campaign",
+        id: campaign._id,
+        title: campaign.name,
         status: normalizeStatus(campaign.status),
-        startTime: campaign.startDate ?? new Date().toISOString(),
-        endTime: campaign.endDate ?? new Date().toISOString(),
-        productsCount: campaign.products?.length ?? 0,
+        startTime: campaign.startDate,
+        endTime: campaign.endDate,
+        productsCount: campaign.products.length,
         totalRevenue: campaign.totalRevenue ?? 0,
         conversions: campaign.conversions ?? 0,
-        image: campaign.image ?? campaign.bannerImage ?? FALLBACK_IMAGE,
+        image: campaign.image,
     };
 };
 
@@ -130,7 +185,10 @@ export default function FlashSalesPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: null });
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-    const [detailMode, setDetailMode] = useState<"view" | "edit">("view");
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [campaignToDelete, setCampaignToDelete] = useState<FlashSale | null>(null);
+    const [updateStatus, setUpdateStatus] = useState<string>("upcoming");
 
     const queryClient = useQueryClient();
     const itemsPerPage = 10;
@@ -229,26 +287,34 @@ export default function FlashSalesPage() {
 
     const openCampaignDetails = (id: string, mode: "view" | "edit") => {
         setSelectedCampaignId(id);
-        setDetailMode(mode);
-    };
-
-    const handleDeleteCampaign = (id: string) => {
-        const shouldDelete = window.confirm("Delete this campaign? This action cannot be undone.");
-        if (!shouldDelete) {
-            return;
+        if (mode === "view") {
+            setIsViewModalOpen(true);
+            setIsUpdateModalOpen(false);
+        } else {
+            setIsUpdateModalOpen(true);
+            setIsViewModalOpen(false);
         }
-        deleteCampaignMutation.mutate(id);
     };
 
-    const handleUpdateStatus = (sale: FlashSale) => {
-        const nextStatus: FlashSale["status"] = sale.status === "Active" ? "Upcoming" : "Active";
-        updateCampaignMutation.mutate({ id: sale.id, status: toApiStatus(nextStatus) });
+    const handleDeleteCampaign = (sale: FlashSale) => {
+        setCampaignToDelete(sale);
     };
 
     const allSales = useMemo(() => {
         const campaigns = extractCampaignArray(campaignsResponse);
         return campaigns.map(mapCampaignToFlashSale);
     }, [campaignsResponse]);
+
+    const selectedSale = useMemo(
+        () => allSales.find((sale) => sale.id === selectedCampaignId) ?? null,
+        [allSales, selectedCampaignId]
+    );
+
+    useEffect(() => {
+        if (isUpdateModalOpen && selectedSale) {
+            setUpdateStatus(toApiStatus(selectedSale.status));
+        }
+    }, [isUpdateModalOpen, selectedSale]);
 
     const filteredSales = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -460,7 +526,7 @@ export default function FlashSalesPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-gray-400 hover:text-red-500"
-                        onClick={() => handleDeleteCampaign(sale.id)}
+                        onClick={() => handleDeleteCampaign(sale)}
                         disabled={deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id}
                         aria-label="Delete campaign"
                     >
@@ -538,108 +604,167 @@ export default function FlashSalesPage() {
                 emptyMessage="Try adjusting your search or filters"
             />
 
-            {selectedCampaignId && (
-                <Card className="border border-gray-200 shadow-sm">
-                    <CardContent className="p-6 space-y-4">
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <p className="text-xs uppercase tracking-wide text-gray-500 font-bold">Campaign Details</p>
-                                <h3 className="text-lg font-bold text-gray-900">
-                                    {campaignDetail?.name ?? campaignDetail?.title ?? "Campaign"}
-                                </h3>
-                            </div>
-                            <Button variant="outline" size="sm" onClick={() => setSelectedCampaignId(null)}>
-                                Close
+            <Dialog
+                open={isViewModalOpen}
+                onOpenChange={(open) => {
+                    setIsViewModalOpen(open);
+                    if (!open) {
+                        setSelectedCampaignId(null);
+                    }
+                }}
+            >
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Campaign Details</DialogTitle>
+                        <DialogDescription>Review campaign information and timeline.</DialogDescription>
+                    </DialogHeader>
+
+                    {isCampaignDetailLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading campaign details...
+                        </div>
+                    ) : hasCampaignDetailError ? (
+                        <div className="space-y-3">
+                            <p className="text-sm text-red-600">Failed to load campaign details.</p>
+                            <Button variant="outline" size="sm" onClick={() => refetchCampaignDetail()}>
+                                Retry
                             </Button>
                         </div>
-
-                        {isCampaignDetailLoading ? (
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Loading campaign details...
+                    ) : campaignDetail ? (
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <p className="text-xs uppercase tracking-wide text-gray-500 font-bold">Campaign</p>
+                                <h3 className="text-lg font-bold text-gray-900">{campaignDetail?.name ?? "Campaign"}</h3>
                             </div>
-                        ) : hasCampaignDetailError ? (
-                            <div className="space-y-3">
-                                <p className="text-sm text-red-600">Failed to load campaign details.</p>
-                                <Button variant="outline" size="sm" onClick={() => refetchCampaignDetail()}>
-                                    Retry
-                                </Button>
-                            </div>
-                        ) : campaignDetail ? (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                    <div>
-                                        <p className="text-gray-500">Status</p>
-                                        <p className="font-semibold text-gray-900">{normalizeStatus(campaignDetail.status)}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-500">Start Date</p>
-                                        <p className="font-semibold text-gray-900">
-                                            {campaignDetail.startDate ? new Date(campaignDetail.startDate).toLocaleString() : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-500">End Date</p>
-                                        <p className="font-semibold text-gray-900">
-                                            {campaignDetail.endDate ? new Date(campaignDetail.endDate).toLocaleString() : "N/A"}
-                                        </p>
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p className="text-gray-500">Status</p>
+                                    <p className="font-semibold text-gray-900">{normalizeStatus(campaignDetail.status)}</p>
                                 </div>
-
-                                {detailMode === "edit" && (
-                                    <div className="flex items-center gap-2 pt-2">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => updateCampaignMutation.mutate({ id: selectedCampaignId, status: "active" })}
-                                            disabled={updateCampaignMutation.isPending}
-                                        >
-                                            {updateCampaignMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                                            Set Active
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => updateCampaignMutation.mutate({ id: selectedCampaignId, status: "upcoming" })}
-                                            disabled={updateCampaignMutation.isPending}
-                                        >
-                                            Set Upcoming
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => updateCampaignMutation.mutate({ id: selectedCampaignId, status: "expired" })}
-                                            disabled={updateCampaignMutation.isPending}
-                                        >
-                                            End Campaign
-                                        </Button>
-                                    </div>
-                                )}
-
-                                {detailMode === "view" && (
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => {
-                                            const selectedSale = allSales.find((sale) => sale.id === selectedCampaignId);
-                                            if (selectedSale) {
-                                                handleUpdateStatus(selectedSale);
-                                            }
-                                        }}
-                                        disabled={updateCampaignMutation.isPending}
-                                    >
-                                        {updateCampaignMutation.isPending ? (
-                                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                        ) : null}
-                                        Quick Toggle Status
-                                    </Button>
-                                )}
+                                <div>
+                                    <p className="text-gray-500">Start Date</p>
+                                    <p className="font-semibold text-gray-900">
+                                        {campaignDetail.startDate ? new Date(campaignDetail.startDate).toLocaleString() : "N/A"}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500">End Date</p>
+                                    <p className="font-semibold text-gray-900">
+                                        {campaignDetail.endDate ? new Date(campaignDetail.endDate).toLocaleString() : "N/A"}
+                                    </p>
+                                </div>
                             </div>
-                        ) : (
-                            <p className="text-sm text-gray-500">No campaign details available.</p>
-                        )}
-                    </CardContent>
-                </Card>
-            )}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500">No campaign details available.</p>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={isUpdateModalOpen}
+                onOpenChange={(open) => {
+                    setIsUpdateModalOpen(open);
+                    if (!open) {
+                        setSelectedCampaignId(null);
+                    }
+                }}
+            >
+                <DialogContent className="max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Update Campaign</DialogTitle>
+                        <DialogDescription>Update campaign status and apply changes.</DialogDescription>
+                    </DialogHeader>
+
+                    {isCampaignDetailLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading campaign details...
+                        </div>
+                    ) : hasCampaignDetailError ? (
+                        <div className="space-y-3">
+                            <p className="text-sm text-red-600">Failed to load campaign details.</p>
+                            <Button variant="outline" size="sm" onClick={() => refetchCampaignDetail()}>
+                                Retry
+                            </Button>
+                        </div>
+                    ) : campaignDetail ? (
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <p className="text-xs uppercase tracking-wide text-gray-500 font-bold">Campaign</p>
+                                <p className="font-semibold text-gray-900">{campaignDetail?.name ?? "Campaign"}</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-sm font-semibold text-gray-700">Status</p>
+                                <Select value={updateStatus} onValueChange={setUpdateStatus}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="upcoming">Upcoming</SelectItem>
+                                        <SelectItem value="expired">Ended</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsUpdateModalOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        if (!selectedCampaignId) {
+                                            return;
+                                        }
+                                        updateCampaignMutation.mutate(
+                                            { id: selectedCampaignId, status: updateStatus },
+                                            {
+                                                onSuccess: () => {
+                                                    setIsUpdateModalOpen(false);
+                                                    setSelectedCampaignId(null);
+                                                },
+                                            }
+                                        );
+                                    }}
+                                    disabled={updateCampaignMutation.isPending}
+                                >
+                                    {updateCampaignMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                                    Update Campaign
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500">No campaign details available.</p>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            <ConfirmActionDialog
+                open={Boolean(campaignToDelete)}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setCampaignToDelete(null);
+                    }
+                }}
+                title="Delete Campaign"
+                description={`Are you sure you want to delete ${campaignToDelete?.title ?? "this campaign"}? This action cannot be undone.`}
+                confirmLabel={deleteCampaignMutation.isPending ? "Deleting..." : "Delete"}
+                variant="destructive"
+                isLoading={deleteCampaignMutation.isPending}
+                onConfirm={() => {
+                    if (!campaignToDelete) {
+                        return;
+                    }
+                    deleteCampaignMutation.mutate(campaignToDelete.id, {
+                        onSuccess: () => {
+                            setCampaignToDelete(null);
+                        },
+                    });
+                }}
+            />
 
             {/* Empty State Mockup Strategy */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
