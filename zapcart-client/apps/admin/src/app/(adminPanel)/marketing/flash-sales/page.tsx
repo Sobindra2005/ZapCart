@@ -180,6 +180,32 @@ const mapCampaignToFlashSale = (campaign: Campaign): FlashSale => {
     };
 };
 
+const createCampaignFormData = (data: {
+    name: string;
+    description?: string;
+    products: string[];
+    status?: string;
+    discountType: string;
+    discountValue: number;
+    startDate: string;
+    endDate: string;
+    imageFile?: File;
+}): FormData => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description ?? "");
+    formData.append("products", JSON.stringify(data.products));
+    formData.append("status", data.status ?? "upcoming");
+    formData.append("discountType", data.discountType);
+    formData.append("discountValue", String(data.discountValue));
+    formData.append("startDate", data.startDate);
+    formData.append("endDate", data.endDate);
+    if (data.imageFile) {
+        formData.append("image", data.imageFile);
+    }
+    return formData;
+};
+
 export default function FlashSalesPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -219,10 +245,44 @@ export default function FlashSalesPage() {
         [campaignDetailResponse]
     );
 
+    const createCampaignMutation = useMutation({
+        mutationFn: (data: {
+            name: string;
+            description?: string;
+            products: string[];
+            status?: string;
+            discountType: string;
+            discountValue: number;
+            startDate: string;
+            endDate: string;
+            imageFile?: File;
+        }) => {
+            const formData = createCampaignFormData(data);
+            return marketingApi.createCampaign(formData);
+        },
+        onSuccess: () => {
+            toast.success("Campaign created successfully");
+            queryClient.invalidateQueries({ queryKey: ["flash-sales", "campaigns"] });
+        },
+        onError: (error: unknown) => {
+            toast.error("Failed to create campaign", {
+                description: error instanceof Error ? error.message : "Please try again.",
+            });
+        },
+    });
+
     const updateCampaignMutation = useMutation({
-        mutationFn: ({ id, status }: { id: string; status: string }) => {
-            const formData = new FormData();
-            formData.append("status", status);
+        mutationFn: ({ id, campaign }: { id: string; campaign: Campaign; updatedStatus?: string }) => {
+            const formData = createCampaignFormData({
+                name: campaign.name,
+                description: campaign.description,
+                products: campaign.products,
+                status: campaign.status,
+                discountType: campaign.discountType,
+                discountValue: campaign.discountValue,
+                startDate: campaign.startDate,
+                endDate: campaign.endDate,
+            });
             return marketingApi.updateCampaign(id, formData);
         },
         onSuccess: () => {
@@ -562,7 +622,21 @@ export default function FlashSalesPage() {
                             </Button>
                         }
                     >
-                        <CreateCampaignForm onSubmit={(data) => console.log(data)} />
+                        <CreateCampaignForm
+                            onSubmit={(data) => {
+                                createCampaignMutation.mutate({
+                                    name: data.name,
+                                    description: data.description,
+                                    products: data.productIds ?? data.products,
+                                    status: data.status,
+                                    discountType: data.discountType,
+                                    discountValue: data.discountValue,
+                                    startDate: data.startDate,
+                                    endDate: data.endDate,
+                                    imageFile: data.imageFile ?? data.image,
+                                });
+                            }}
+                        />
                     </FormPopup>
                 </div>
             </div>
@@ -716,11 +790,15 @@ export default function FlashSalesPage() {
                                 </Button>
                                 <Button
                                     onClick={() => {
-                                        if (!selectedCampaignId) {
+                                        if (!selectedCampaignId || !campaignDetail) {
                                             return;
                                         }
+                                        const updatedCampaign: Campaign = {
+                                            ...campaignDetail,
+                                            status: updateStatus as CampaignStatus,
+                                        };
                                         updateCampaignMutation.mutate(
-                                            { id: selectedCampaignId, status: updateStatus },
+                                            { id: selectedCampaignId, campaign: updatedCampaign },
                                             {
                                                 onSuccess: () => {
                                                     setIsUpdateModalOpen(false);
