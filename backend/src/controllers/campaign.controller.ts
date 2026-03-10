@@ -36,7 +36,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
 
 export const getCampaigns = asyncHandler(async (req, res) => {
     const { status, createdBy } = req.query;
-    let filters: {
+    const filters: {
         status?: string;
         createdBy?: number;
     } = {};
