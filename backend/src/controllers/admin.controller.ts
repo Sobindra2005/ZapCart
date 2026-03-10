@@ -49,7 +49,9 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
     } : {};
 
     // Determine sort order
-    let orderBy: any;
+    let orderBy: {
+        [key: string]: string;
+    } | Array<{ [key: string]: string }> = { createdAt: 'desc' }; // Default sorting
     switch (sortBy) {
         case 'newest':
             orderBy = { createdAt: sortOrder };
@@ -93,14 +95,14 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
     // For sorting by spent, we need to fetch more users and sort in memory
     // For other complex sorts, we'll handle post-fetch as well
     const needsCustomSorting = ['spent', 'status', 'role'].includes(sortBy);
-    
-    let fetchLimit = limit;
+
+    let fetchLimit: number | undefined = limit;
     let fetchSkip = start;
-    
+
     if (needsCustomSorting) {
         // For custom sorting, we need to fetch more data to sort properly
         // We'll fetch all matching records and then paginate
-        fetchLimit = undefined as any;
+        fetchLimit = undefined; // Fetch all and sort in memory
         fetchSkip = 0;
     }
 
@@ -165,8 +167,8 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
         switch (sortBy) {
             case 'spent':
                 usersWithTotalSpent.sort((a, b) => {
-                    return sortOrder === 'asc' 
-                        ? a.totalSpent - b.totalSpent 
+                    return sortOrder === 'asc'
+                        ? a.totalSpent - b.totalSpent
                         : b.totalSpent - a.totalSpent;
                 });
                 break;
@@ -187,7 +189,7 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
                 });
                 break;
         }
-        
+
         // Apply pagination after sorting
         usersWithTotalSpent = usersWithTotalSpent.slice(start, start + limit);
     } else if (!needsCustomSorting) {
