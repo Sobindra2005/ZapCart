@@ -1,6 +1,5 @@
 import { AlertCircle, Inbox, SearchX } from "lucide-react";
 import { TableCell, TableRow } from "./table";
-import { Skeleton } from "./skeleton";
 import { Button } from "./button";
 import { cn } from "@repo/lib/utils";
 
