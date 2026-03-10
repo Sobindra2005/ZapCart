@@ -66,5 +66,38 @@ const campaignSchema = new mongoose.Schema<ICampaign>({
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
 });
 
+campaignSchema.pre('save', function () {
+    const now = new Date();
+
+    if (!this.startDate || !this.endDate) {
+        return;
+    }
+
+    // Keep the date window logically valid.
+    if (this.endDate < this.startDate) {
+        throw new Error('endDate cannot be earlier than startDate');
+    }
+
+    // A completed campaign must always be expired.
+    if (now > this.endDate) {
+        this.status = 'expired';
+        return;
+    }
+
+    // During campaign window, invalid statuses are paused by default.
+    if (now >= this.startDate && now <= this.endDate) {
+        if (!['active', 'paused'].includes(this.status)) {
+            this.status = 'paused';
+        }
+        return;
+    }
+
+    // Before campaign starts, expired/active states are reset.
+    if (now < this.startDate && ['active', 'expired'].includes(this.status)) {
+        this.status = 'upcoming';
+    }
+
+});
+
 
 export const Campaign = mongoose.model<ICampaign>('Campaign', campaignSchema);
