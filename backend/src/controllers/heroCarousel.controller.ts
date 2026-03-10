@@ -29,7 +29,7 @@ export const createHeroCarousel = asyncHandler(async (req, res) => {
 export const getHeroCarousel = asyncHandler(async (_req, res) => {
     const { status, createdBy } = _req.query;
 
-    let filters: {
+    const filters: {
         status?: string;
         createdBy?: number;
     } = {};

@@ -196,15 +196,18 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
         // Apply the database-level sorting that was already done
         usersWithTotalSpent.sort((a, b) => {
             switch (sortBy) {
-                case 'firstName':
+                case 'firstName': {
                     const firstNameCompare = a.firstName.localeCompare(b.firstName);
                     return sortOrder === 'asc' ? firstNameCompare : -firstNameCompare;
-                case 'email':
+                }
+                case 'email': {
                     const emailCompare = a.email.localeCompare(b.email);
                     return sortOrder === 'asc' ? emailCompare : -emailCompare;
-                case 'phone':
+                }
+                case 'phone': {
                     const phoneCompare = (a.phone || '').localeCompare(b.phone || '');
                     return sortOrder === 'asc' ? phoneCompare : -phoneCompare;
+                }
                 default:
                     return 0; // Keep original order for other sorts
             }

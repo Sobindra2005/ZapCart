@@ -126,7 +126,7 @@ export class AnalyticsService {
         endDate.setHours(23, 59, 59, 999);
         break;
 
-      case 'week':
+      case 'week': {
         // Start of current week (Monday)
         const dayOfWeek = now.getDay();
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -138,6 +138,7 @@ export class AnalyticsService {
         endDate.setDate(now.getDate() + diffToSunday);
         endDate.setHours(23, 59, 59, 999);
         break;
+      }
 
       case 'month':
         startDate.setDate(1);
@@ -145,7 +146,7 @@ export class AnalyticsService {
         endDate.setHours(23, 59, 59, 999);
         break;
 
-      case 'year':
+      case 'year': {
         startDate.setMonth(0, 1);
         startDate.setHours(0, 0, 0, 0);
         
@@ -153,6 +154,7 @@ export class AnalyticsService {
         endDate.setMonth(11, 31);
         endDate.setHours(23, 59, 59, 999);
         break;
+      }
     }
 
     return { startDate, endDate };
