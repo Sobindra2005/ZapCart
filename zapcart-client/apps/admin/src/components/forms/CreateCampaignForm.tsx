@@ -22,7 +22,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@repo/ui/ui/select"
-import { Calendar, Tag, Percent, Package, Search, X } from "lucide-react"
+import { Calendar, Tag, Percent, Package, Search, X, Loader2 } from "lucide-react"
 import { Badge } from "@repo/ui/ui/badge"
 import { PlusIcon } from "@radix-ui/react-icons"
 import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
@@ -62,9 +62,10 @@ type CampaignFormValues = z.infer<typeof campaignSchema>
 interface CreateCampaignFormProps {
     onCancel?: () => void
     onSubmit?: (data: any) => void
+    isLoading?: boolean
 }
 
-export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormProps) {
+export function CreateCampaignForm({ onCancel, onSubmit, isLoading = false }: CreateCampaignFormProps) {
     const [selectedProducts, setSelectedProducts] = React.useState<any[]>([])
     const [searchQuery, setSearchQuery] = React.useState("")
 
@@ -383,10 +384,11 @@ export function CreateCampaignForm({ onCancel, onSubmit }: CreateCampaignFormPro
                 <div className="flex w-full justify-end items-center ">
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" disabled={isLoading}>Cancel</Button>
                         </DialogClose>
-                        <Button type="submit" className="font-bold bg-primary hover:bg-primary/90 px-8">
-                            Create Campaign
+                        <Button type="submit" className="font-bold bg-primary hover:bg-primary/90 px-8" disabled={isLoading}>
+                            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            {isLoading ? "Creating..." : "Create Campaign"}
                         </Button>
                     </DialogFooter>
                 </div>
