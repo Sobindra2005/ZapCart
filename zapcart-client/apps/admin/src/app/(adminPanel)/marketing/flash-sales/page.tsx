@@ -835,67 +835,69 @@ export default function FlashSalesPage() {
                                     </div>
                                 </div>
 
-                                <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsUpdateModalOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={() => {
-                                            if (!selectedCampaignId || !campaignDetail) {
-                                                return;
-                                            }
-
-                                            const formValues = updateCampaignForm.getValues();
-
-                                            if (!formValues.name.trim()) {
-                                                toast.error("Campaign name is required");
-                                                return;
-                                            }
-
-                                            if (!formValues.dateRange?.from || !formValues.dateRange?.to) {
-                                                toast.error("Start and end dates are required");
-                                                return;
-                                            }
-
-                                            const discountValue = Number(formValues.discountValue);
-                                            if (Number.isNaN(discountValue) || discountValue < 0) {
-                                                toast.error("Discount value must be a valid number");
-                                                return;
-                                            }
-
-                                            const updatedCampaign: Campaign = {
-                                                ...campaignDetail,
-                                                name: formValues.name.trim(),
-                                                description: formValues.description.trim(),
-                                                products: campaignDetail.products,
-                                                status: formValues.status,
-                                                discountType: formValues.discountType,
-                                                discountValue,
-                                                startDate: formValues.dateRange.from.toISOString(),
-                                                endDate: formValues.dateRange.to.toISOString(),
-                                            };
-                                            updateCampaignMutation.mutate(
-                                                {
-                                                    id: selectedCampaignId,
-                                                    campaign: updatedCampaign,
-                                                    imageFile: formValues.imageFile,
-                                                    image: campaignDetail.image,
-                                                },
-                                                {
-                                                    onSuccess: () => {
-                                                        setIsUpdateModalOpen(false);
-                                                        setSelectedCampaignId(null);
-                                                        updateCampaignForm.setValue("imageFile", undefined, { shouldDirty: false });
-                                                    },
+                                <div className="flex w-full justify-end items-center ">
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsUpdateModalOpen(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                if (!selectedCampaignId || !campaignDetail) {
+                                                    return;
                                                 }
-                                            );
-                                        }}
-                                        disabled={updateCampaignMutation.isPending}
-                                    >
-                                        {updateCampaignMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                                        Update Campaign
-                                    </Button>
-                                </DialogFooter>
+
+                                                const formValues = updateCampaignForm.getValues();
+
+                                                if (!formValues.name.trim()) {
+                                                    toast.error("Campaign name is required");
+                                                    return;
+                                                }
+
+                                                if (!formValues.dateRange?.from || !formValues.dateRange?.to) {
+                                                    toast.error("Start and end dates are required");
+                                                    return;
+                                                }
+
+                                                const discountValue = Number(formValues.discountValue);
+                                                if (Number.isNaN(discountValue) || discountValue < 0) {
+                                                    toast.error("Discount value must be a valid number");
+                                                    return;
+                                                }
+
+                                                const updatedCampaign: Campaign = {
+                                                    ...campaignDetail,
+                                                    name: formValues.name.trim(),
+                                                    description: formValues.description.trim(),
+                                                    products: campaignDetail.products,
+                                                    status: formValues.status,
+                                                    discountType: formValues.discountType,
+                                                    discountValue,
+                                                    startDate: formValues.dateRange.from.toISOString(),
+                                                    endDate: formValues.dateRange.to.toISOString(),
+                                                };
+                                                updateCampaignMutation.mutate(
+                                                    {
+                                                        id: selectedCampaignId,
+                                                        campaign: updatedCampaign,
+                                                        imageFile: formValues.imageFile,
+                                                        image: campaignDetail.image,
+                                                    },
+                                                    {
+                                                        onSuccess: () => {
+                                                            setIsUpdateModalOpen(false);
+                                                            setSelectedCampaignId(null);
+                                                            updateCampaignForm.setValue("imageFile", undefined, { shouldDirty: false });
+                                                        },
+                                                    }
+                                                );
+                                            }}
+                                            disabled={updateCampaignMutation.isPending}
+                                        >
+                                            {updateCampaignMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                                            Update Campaign
+                                        </Button>
+                                    </DialogFooter>
+                                </div>
                             </div>
                         ) : (
                             <p className="text-sm text-gray-500">No campaign details available.</p>
@@ -931,34 +933,36 @@ export default function FlashSalesPage() {
                             </Button>
                         }
                     >
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    if (campaignToDelete?.id === sale.id) {
-                                        setCampaignToDelete(null);
-                                    }
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                disabled={deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id}
-                                onClick={() => {
-                                    deleteCampaignMutation.mutate(sale.id, {
-                                        onSuccess: () => {
+                        <div className="flex w-full justify-end items-center ">
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        if (campaignToDelete?.id === sale.id) {
                                             setCampaignToDelete(null);
-                                        },
-                                    });
-                                }}
-                            >
-                                {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id && (
-                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                )}
-                                {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id ? "Deleting..." : "Delete"}
-                            </Button>
-                        </DialogFooter>
+                                        }
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    disabled={deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id}
+                                    onClick={() => {
+                                        deleteCampaignMutation.mutate(sale.id, {
+                                            onSuccess: () => {
+                                                setCampaignToDelete(null);
+                                            },
+                                        });
+                                    }}
+                                >
+                                    {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id && (
+                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    )}
+                                    {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id ? "Deleting..." : "Delete"}
+                                </Button>
+                            </DialogFooter>
+                        </div>
                     </FormPopup>
                 </div>
             ),
@@ -1058,7 +1062,7 @@ export default function FlashSalesPage() {
             />
 
             {/* Empty State Mockup Strategy */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="border-dashed border-2 border-gray-200 shadow-none bg-gray-50/50">
                     <CardContent className="flex flex-col items-center justify-center py-12">
                         <div className="h-16 w-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mb-4">
@@ -1080,7 +1084,7 @@ export default function FlashSalesPage() {
                         <Button variant="link" className="mt-4 font-bold text-primary">Coming soon</Button>
                     </CardContent>
                 </Card>
-            </div>
+            </div> */}
         </div>
     );
 }

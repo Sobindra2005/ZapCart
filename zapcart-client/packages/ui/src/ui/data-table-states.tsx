@@ -1,10 +1,9 @@
-import { AlertCircle, Inbox, SearchX } from "lucide-react";
+import { AlertCircle, Inbox, Loader2, SearchX } from "lucide-react";
 import { TableCell, TableRow } from "./table";
 import { Button } from "./button";
 import { cn } from "@repo/lib/utils";
 
 interface TableLoadingStateProps {
-    rowCount?: number;
     columnCount?: number;
 }
 
@@ -48,12 +47,16 @@ export function TableLoadingState({
     columnCount = 5,
 }: TableLoadingStateProps) {
     return (
-        <>
-            {
-                
-                Array.from({ length: 10 }).map((_, i) => <SkeletonTableRow key={i} columnCount={columnCount} />)
-            }
-        </>
+        <TableRow>
+            <TableCell colSpan={columnCount} style={{ height: '280px' }} className="text-center">
+                <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Fetching from the server...</p>
+                </div>
+            </TableCell>
+        </TableRow>
     );
 }
 
@@ -72,7 +75,7 @@ export function TableErrorState({
 }: TableErrorStateProps) {
     return (
         <TableRow>
-            <TableCell colSpan={colSpan} style={{ height: '500px' }} className=" text-center">
+            <TableCell colSpan={colSpan} style={{ height: '200px' }} className=" text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
                         <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -119,7 +122,7 @@ export function TableEmptyState({
 
     return (
         <TableRow>
-            <TableCell style={{ height: '500px' }} colSpan={colSpan} className="h-[600px] text-center">
+            <TableCell style={{ height: '200px' }} colSpan={colSpan} className=" text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted/50">
                         {Icon}
