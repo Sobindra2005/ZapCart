@@ -39,7 +39,7 @@ import {
     Card,
     CardContent,
 } from "@repo/ui/ui/card";
-import { Stat, StatsCards } from "@/components/common/StatsCards";
+import { StatCard, StatCardSkeleton } from "@/components/common/StatCard";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateCampaignForm } from "@/components/forms/CreateCampaignForm";
 import { ServerTable, ServerTableColumn, SortConfig } from "@/components/common/ServerTable";
@@ -217,6 +217,82 @@ const createCampaignFormData = (data: {
     }
     return formData;
 };
+
+interface FlashSaleKpiSectionProps {
+    allSales: FlashSale[];
+    isLoading: boolean;
+    isError: boolean;
+    onRetry: () => void;
+}
+
+function FlashSaleKpiSection({ allSales, isLoading, isError, onRetry }: FlashSaleKpiSectionProps) {
+    const activeCount = allSales.filter((sale) => sale.status === "Active").length;
+    const totalRevenue = allSales.reduce((sum, sale) => sum + sale.totalRevenue, 0);
+    const totalOrders = allSales.reduce((sum, sale) => sum + sale.conversions, 0);
+    const avgConversionRate = allSales.length > 0
+        ? (allSales.reduce((sum, sale) => sum + sale.conversions, 0) / allSales.length).toFixed(1)
+        : "0.0";
+
+    const kpis = [
+        {
+            key: "activeCampaigns",
+            label: "Active Campaigns",
+            value: String(activeCount).padStart(2, "0"),
+            trend: `${allSales.length} total`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+        {
+            key: "avgConversionRate",
+            label: "Avg. Conversion Rate",
+            value: `${avgConversionRate}%`,
+            trend: `${totalOrders} orders`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+        {
+            key: "totalRevenue",
+            label: "Total Revenue",
+            value: `$${totalRevenue.toLocaleString()}`,
+            trend: `${allSales.length} campaigns`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+        {
+            key: "itemsSold",
+            label: "Items Sold Flash",
+            value: totalOrders.toLocaleString(),
+            trend: `${allSales.length} campaigns`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+    ];
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {kpis.map((kpi) => {
+                if (isLoading) {
+                    return <StatCardSkeleton key={kpi.key} />;
+                }
+                if (isError) {
+                    return <StatCardSkeleton key={kpi.key} />;
+                }
+                return (
+                    <StatCard
+                        key={kpi.key}
+                        label={kpi.label}
+                        value={kpi.value}
+                        trend={kpi.trend}
+                        trendDir={kpi.trendDir}
+                        vs={kpi.vs}
+                        menuItems={[{ label: "Retry", accessorKey: "retry" }]}
+                        onMenuSelect={(key) => { if (key === "retry") onRetry(); }}
+                    />
+                );
+            })}
+        </div>
+    );
+}
 
 export default function FlashSalesPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -448,45 +524,6 @@ export default function FlashSalesPage() {
         return sortedSales.slice(start, start + itemsPerPage);
     }, [currentPage, sortedSales, itemsPerPage]);
 
-    const stats = useMemo<Stat[]>(() => {
-        const activeCount = allSales.filter((sale) => sale.status === "Active").length;
-        const totalRevenue = allSales.reduce((sum, sale) => sum + sale.totalRevenue, 0);
-        const totalOrders = allSales.reduce((sum, sale) => sum + sale.conversions, 0);
-        const avgConversionRate = allSales.length > 0
-            ? (allSales.reduce((sum, sale) => sum + sale.conversions, 0) / allSales.length).toFixed(1)
-            : "0.0";
-
-        return [
-            {
-                label: "Active Campaigns",
-                value: String(activeCount).padStart(2, "0"),
-                trend: `${allSales.length} total`,
-                trendDir: "up",
-                vs: "Live Data"
-            },
-            {
-                label: "Avg. Conversion Rate",
-                value: `${avgConversionRate}%`,
-                trend: `${totalOrders} orders`,
-                trendDir: "up",
-                vs: "Live Data"
-            },
-            {
-                label: "Total Revenue",
-                value: `$${totalRevenue.toLocaleString()}`,
-                trend: `${allSales.length} campaigns`,
-                trendDir: "up",
-                vs: "Live Data"
-            },
-            {
-                label: "Items Sold Flash",
-                value: totalOrders.toLocaleString(),
-                trend: `${allSales.length} campaigns`,
-                trendDir: "up",
-                vs: "Live Data"
-            }
-        ];
-    }, [allSales]);
 
     const handleSort = (key: string) => {
         let direction: "asc" | "desc" | null = "asc";
@@ -1025,7 +1062,12 @@ export default function FlashSalesPage() {
             </div>
 
             {/* Quick Stats */}
-            <StatsCards stats={stats} />
+            <FlashSaleKpiSection
+                allSales={allSales}
+                isLoading={isCampaignsLoading}
+                isError={hasCampaignsError}
+                onRetry={refetchCampaigns}
+            />
 
             {/* Campaign List */}
             <ServerTable
