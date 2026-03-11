@@ -194,6 +194,7 @@ export const marketingApi = {
     getCampaigns: (params?: {
         status?: string;
         createdBy?: string;
+        search?: string;
     }) => {
         return axiosInstance.get('/marketing/campaign', { params });
     },

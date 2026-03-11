@@ -296,6 +296,8 @@ function FlashSaleKpiSection({ allSales, isLoading, isError, onRetry }: FlashSal
 
 export default function FlashSalesPage() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<CampaignStatus | "">("");
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: null });
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -320,14 +322,22 @@ export default function FlashSalesPage() {
     const queryClient = useQueryClient();
     const itemsPerPage = 10;
 
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
     const {
         data: campaignsResponse,
         isLoading: isCampaignsLoading,
         isError: hasCampaignsError,
         refetch: refetchCampaigns,
     } = useQuery({
-        queryKey: ["flash-sales", "campaigns"],
-        queryFn: () => marketingApi.getCampaigns(),
+        queryKey: ["flash-sales", "campaigns", debouncedSearch, statusFilter],
+        queryFn: () => marketingApi.getCampaigns({
+            search: debouncedSearch || undefined,
+            status: statusFilter || undefined,
+        }),
     });
 
     const {
@@ -487,25 +497,12 @@ export default function FlashSalesPage() {
         });
     }, [isUpdateModalOpen, campaignDetail, updateCampaignForm]);
 
-    const filteredSales = useMemo(() => {
-        const query = searchQuery.trim().toLowerCase();
-        if (!query) {
+    const sortedSales = useMemo(() => {
+        if (!sortConfig.key || !sortConfig.direction) {
             return allSales;
         }
 
-        return allSales.filter((sale) =>
-            sale.title.toLowerCase().includes(query) ||
-            sale.status.toLowerCase().includes(query) ||
-            sale.id.includes(query)
-        );
-    }, [allSales, searchQuery]);
-
-    const sortedSales = useMemo(() => {
-        if (!sortConfig.key || !sortConfig.direction) {
-            return filteredSales;
-        }
-
-        return [...filteredSales].sort((a, b) => {
+        return [...allSales].sort((a, b) => {
             const aValue = getSortValue(a, sortConfig.key as string);
             const bValue = getSortValue(b, sortConfig.key as string);
 
@@ -517,7 +514,7 @@ export default function FlashSalesPage() {
             }
             return 0;
         });
-    }, [filteredSales, sortConfig]);
+    }, [allSales, sortConfig]);
 
     const paginatedSales = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
@@ -540,6 +537,11 @@ export default function FlashSalesPage() {
 
     const handleSearchChange = (value: string) => {
         setSearchQuery(value);
+        setCurrentPage(1);
+    };
+
+    const handleStatusFilterChange = (value: string) => {
+        setStatusFilter(value === "all" ? "" : value as CampaignStatus);
         setCurrentPage(1);
     };
 
@@ -636,7 +638,7 @@ export default function FlashSalesPage() {
             align: "right",
             cell: (sale) => (
                 <div className="flex items-center justify-end gap-1">
-                    <FormPopup
+                    {/* <FormPopup
                         title="Campaign Details"
                         description="Review campaign information and timeline."
                         className="max-w-2xl"
@@ -706,7 +708,7 @@ export default function FlashSalesPage() {
                         ) : (
                             <p className="text-sm text-gray-500">No campaign details available.</p>
                         )}
-                    </FormPopup>
+                    </FormPopup> */}
 
                     <FormPopup
                         title="Update Campaign"
@@ -1088,16 +1090,18 @@ export default function FlashSalesPage() {
                 error={hasCampaignsError}
                 onRetry={refetchCampaigns}
                 toolbarContent={(
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" size="sm" className="gap-2 font-bold border-gray-200">
-                            <Filter className="h-4 w-4" />
-                            Filter
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-2 font-bold border-gray-200">
-                            <Calendar className="h-4 w-4" />
-                            By Date
-                        </Button>
-                    </div>
+                    <Select value={statusFilter || "all"} onValueChange={handleStatusFilterChange}>
+                        <SelectTrigger className="w-36">
+                            <SelectValue placeholder="All statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All statuses</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="upcoming">Upcoming</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                            <SelectItem value="paused">Paused</SelectItem>
+                        </SelectContent>
+                    </Select>
                 )}
                 emptyTitle="No campaigns found"
                 emptyMessage="Try adjusting your search or filters"

@@ -35,10 +35,14 @@ export const createCampaign = asyncHandler(async (req, res) => {
 });
 
 export const getCampaigns = asyncHandler(async (req, res) => {
-    const { status, createdBy } = req.query;
+    const { status, createdBy, searchQuery } = req.query;
     const filters: {
         status?: string;
         createdBy?: number;
+        $or?: Array<
+            | { name: { $regex: string; $options: string } }
+            | { description: { $regex: string; $options: string } }
+        >;
     } = {};
 
     if (typeof status === "string") {
@@ -46,6 +50,12 @@ export const getCampaigns = asyncHandler(async (req, res) => {
     }
     if (typeof createdBy === "string" && !isNaN(Number(createdBy))) {
         filters.createdBy = Number(createdBy);
+    }
+    if (typeof searchQuery === "string" && searchQuery.trim()) {
+        filters.$or = [
+            { name: { $regex: searchQuery.trim(), $options: "i" } },
+            { description: { $regex: searchQuery.trim(), $options: "i" } }
+        ];
     }
 
     const campaigns = await Campaign.find(filters).sort({ createdAt: -1 });
