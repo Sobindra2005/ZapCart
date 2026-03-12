@@ -31,7 +31,7 @@ router.use(protect);
 router.use(restrictTo("admin"));
 
 router.post("/campaign/", upload.single("image"), createCampaign);
-router.patch("/campaign/:id", upload.single("image"), updateCampaign);
+router.patch("/campaign/:id", upload.single("imageFile"), updateCampaign);
 router.delete("/campaign/:id", deleteCampaign);
 
 export default router;

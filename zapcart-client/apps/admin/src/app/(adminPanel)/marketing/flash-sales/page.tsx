@@ -211,7 +211,7 @@ const createCampaignFormData = (data: {
     formData.append("startDate", data.startDate);
     formData.append("endDate", data.endDate);
     if (data.imageFile) {
-        formData.append("image", data.imageFile);
+        formData.append("imageFile", data.imageFile);
     } else if (typeof data.image === "string") {
         formData.append("image", data.image);
     }
@@ -406,7 +406,7 @@ export default function FlashSalesPage() {
                 imageFile,
                 image,
             });
-            console.log({ formData });
+            console.log("FormData entries for update:", Object.fromEntries(formData.entries()));
             return marketingApi.updateCampaign(id, formData);
         },
         onSuccess: () => {
@@ -904,6 +904,7 @@ export default function FlashSalesPage() {
                                                     return;
                                                 }
 
+
                                                 const updatedCampaign: Campaign = {
                                                     ...campaignDetail,
                                                     name: formValues.name.trim(),
@@ -1047,7 +1048,6 @@ export default function FlashSalesPage() {
                         <CreateCampaignForm
                             isLoading={createCampaignMutation.isPending}
                             onSubmit={(data) => {
-                                console.log("Create form values:", data);
                                 createCampaignMutation.mutate({
                                     name: data.name,
                                     description: data.description,

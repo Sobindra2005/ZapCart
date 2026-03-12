@@ -73,7 +73,7 @@ export function CreateCampaignForm({ onCancel, onSubmit, isLoading = false }: Cr
     const form = useForm<CampaignFormValues>({
         resolver: zodResolver(campaignSchema),
         defaultValues: {
-            name: "",
+            name: "Black Day Sale",
             description: "",
             status: "upcoming",
             startDate: "",
@@ -91,6 +91,8 @@ export function CreateCampaignForm({ onCancel, onSubmit, isLoading = false }: Cr
             productIds: data.products,
             imageFile: data.image,
         }
+
+        console.log("Submitting campaign with data:", formData)
         onSubmit?.(formData)
     }
 
@@ -141,7 +143,7 @@ export function CreateCampaignForm({ onCancel, onSubmit, isLoading = false }: Cr
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onFormSubmit,onError)} >
                 {/* Campaign Details */}
-                <div className="max-h-[80vh] overflow-y-auto space-y-8 py-4  px-1">
+                <div className="max-h-[75vh] overflow-y-auto space-y-8 py-4  px-1">
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
                             <Tag className="h-4 w-4 text-primary" />

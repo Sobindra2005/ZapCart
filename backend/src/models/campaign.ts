@@ -29,7 +29,6 @@ const campaignSchema = new mongoose.Schema<ICampaign>({
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
-            default: []
         }
     ],
     status: {
