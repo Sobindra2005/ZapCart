@@ -60,3 +60,13 @@ export interface Product {
     createdAt: string;
     updatedAt: string;
 }
+export interface SearchProduct {
+    _id: string;
+    entityType: string;
+    brand: string;
+    name: string;
+    basePrice: number;
+    rating: number;
+    thumbnail: string;
+    entityId: string;
+}

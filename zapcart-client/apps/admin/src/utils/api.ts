@@ -225,20 +225,16 @@ export const marketingApi = {
         return axiosInstance.delete(`/marketing/campaign/${id}`);
     },
     addFeaturedProduct: (productId: string) => {
-        return axiosInstance.patch('/marketing/products/featured/add', { productId });
+        return axiosInstance.patch('/products/featured/add', { productId });
     },
     removeFeaturedProduct: (productId: string) => {
-        return axiosInstance.patch('/marketing/products/featured/remove', { productId });
+        return axiosInstance.patch('/products/featured/remove', { productId });
     },
     getFeaturedProducts: () => {
-        return axiosInstance.get('/marketing/products/featured');
-    },
-    searchProducts: (params?: {
-        search?: string;
-        limit?: number;
-    }) => {
-        return axiosInstance.get('/products', { params });
+        return axiosInstance.get('/products/featured');
+    }, 
+    searchSuggestions: (query: string) => {
+        return axiosInstance.get(`/search/suggestions?q=${encodeURIComponent(query)}`);
     }
-
 }
 

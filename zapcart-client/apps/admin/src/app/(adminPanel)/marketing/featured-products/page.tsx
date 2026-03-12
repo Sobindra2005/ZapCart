@@ -21,12 +21,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { marketingApi } from "@/utils/api";
 import { toast } from "sonner";
 import { Badge } from "@repo/ui/ui/badge";
-import { Product } from "@/types/product";
+import { Product, SearchProduct } from "@/types/product";
 
 const FEATURED_PRODUCT_LIMIT = 7;
 
-const pickProductId = (product: Partial<Product> & { productId?: string }) =>
-    String(product._id ?? product.id ?? product.productId ?? "");
+const pickProductId = (product: Partial<Product | SearchProduct> & { productId?: string; entityId?: string }) =>
+    String(product.entityId ?? product._id ?? (product as Partial<Product>).id ?? product.productId ?? "");
 
 const extractArrayData = <T,>(response: unknown): T[] => {
     const payload = (response as { data?: { data?: unknown } | unknown })?.data;
@@ -59,8 +59,12 @@ const getCategoryName = (category: Product["category"]) => {
     return category?.name ?? "Uncategorized";
 };
 
-const getProductImage = (product: Product) => {
-    return product.thumbnail ?? product.images?.[0] ?? "";
+const getProductImage = (product: SearchProduct | Product) => {
+    if ("images" in product) {
+        return product.thumbnail ?? product.images?.[0] ?? "";
+    }
+
+    return product.thumbnail ?? "";
 };
 
 export default function FeaturedProductsPage() {
@@ -100,14 +104,14 @@ export default function FeaturedProductsPage() {
     } = useQuery({
         queryKey: ["products", "search", debouncedSearch],
         queryFn: () =>
-            marketingApi.searchProducts({
-                search: debouncedSearch || undefined,
-                limit: 30,
-            }),
+            marketingApi.searchSuggestions(
+                debouncedSearch
+            ),
+        enabled: debouncedSearch.length > 0,
     });
 
     const searchResults = useMemo(() => {
-        const results = extractArrayData<Product>(searchResponse);
+        const results = extractArrayData<SearchProduct>(searchResponse);
         return results.filter((product) => !featuredProductIds.has(pickProductId(product)));
     }, [featuredProductIds, searchResponse]);
 
@@ -246,7 +250,11 @@ export default function FeaturedProductsPage() {
                             </div>
 
                             <div className="max-h-[55vh] overflow-y-auto space-y-2">
-                                {(isSearchLoading || isSearchFetching) ? (
+                                {!debouncedSearch ? (
+                                    <div className="text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg p-4 text-center">
+                                        Start typing to search products.
+                                    </div>
+                                ) : (isSearchLoading || isSearchFetching) ? (
                                     <div className="text-sm text-gray-500 flex items-center gap-2 py-4">
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                         Loading products...
