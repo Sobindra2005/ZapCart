@@ -224,5 +224,15 @@ export const marketingApi = {
     deleteCampaign: (id: string) => {
         return axiosInstance.delete(`/marketing/campaign/${id}`);
     },
+    addFeaturedProduct: (productId: string) => {
+        return axiosInstance.patch('/marketing/products/featured/add', { productId });
+    },
+    removeFeaturedProduct: (productId: string) => {
+        return axiosInstance.patch('/marketing/products/featured/remove', { productId });
+    },
+    getFeaturedProducts: () => {
+        return axiosInstance.get('/marketing/products/featured');
+    }
 
 }
+

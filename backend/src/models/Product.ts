@@ -72,6 +72,7 @@ export interface IProduct extends Document {
   // Status & Visibility
   status: 'draft' | 'active' | 'archived';
   visibility: 'public' | 'hidden' | 'featured';
+  featured: boolean;
   publishedAt?: Date;
 
   // Sales & Analytics
@@ -296,6 +297,11 @@ const ProductSchema = new Schema<IProduct>(
       default: 'public',
       index: true
     },
+    featured: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
     publishedAt: Date,
 
     // Sales & Analytics
@@ -331,6 +337,7 @@ const ProductSchema = new Schema<IProduct>(
 // Indexes for performance
 ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
 ProductSchema.index({ category: 1, status: 1, visibility: 1 });
+ProductSchema.index({ featured: 1, status: 1 });
 ProductSchema.index({ brand: 1, status: 1 });
 ProductSchema.index({ basePrice: 1 });
 ProductSchema.index({ averageRating: -1 });
@@ -409,10 +416,10 @@ ProductSchema.post('deleteOne', { document: true, query: false }, async function
 });
 
 // Static method to find featured products
-ProductSchema.statics.findFeatured = function (limit: number = 10) {
+ProductSchema.statics.findFeatured = function (limit: number = 7) {
   return this.find({
     status: 'active',
-    visibility: 'featured'
+    featured: true
   })
     .sort({ salesCount: -1, averageRating: -1 })
     .limit(limit)

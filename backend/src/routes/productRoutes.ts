@@ -13,6 +13,8 @@ import {
     deleteProductVariant,
     bulkUpdateProducts,
     bulkDeleteProducts,
+    addProductToFeatured,
+    removeProductFromFeatured,
 } from '@/controllers/product.controller';
 import { protect, restrictTo } from '@/middlewares/authMiddleware';
 
@@ -33,6 +35,8 @@ router.get('/', getAllProducts);
 router.use(restrictTo('admin'));
 
 router.post('/', createProduct);
+router.patch('/featured/add', addProductToFeatured);
+router.patch('/featured/remove', removeProductFromFeatured);
 router.put('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
 

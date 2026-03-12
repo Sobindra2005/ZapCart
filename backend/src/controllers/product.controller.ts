@@ -5,6 +5,8 @@ import Product, { IProduct, IProductVariant } from '@/models/Product';
 import { prisma } from '@/config/prisma';
 import mongoose from 'mongoose';
 
+const MAX_FEATURED_PRODUCTS = 7;
+
 /**
  * Helper function to sync product stock with Prisma Inventory
  */
@@ -64,6 +66,7 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
 interface ProductFilter {
     category?: string;
     brand?: string;
+    featured?: boolean;
     basePrice?: {
         $gte?: number;
         $lte?: number;
@@ -123,8 +126,13 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response) =
     // Filter by visibility
     if (visibility) {
         filter.visibility = visibility as string | { $in?: string[] };
-    } else if (featured === 'true') {
-        filter.visibility = 'featured';
+    }
+
+    // Filter by featured flag
+    if (featured === 'true') {
+        filter.featured = true;
+    } else if (featured === 'false') {
+        filter.featured = false;
     }
 
     // Search by text
@@ -164,7 +172,7 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response) =
  */
 export const getFeaturedProducts = asyncHandler(async (_req: Request, res: Response) => {
     // Use static method from Product model
-    const products = await Product.findFeatured(10);
+    const products = await Product.findFeatured(MAX_FEATURED_PRODUCTS);
 
     res.status(200).json({
         status: 'success',
@@ -172,6 +180,7 @@ export const getFeaturedProducts = asyncHandler(async (_req: Request, res: Respo
         data: { products },
     });
 });
+
 
 /**
  * Get products by category
@@ -527,5 +536,66 @@ export const bulkDeleteProducts = asyncHandler(async (req: Request, res: Respons
     res.status(204).json({
         status: 'success',
         data: null,
+    });
+});
+
+/**
+ * Add a product to featured list
+ * PATCH /api/v1/products/featured/add
+ * Body: { productId: string }
+ */
+export const addProductToFeatured = asyncHandler(async (req: Request, res: Response) => {
+    const { productId } = req.body;
+
+    if (!productId) {
+        throw new AppError('Please provide productId', 400);
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+        throw new AppError('Product not found', 404);
+    }
+
+    if (product.featured) {
+        throw new AppError('Product is already featured', 400);
+    }
+
+    const featuredCount = await Product.countDocuments({ featured: true });
+    if (featuredCount >= MAX_FEATURED_PRODUCTS) {
+        throw new AppError('Featured product slots are full (max 7)', 400);
+    }
+
+    product.featured = true;
+    await product.save();
+
+    res.status(200).json({
+        status: 'success',
+        data: { product },
+    });
+});
+
+/**
+ * Remove a product from featured list
+ * PATCH /api/v1/products/featured/remove
+ * Body: { productId: string }
+ */
+export const removeProductFromFeatured = asyncHandler(async (req: Request, res: Response) => {
+    const { productId } = req.body;
+
+    if (!productId) {
+        throw new AppError('Please provide productId', 400);
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+        throw new AppError('Product not found', 404);
+    }
+
+    product.featured = false;
+    await product.save();
+
+    res.status(200).json({
+        status: 'success',
+        data: { product },
     });
 });
