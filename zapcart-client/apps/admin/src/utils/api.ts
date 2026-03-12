@@ -232,6 +232,12 @@ export const marketingApi = {
     },
     getFeaturedProducts: () => {
         return axiosInstance.get('/marketing/products/featured');
+    },
+    searchProducts: (params?: {
+        search?: string;
+        limit?: number;
+    }) => {
+        return axiosInstance.get('/products', { params });
     }
 
 }
