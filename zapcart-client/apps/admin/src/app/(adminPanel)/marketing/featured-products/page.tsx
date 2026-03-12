@@ -28,29 +28,6 @@ const FEATURED_PRODUCT_LIMIT = 7;
 const pickProductId = (product: Partial<Product | SearchProduct> & { productId?: string; entityId?: string }) =>
     String(product.entityId ?? product._id ?? (product as Partial<Product>).id ?? product.productId ?? "");
 
-const extractArrayData = <T,>(response: unknown): T[] => {
-    const payload = (response as { data?: { data?: unknown } | unknown })?.data;
-
-    if (Array.isArray(payload)) {
-        return payload as T[];
-    }
-
-    if (payload && typeof payload === "object" && "data" in payload) {
-        const nested = (payload as { data?: unknown }).data;
-        if (Array.isArray(nested)) {
-            return nested as T[];
-        }
-        if (nested && typeof nested === "object" && "items" in nested) {
-            const items = (nested as { items?: unknown }).items;
-            if (Array.isArray(items)) {
-                return items as T[];
-            }
-        }
-    }
-
-    return [];
-};
-
 const getCategoryName = (category: Product["category"]) => {
     if (typeof category === "string") {
         return category;
@@ -90,7 +67,8 @@ export default function FeaturedProductsPage() {
     });
 
     const featuredProducts = useMemo(() => {
-        return extractArrayData<Product>(featuredResponse);
+        const payload = featuredResponse?.data?.data?.products;
+        return Array.isArray(payload) ? (payload as Product[]) : [];
     }, [featuredResponse]);
 
     const featuredProductIds = useMemo(() => {
@@ -111,7 +89,8 @@ export default function FeaturedProductsPage() {
     });
 
     const searchResults = useMemo(() => {
-        const results = extractArrayData<SearchProduct>(searchResponse);
+        const payload = searchResponse?.data?.data?.suggestions;
+        const results = Array.isArray(payload) ? (payload as SearchProduct[]) : [];
         return results.filter((product) => !featuredProductIds.has(pickProductId(product)));
     }, [featuredProductIds, searchResponse]);
 
@@ -162,7 +141,8 @@ export default function FeaturedProductsPage() {
 
     return (
         <div className="p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-end gap-4 mb-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+                <h2 className="text-2xl font-bold tracking-tight">Featured Products</h2>
                 <Badge variant="outline" className="font-bold">
                     {featuredProducts.length} / {FEATURED_PRODUCT_LIMIT} slots used
                 </Badge>
@@ -171,7 +151,6 @@ export default function FeaturedProductsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-4">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">Active Spotlight</h3>
                         {isFeaturedFetching && !isFeaturedLoading && (
                             <span className="text-[11px] text-gray-500">Refreshing...</span>
                         )}
@@ -218,7 +197,7 @@ export default function FeaturedProductsPage() {
                                         disabled={removeFeaturedMutation.isPending}
                                         aria-label={`Remove ${product.name}`}
                                     >
-                                        {removeFeaturedMutation.isPending ? (
+                                        {removeFeaturedMutation.isPending && removeFeaturedMutation.variables === productId ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                         ) : (
                                             <Trash2 className="h-4 w-4" />
@@ -290,7 +269,7 @@ export default function FeaturedProductsPage() {
                                                     disabled={disableAdd}
                                                     className="font-semibold"
                                                 >
-                                                    {addFeaturedMutation.isPending ? (
+                                                    {addFeaturedMutation.isPending && addFeaturedMutation.variables === productId ? (
                                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                                     ) : (
                                                         <Plus className="h-3.5 w-3.5 mr-1" />
