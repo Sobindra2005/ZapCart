@@ -48,7 +48,7 @@ export function TableLoadingState({
 }: TableLoadingStateProps) {
     return (
         <TableRow>
-            <TableCell colSpan={columnCount} style={{ height: '280px' }} className="text-center">
+            <TableCell colSpan={columnCount} style={{ height: '350px' }} className="text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50">
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -75,7 +75,7 @@ export function TableErrorState({
 }: TableErrorStateProps) {
     return (
         <TableRow>
-            <TableCell colSpan={colSpan} style={{ height: '200px' }} className=" text-center">
+            <TableCell colSpan={colSpan} style={{ height: '350px' }} className=" text-center">
                 <div className="flex flex-col items-center justify-center space-y-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
                         <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />

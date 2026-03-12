@@ -194,8 +194,9 @@ export const marketingApi = {
     getCampaigns: (params?: {
         status?: string;
         createdBy?: string;
-        search?: string;
+        searchQuery?: string;
     }) => {
+        console.log("Fetching campaigns with params:", params);
         return axiosInstance.get('/marketing/campaign', { params });
     },
     getCampaignById: (id: string, params?: {

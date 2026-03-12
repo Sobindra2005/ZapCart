@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
+import { FieldErrors, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@repo/ui/ui/button"
@@ -28,6 +28,7 @@ import { PlusIcon } from "@radix-ui/react-icons"
 import { DialogClose, DialogFooter } from "@repo/ui/ui/dialog"
 import DropZone from "../common/dropZone"
 import { DateTimePicker } from "../ui/DateTimePicker"
+import { toast } from "sonner"
 
 const MAX_CAMPAIGN_FILE_SIZE = 5 * 1024 * 1024
 const CAMPAIGN_FILE_ACCEPT = {
@@ -51,7 +52,7 @@ const campaignSchema = z.object({
     image: z.instanceof(File, { message: "Campaign file is required" })
         .refine((file) => allowedCampaignMimeTypes.includes(file.type), "Only JPG, PNG, WEBP, GIF, or PDF files are allowed")
         .refine((file) => file.size <= MAX_CAMPAIGN_FILE_SIZE, "File size must be 5MB or less"),
-    products: z.array(z.string()).min(1, "Select at least one product"),
+    products: z.array(z.string()).optional(),
 }).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
     path: ["endDate"],
     message: "End date must be after start date",
@@ -90,7 +91,6 @@ export function CreateCampaignForm({ onCancel, onSubmit, isLoading = false }: Cr
             productIds: data.products,
             imageFile: data.image,
         }
-        console.log("Campaign Data:", formData)
         onSubmit?.(formData)
     }
 
@@ -126,9 +126,20 @@ export function CreateCampaignForm({ onCancel, onSubmit, isLoading = false }: Cr
         })
     }
 
+    const onError = (errors: FieldErrors<CampaignFormValues>) => {
+        Object.values(errors).forEach((error) => {
+            if (!error || typeof error !== "object") return
+
+            const maybeMessage = "message" in error ? error.message : undefined
+            if (typeof maybeMessage === "string" && maybeMessage.length > 0) {
+                toast.error(maybeMessage)
+            }
+        })
+    }
+
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onFormSubmit)} >
+            <form onSubmit={form.handleSubmit(onFormSubmit,onError)} >
                 {/* Campaign Details */}
                 <div className="max-h-[80vh] overflow-y-auto space-y-8 py-4  px-1">
                     <div className="space-y-4">
@@ -204,7 +215,7 @@ export function CreateCampaignForm({ onCancel, onSubmit, isLoading = false }: Cr
                                                 field.onChange(currentDate.toISOString());
                                             }}
                                         />
-                                        <FormMessage />
+                                        {/* <FormMessage /> */}
                                     </FormItem>
                                 )}
                             />

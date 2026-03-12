@@ -285,7 +285,7 @@ function FlashSaleKpiSection({ allSales, isLoading, isError, onRetry }: FlashSal
                         trend={kpi.trend}
                         trendDir={kpi.trendDir}
                         vs={kpi.vs}
-                        menuItems={[{ label: "Retry", accessorKey: "retry" }]}
+                        menuItems={[{ label: "Refresh", accessorKey: "retry" }]}
                         onMenuSelect={(key) => { if (key === "retry") onRetry(); }}
                     />
                 );
@@ -335,7 +335,7 @@ export default function FlashSalesPage() {
     } = useQuery({
         queryKey: ["flash-sales", "campaigns", debouncedSearch, statusFilter],
         queryFn: () => marketingApi.getCampaigns({
-            search: debouncedSearch || undefined,
+            searchQuery: debouncedSearch || undefined,
             status: statusFilter || undefined,
         }),
     });
@@ -406,6 +406,7 @@ export default function FlashSalesPage() {
                 imageFile,
                 image,
             });
+            console.log({ formData });
             return marketingApi.updateCampaign(id, formData);
         },
         onSuccess: () => {
@@ -1046,6 +1047,7 @@ export default function FlashSalesPage() {
                         <CreateCampaignForm
                             isLoading={createCampaignMutation.isPending}
                             onSubmit={(data) => {
+                                console.log("Create form values:", data);
                                 createCampaignMutation.mutate({
                                     name: data.name,
                                     description: data.description,
