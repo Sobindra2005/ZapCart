@@ -39,7 +39,7 @@ import {
     Card,
     CardContent,
 } from "@repo/ui/ui/card";
-import { Stat, StatsCards } from "@/components/common/StatsCards";
+import { StatCard, StatCardSkeleton } from "@/components/common/StatCard";
 import { FormPopup } from "@repo/ui/ui/form-popup";
 import { CreateCampaignForm } from "@/components/forms/CreateCampaignForm";
 import { ServerTable, ServerTableColumn, SortConfig } from "@/components/common/ServerTable";
@@ -211,15 +211,93 @@ const createCampaignFormData = (data: {
     formData.append("startDate", data.startDate);
     formData.append("endDate", data.endDate);
     if (data.imageFile) {
-        formData.append("image", data.imageFile);
+        formData.append("imageFile", data.imageFile);
     } else if (typeof data.image === "string") {
         formData.append("image", data.image);
     }
     return formData;
 };
 
+interface FlashSaleKpiSectionProps {
+    allSales: FlashSale[];
+    isLoading: boolean;
+    isError: boolean;
+    onRetry: () => void;
+}
+
+function FlashSaleKpiSection({ allSales, isLoading, isError, onRetry }: FlashSaleKpiSectionProps) {
+    const activeCount = allSales.filter((sale) => sale.status === "Active").length;
+    const totalRevenue = allSales.reduce((sum, sale) => sum + sale.totalRevenue, 0);
+    const totalOrders = allSales.reduce((sum, sale) => sum + sale.conversions, 0);
+    const avgConversionRate = allSales.length > 0
+        ? (allSales.reduce((sum, sale) => sum + sale.conversions, 0) / allSales.length).toFixed(1)
+        : "0.0";
+
+    const kpis = [
+        {
+            key: "activeCampaigns",
+            label: "Active Campaigns",
+            value: String(activeCount).padStart(2, "0"),
+            trend: `${allSales.length} total`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+        {
+            key: "avgConversionRate",
+            label: "Avg. Conversion Rate",
+            value: `${avgConversionRate}%`,
+            trend: `${totalOrders} orders`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+        {
+            key: "totalRevenue",
+            label: "Total Revenue",
+            value: `$${totalRevenue.toLocaleString()}`,
+            trend: `${allSales.length} campaigns`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+        {
+            key: "itemsSold",
+            label: "Items Sold Flash",
+            value: totalOrders.toLocaleString(),
+            trend: `${allSales.length} campaigns`,
+            trendDir: "up" as const,
+            vs: "Live Data",
+        },
+    ];
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {kpis.map((kpi) => {
+                if (isLoading) {
+                    return <StatCardSkeleton key={kpi.key} />;
+                }
+                if (isError) {
+                    return <StatCardSkeleton key={kpi.key} />;
+                }
+                return (
+                    <StatCard
+                        key={kpi.key}
+                        label={kpi.label}
+                        value={kpi.value}
+                        trend={kpi.trend}
+                        trendDir={kpi.trendDir}
+                        vs={kpi.vs}
+                        menuItems={[{ label: "Refresh", accessorKey: "retry" }]}
+                        onMenuSelect={(key) => { if (key === "retry") onRetry(); }}
+                    />
+                );
+            })}
+        </div>
+    );
+}
+
 export default function FlashSalesPage() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<CampaignStatus | "">("");
     const [currentPage, setCurrentPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: null });
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -244,14 +322,22 @@ export default function FlashSalesPage() {
     const queryClient = useQueryClient();
     const itemsPerPage = 10;
 
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
     const {
         data: campaignsResponse,
         isLoading: isCampaignsLoading,
         isError: hasCampaignsError,
         refetch: refetchCampaigns,
     } = useQuery({
-        queryKey: ["flash-sales", "campaigns"],
-        queryFn: () => marketingApi.getCampaigns(),
+        queryKey: ["flash-sales", "campaigns", debouncedSearch, statusFilter],
+        queryFn: () => marketingApi.getCampaigns({
+            searchQuery: debouncedSearch || undefined,
+            status: statusFilter || undefined,
+        }),
     });
 
     const {
@@ -320,6 +406,7 @@ export default function FlashSalesPage() {
                 imageFile,
                 image,
             });
+            console.log("FormData entries for update:", Object.fromEntries(formData.entries()));
             return marketingApi.updateCampaign(id, formData);
         },
         onSuccess: () => {
@@ -411,25 +498,12 @@ export default function FlashSalesPage() {
         });
     }, [isUpdateModalOpen, campaignDetail, updateCampaignForm]);
 
-    const filteredSales = useMemo(() => {
-        const query = searchQuery.trim().toLowerCase();
-        if (!query) {
+    const sortedSales = useMemo(() => {
+        if (!sortConfig.key || !sortConfig.direction) {
             return allSales;
         }
 
-        return allSales.filter((sale) =>
-            sale.title.toLowerCase().includes(query) ||
-            sale.status.toLowerCase().includes(query) ||
-            sale.id.includes(query)
-        );
-    }, [allSales, searchQuery]);
-
-    const sortedSales = useMemo(() => {
-        if (!sortConfig.key || !sortConfig.direction) {
-            return filteredSales;
-        }
-
-        return [...filteredSales].sort((a, b) => {
+        return [...allSales].sort((a, b) => {
             const aValue = getSortValue(a, sortConfig.key as string);
             const bValue = getSortValue(b, sortConfig.key as string);
 
@@ -441,52 +515,13 @@ export default function FlashSalesPage() {
             }
             return 0;
         });
-    }, [filteredSales, sortConfig]);
+    }, [allSales, sortConfig]);
 
     const paginatedSales = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage;
         return sortedSales.slice(start, start + itemsPerPage);
     }, [currentPage, sortedSales, itemsPerPage]);
 
-    const stats = useMemo<Stat[]>(() => {
-        const activeCount = allSales.filter((sale) => sale.status === "Active").length;
-        const totalRevenue = allSales.reduce((sum, sale) => sum + sale.totalRevenue, 0);
-        const totalOrders = allSales.reduce((sum, sale) => sum + sale.conversions, 0);
-        const avgConversionRate = allSales.length > 0
-            ? (allSales.reduce((sum, sale) => sum + sale.conversions, 0) / allSales.length).toFixed(1)
-            : "0.0";
-
-        return [
-            {
-                label: "Active Campaigns",
-                value: String(activeCount).padStart(2, "0"),
-                trend: `${allSales.length} total`,
-                trendDir: "up",
-                vs: "Live Data"
-            },
-            {
-                label: "Avg. Conversion Rate",
-                value: `${avgConversionRate}%`,
-                trend: `${totalOrders} orders`,
-                trendDir: "up",
-                vs: "Live Data"
-            },
-            {
-                label: "Total Revenue",
-                value: `$${totalRevenue.toLocaleString()}`,
-                trend: `${allSales.length} campaigns`,
-                trendDir: "up",
-                vs: "Live Data"
-            },
-            {
-                label: "Items Sold Flash",
-                value: totalOrders.toLocaleString(),
-                trend: `${allSales.length} campaigns`,
-                trendDir: "up",
-                vs: "Live Data"
-            }
-        ];
-    }, [allSales]);
 
     const handleSort = (key: string) => {
         let direction: "asc" | "desc" | null = "asc";
@@ -503,6 +538,11 @@ export default function FlashSalesPage() {
 
     const handleSearchChange = (value: string) => {
         setSearchQuery(value);
+        setCurrentPage(1);
+    };
+
+    const handleStatusFilterChange = (value: string) => {
+        setStatusFilter(value === "all" ? "" : value as CampaignStatus);
         setCurrentPage(1);
     };
 
@@ -599,7 +639,7 @@ export default function FlashSalesPage() {
             align: "right",
             cell: (sale) => (
                 <div className="flex items-center justify-end gap-1">
-                    <FormPopup
+                    {/* <FormPopup
                         title="Campaign Details"
                         description="Review campaign information and timeline."
                         className="max-w-2xl"
@@ -669,7 +709,7 @@ export default function FlashSalesPage() {
                         ) : (
                             <p className="text-sm text-gray-500">No campaign details available.</p>
                         )}
-                    </FormPopup>
+                    </FormPopup> */}
 
                     <FormPopup
                         title="Update Campaign"
@@ -835,67 +875,70 @@ export default function FlashSalesPage() {
                                     </div>
                                 </div>
 
-                                <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsUpdateModalOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={() => {
-                                            if (!selectedCampaignId || !campaignDetail) {
-                                                return;
-                                            }
-
-                                            const formValues = updateCampaignForm.getValues();
-
-                                            if (!formValues.name.trim()) {
-                                                toast.error("Campaign name is required");
-                                                return;
-                                            }
-
-                                            if (!formValues.dateRange?.from || !formValues.dateRange?.to) {
-                                                toast.error("Start and end dates are required");
-                                                return;
-                                            }
-
-                                            const discountValue = Number(formValues.discountValue);
-                                            if (Number.isNaN(discountValue) || discountValue < 0) {
-                                                toast.error("Discount value must be a valid number");
-                                                return;
-                                            }
-
-                                            const updatedCampaign: Campaign = {
-                                                ...campaignDetail,
-                                                name: formValues.name.trim(),
-                                                description: formValues.description.trim(),
-                                                products: campaignDetail.products,
-                                                status: formValues.status,
-                                                discountType: formValues.discountType,
-                                                discountValue,
-                                                startDate: formValues.dateRange.from.toISOString(),
-                                                endDate: formValues.dateRange.to.toISOString(),
-                                            };
-                                            updateCampaignMutation.mutate(
-                                                {
-                                                    id: selectedCampaignId,
-                                                    campaign: updatedCampaign,
-                                                    imageFile: formValues.imageFile,
-                                                    image: campaignDetail.image,
-                                                },
-                                                {
-                                                    onSuccess: () => {
-                                                        setIsUpdateModalOpen(false);
-                                                        setSelectedCampaignId(null);
-                                                        updateCampaignForm.setValue("imageFile", undefined, { shouldDirty: false });
-                                                    },
+                                <div className="flex w-full justify-end items-center ">
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsUpdateModalOpen(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                if (!selectedCampaignId || !campaignDetail) {
+                                                    return;
                                                 }
-                                            );
-                                        }}
-                                        disabled={updateCampaignMutation.isPending}
-                                    >
-                                        {updateCampaignMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                                        Update Campaign
-                                    </Button>
-                                </DialogFooter>
+
+                                                const formValues = updateCampaignForm.getValues();
+
+                                                if (!formValues.name.trim()) {
+                                                    toast.error("Campaign name is required");
+                                                    return;
+                                                }
+
+                                                if (!formValues.dateRange?.from || !formValues.dateRange?.to) {
+                                                    toast.error("Start and end dates are required");
+                                                    return;
+                                                }
+
+                                                const discountValue = Number(formValues.discountValue);
+                                                if (Number.isNaN(discountValue) || discountValue < 0) {
+                                                    toast.error("Discount value must be a valid number");
+                                                    return;
+                                                }
+
+
+                                                const updatedCampaign: Campaign = {
+                                                    ...campaignDetail,
+                                                    name: formValues.name.trim(),
+                                                    description: formValues.description.trim(),
+                                                    products: campaignDetail.products,
+                                                    status: formValues.status,
+                                                    discountType: formValues.discountType,
+                                                    discountValue,
+                                                    startDate: formValues.dateRange.from.toISOString(),
+                                                    endDate: formValues.dateRange.to.toISOString(),
+                                                };
+                                                updateCampaignMutation.mutate(
+                                                    {
+                                                        id: selectedCampaignId,
+                                                        campaign: updatedCampaign,
+                                                        imageFile: formValues.imageFile,
+                                                        image: campaignDetail.image,
+                                                    },
+                                                    {
+                                                        onSuccess: () => {
+                                                            setIsUpdateModalOpen(false);
+                                                            setSelectedCampaignId(null);
+                                                            updateCampaignForm.setValue("imageFile", undefined, { shouldDirty: false });
+                                                        },
+                                                    }
+                                                );
+                                            }}
+                                            disabled={updateCampaignMutation.isPending}
+                                        >
+                                            {updateCampaignMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                                            Update Campaign
+                                        </Button>
+                                    </DialogFooter>
+                                </div>
                             </div>
                         ) : (
                             <p className="text-sm text-gray-500">No campaign details available.</p>
@@ -931,34 +974,36 @@ export default function FlashSalesPage() {
                             </Button>
                         }
                     >
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    if (campaignToDelete?.id === sale.id) {
-                                        setCampaignToDelete(null);
-                                    }
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                disabled={deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id}
-                                onClick={() => {
-                                    deleteCampaignMutation.mutate(sale.id, {
-                                        onSuccess: () => {
+                        <div className="flex w-full justify-end items-center ">
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        if (campaignToDelete?.id === sale.id) {
                                             setCampaignToDelete(null);
-                                        },
-                                    });
-                                }}
-                            >
-                                {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id && (
-                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                )}
-                                {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id ? "Deleting..." : "Delete"}
-                            </Button>
-                        </DialogFooter>
+                                        }
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    disabled={deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id}
+                                    onClick={() => {
+                                        deleteCampaignMutation.mutate(sale.id, {
+                                            onSuccess: () => {
+                                                setCampaignToDelete(null);
+                                            },
+                                        });
+                                    }}
+                                >
+                                    {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id && (
+                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    )}
+                                    {deleteCampaignMutation.isPending && deleteCampaignMutation.variables === sale.id ? "Deleting..." : "Delete"}
+                                </Button>
+                            </DialogFooter>
+                        </div>
                     </FormPopup>
                 </div>
             ),
@@ -1021,7 +1066,12 @@ export default function FlashSalesPage() {
             </div>
 
             {/* Quick Stats */}
-            <StatsCards stats={stats} />
+            <FlashSaleKpiSection
+                allSales={allSales}
+                isLoading={isCampaignsLoading}
+                isError={hasCampaignsError}
+                onRetry={refetchCampaigns}
+            />
 
             {/* Campaign List */}
             <ServerTable
@@ -1042,23 +1092,25 @@ export default function FlashSalesPage() {
                 error={hasCampaignsError}
                 onRetry={refetchCampaigns}
                 toolbarContent={(
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" size="sm" className="gap-2 font-bold border-gray-200">
-                            <Filter className="h-4 w-4" />
-                            Filter
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-2 font-bold border-gray-200">
-                            <Calendar className="h-4 w-4" />
-                            By Date
-                        </Button>
-                    </div>
+                    <Select value={statusFilter || "all"} onValueChange={handleStatusFilterChange}>
+                        <SelectTrigger className="w-36">
+                            <SelectValue placeholder="All statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All statuses</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="upcoming">Upcoming</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                            <SelectItem value="paused">Paused</SelectItem>
+                        </SelectContent>
+                    </Select>
                 )}
                 emptyTitle="No campaigns found"
                 emptyMessage="Try adjusting your search or filters"
             />
 
             {/* Empty State Mockup Strategy */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="border-dashed border-2 border-gray-200 shadow-none bg-gray-50/50">
                     <CardContent className="flex flex-col items-center justify-center py-12">
                         <div className="h-16 w-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mb-4">
@@ -1080,7 +1132,7 @@ export default function FlashSalesPage() {
                         <Button variant="link" className="mt-4 font-bold text-primary">Coming soon</Button>
                     </CardContent>
                 </Card>
-            </div>
+            </div> */}
         </div>
     );
 }

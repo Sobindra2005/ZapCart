@@ -194,7 +194,9 @@ export const marketingApi = {
     getCampaigns: (params?: {
         status?: string;
         createdBy?: string;
+        searchQuery?: string;
     }) => {
+        console.log("Fetching campaigns with params:", params);
         return axiosInstance.get('/marketing/campaign', { params });
     },
     getCampaignById: (id: string, params?: {
@@ -222,5 +224,17 @@ export const marketingApi = {
     deleteCampaign: (id: string) => {
         return axiosInstance.delete(`/marketing/campaign/${id}`);
     },
-
+    addFeaturedProduct: (productId: string) => {
+        return axiosInstance.patch('/products/featured/add', { productId });
+    },
+    removeFeaturedProduct: (productId: string) => {
+        return axiosInstance.patch('/products/featured/remove', { productId });
+    },
+    getFeaturedProducts: () => {
+        return axiosInstance.get('/products/featured');
+    }, 
+    searchSuggestions: (query: string) => {
+        return axiosInstance.get(`/search/suggestions?q=${encodeURIComponent(query)}`);
+    }
 }
+

@@ -165,14 +165,15 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
     // Apply custom sorting if needed
     if (needsCustomSorting) {
         switch (sortBy) {
-            case 'spent':
+            case 'spent': {
                 usersWithTotalSpent.sort((a, b) => {
                     return sortOrder === 'asc'
                         ? a.totalSpent - b.totalSpent
                         : b.totalSpent - a.totalSpent;
                 });
                 break;
-            case 'status':
+            }
+            case 'status': {
                 const statusOrder = { 'active': 0, 'suspended': 1, 'deleted': 2 };
                 usersWithTotalSpent.sort((a, b) => {
                     const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
@@ -180,7 +181,8 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
                     return sortOrder === 'asc' ? aOrder - bOrder : bOrder - aOrder;
                 });
                 break;
-            case 'role':
+            }
+            case 'role': {
                 const roleOrder = { 'SUPER_ADMIN': 0, 'ADMIN': 1, 'CUSTOMER': 2 };
                 usersWithTotalSpent.sort((a, b) => {
                     const aOrder = roleOrder[a.role as keyof typeof roleOrder] ?? 3;
@@ -188,6 +190,7 @@ export const getUsersList = asyncHandler(async (req: Request, res: Response) => 
                     return sortOrder === 'asc' ? aOrder - bOrder : bOrder - aOrder;
                 });
                 break;
+            }
         }
 
         // Apply pagination after sorting

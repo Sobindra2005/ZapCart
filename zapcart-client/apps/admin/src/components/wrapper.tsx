@@ -56,7 +56,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
                 )}
             >
                 <Header title={title} />
-                <main className="flex-1 p-8">
+                <main className="flex-1 p-8 border-black">
                     {children}
                 </main>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { DocumentDownload } from "iconsax-react";
 import { CSVLink } from "react-csv";
@@ -147,6 +147,36 @@ export function ServerTable<T>({
 }: ServerTableProps<T>) {
     const selectedCount = selectedRowIds?.length ?? 0;
     const allSelected = data.length > 0 && selectedCount === data.length && selectedCount > 0;
+    const tableContentRef = useRef<HTMLDivElement>(null);
+    const [animatedHeight, setAnimatedHeight] = useState<number | null>(null);
+
+    useEffect(() => {
+        const element = tableContentRef.current;
+        if (!element) return;
+
+        const setHeight = (height: number) => {
+            setAnimatedHeight((prev) => {
+                if (prev === null) return height;
+                if (Math.abs(prev - height) < 1) return prev;
+                return height;
+            });
+        };
+
+        // Initialize with the current height to avoid first-paint jump.
+        setHeight(element.offsetHeight);
+
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (!entry) return;
+            setHeight(entry.contentRect.height);
+        });
+
+        observer.observe(element);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
 
     const handleFilterChange = (key: string, value: string) => {
         const nextValues = { ...filterValues, [key]: value };
@@ -240,123 +270,130 @@ export function ServerTable<T>({
                 </div>
             )}
 
-            <Table className={tableClassName}>
-                <TableHeader>
-                    <TableRow>
-                        {(onRowSelect && onSelectAll) && (
-                            <TableHead className="w-10 pl-6">
-                                <input
-                                    type="checkbox"
-                                    className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                                    checked={allSelected}
-                                    onChange={onSelectAll}
-                                />
-                            </TableHead>
-                        )}
+            <div
+                className="overflow-hidden transition-[height] duration-300 ease-in-out"
+                style={{ height: animatedHeight ?? undefined }}
+            >
+                <div ref={tableContentRef}>
+                    <Table className={tableClassName}>
+                        <TableHeader>
+                            <TableRow>
+                                {(onRowSelect && onSelectAll) && (
+                                    <TableHead className="w-10 pl-6">
+                                        <input
+                                            type="checkbox"
+                                            className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                                            checked={allSelected}
+                                            onChange={onSelectAll}
+                                        />
+                                    </TableHead>
+                                )}
 
-                        {columns.map((column) => {
-                            const sortable = column.sortable && !!onSort;
-                            const sortKey = column.sortKey ?? String(column.accessorKey);
-                            const isActiveSort = sortConfig?.key === sortKey;
+                                {columns.map((column) => {
+                                    const sortable = column.sortable && !!onSort;
+                                    const sortKey = column.sortKey ?? String(column.accessorKey);
+                                    const isActiveSort = sortConfig?.key === sortKey;
 
-                            return (
-                                <TableHead
-                                    key={String(column.accessorKey)}
-                                    className={cn(
-                                        column.className,
-                                        sortable && "cursor-pointer group",
-                                        column.align === "right" && "text-right",
-                                        column.align === "center" && "text-center"
-                                    )}
-                                    onClick={() => sortable && onSort?.(sortKey)}
-                                >
-                                    <div
-                                        className={cn(
-                                            "flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider",
-                                            column.align === "right" && "justify-end",
-                                            column.align === "center" && "justify-center"
-                                        )}
-                                    >
-                                        {column.header}
-                                        {sortable && (
-                                            <SortIcon
-                                                isActive={isActiveSort}
-                                                direction={sortConfig?.direction ?? null}
-                                            />
-                                        )}
-                                    </div>
-                                </TableHead>
-                            );
-                        })}
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {isLoading ? (
-                        <TableLoadingState
-                            columnCount={columns.length + (onRowSelect ? 1 : 0)}
-                        />
-                    ) : error ? (
-                        <TableErrorState
-                            title="Error loading data"
-                            message="Please try again later."
-                            onRetry={onRetry}
-                            colSpan={columns.length + (onRowSelect ? 1 : 0)}
-                        />
-                    ) : data.length === 0 ? (
-                        <TableEmptyState
-                            title={emptyTitle}
-                            message={emptyMessage}
-                            colSpan={columns.length + (onRowSelect ? 1 : 0)}
-                            isSearch={!!searchValue}
-                        />
-                    ) : (
-                        data.map((row) => {
-                            const rowId = getRowId(row);
-                            const isSelected = selectedRowIds?.includes(rowId);
-
-                            return (
-                                <TableRow
-                                    key={rowId}
-                                    className={cn(
-                                        "hover:bg-gray-50/80 transition-colors group",
-                                        isSelected && "bg-primary/5 hover:bg-primary/10"
-                                    )}
-                                >
-                                    {onRowSelect && (
-                                        <TableCell className=" pl-6">
-                                            <input
-                                                type="checkbox"
-                                                className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-                                                checked={!!isSelected}
-                                                onChange={() => onRowSelect(rowId)}
-                                            />
-                                        </TableCell>
-                                    )}
-
-                                    {columns.map((column) => {
-                                        const value = (row as Record<string, ReactNode>)[
-                                            String(column.accessorKey)
-                                        ];
-
-                                        return (
-                                            <TableCell
-                                                key={String(column.accessorKey)}
+                                    return (
+                                        <TableHead
+                                            key={String(column.accessorKey)}
+                                            className={cn(
+                                                column.className,
+                                                sortable && "cursor-pointer group",
+                                                column.align === "right" && "text-right",
+                                                column.align === "center" && "text-center"
+                                            )}
+                                            onClick={() => sortable && onSort?.(sortKey)}
+                                        >
+                                            <div
                                                 className={cn(
-                                                    column.cellClassName,
-                                                    column.align === "right" && "text-right",
-                                                    column.align === "center" && "text-center"
+                                                    "flex items-center gap-1.5 hover:text-gray-900 transition-colors uppercase text-xs font-semibold tracking-wider",
+                                                    column.align === "right" && "justify-end",
+                                                    column.align === "center" && "justify-center"
                                                 )}
                                             >
-                                                {column.cell ? column.cell(row) : value}
-                                            </TableCell>
-                                        );
-                                    })}
-                                </TableRow>
-                            );
-                        })
-                    )}
-                </TableBody>
-            </Table>
+                                                {column.header}
+                                                {sortable && (
+                                                    <SortIcon
+                                                        isActive={isActiveSort}
+                                                        direction={sortConfig?.direction ?? null}
+                                                    />
+                                                )}
+                                            </div>
+                                        </TableHead>
+                                    );
+                                })}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoading ? (
+                                <TableLoadingState
+                                    columnCount={columns.length + (onRowSelect ? 1 : 0)}
+                                />
+                            ) : error ? (
+                                <TableErrorState
+                                    title="Error loading data"
+                                    message="Please try again later."
+                                    onRetry={onRetry}
+                                    colSpan={columns.length + (onRowSelect ? 1 : 0)}
+                                />
+                            ) : data.length === 0 ? (
+                                <TableEmptyState
+                                    title={emptyTitle}
+                                    message={emptyMessage}
+                                    colSpan={columns.length + (onRowSelect ? 1 : 0)}
+                                    isSearch={!!searchValue}
+                                />
+                            ) : (
+                                data.map((row) => {
+                                    const rowId = getRowId(row);
+                                    const isSelected = selectedRowIds?.includes(rowId);
+
+                                    return (
+                                        <TableRow
+                                            key={rowId}
+                                            className={cn(
+                                                "hover:bg-gray-50/80 transition-colors group",
+                                                isSelected && "bg-primary/5 hover:bg-primary/10"
+                                            )}
+                                        >
+                                            {onRowSelect && (
+                                                <TableCell className=" pl-6">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                                                        checked={!!isSelected}
+                                                        onChange={() => onRowSelect(rowId)}
+                                                    />
+                                                </TableCell>
+                                            )}
+
+                                            {columns.map((column) => {
+                                                const value = (row as Record<string, ReactNode>)[
+                                                    String(column.accessorKey)
+                                                ];
+
+                                                return (
+                                                    <TableCell
+                                                        key={String(column.accessorKey)}
+                                                        className={cn(
+                                                            column.cellClassName,
+                                                            column.align === "right" && "text-right",
+                                                            column.align === "center" && "text-center"
+                                                        )}
+                                                    >
+                                                        {column.cell ? column.cell(row) : value}
+                                                    </TableCell>
+                                                );
+                                            })}
+                                        </TableRow>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
 
             {!isLoading && !error && (
                 <Pagination
